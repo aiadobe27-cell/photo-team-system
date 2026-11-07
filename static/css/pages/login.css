@@ -1,0 +1,538 @@
+/* ============================================================================
+   📌 ملف التنسيق (login.css): تنسيقات وألوان login.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/login.css (scoped to body.page-login) */
+
+:where(html:has(> body.page-login)),
+:where(body.page-login),
+:where(body.page-login) * {
+    box-sizing: border-box;
+}
+
+:where(body.page-login) {
+    --primary: #2563ff;
+    --primary-light: #6da7ff;
+    --text: #ffffff;
+    --muted: #cbd5e1;
+    --card-bg: rgba(8, 25, 48, .75);
+    --input-bg: rgba(20, 45, 75, .85);
+    --border: rgba(255,255,255,.12);
+    --button-text: #ffffff;
+}
+
+body.theme-dark:where(.page-login) {
+    --text: #ffffff;
+    --muted: #cbd5e1;
+    --card-bg: rgba(8,25,48,.75);
+    --input-bg: rgba(20,45,75,.85);
+    --border: rgba(255,255,255,.12);
+    background: linear-gradient(
+    90deg,
+    rgba(3,12,25,.88),
+    rgba(3,12,25,.35)
+    ),
+    url("../../assets/images/login-dark-bg.webp");
+    background-size: cover;
+    background-position: center;
+}
+
+body.theme-light:where(.page-login) {
+    --text: #10233f;
+    --muted: #64748b;
+    --card-bg: rgba(255,255,255,.88);
+    --input-bg: rgba(255,255,255,.95);
+    --border: rgba(0,0,0,.12);
+    background: linear-gradient(
+    90deg,
+    rgba(48, 44, 44, 0.82),
+    rgba(255,255,255,.35)
+    ),
+    url("../../assets/images/login-white-bg.webp");
+    background-size: cover;
+    background-position: center;
+}
+
+body:where(.page-login) {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Cairo",
+    Tahoma,
+    Arial,
+    sans-serif;
+    color: var(--text);
+    overflow: hidden;
+}
+
+:where(body.page-login) .theme-toggle {
+    position: fixed;
+    top: 25px;
+    right: 35px;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,.12);
+    padding: 6px;
+    border-radius: 50px;
+    backdrop-filter: blur(15px);
+}
+
+:where(body.page-login) .theme-toggle button {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 0;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text);
+}
+
+:where(body.page-login) .theme-toggle .active {
+    background: #2563ff;
+}
+
+:where(body.page-login) .login-layout {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 55% 45%;
+}
+
+:where(body.page-login) .brand-side {
+    padding: 70px 80px;
+}
+
+:where(body.page-login) .logo {
+    width: 250px;
+}
+
+:where(body.page-login) .brand-header p {
+    margin-top: 15px;
+    font-size: 18px;
+    color: var(--muted);
+}
+
+:where(body.page-login) .hero-text {
+    margin-top: 70px;
+}
+
+:where(body.page-login) .hero-text h1 {
+    font-size: 58px;
+    margin: 0 0 20px;
+    font-weight: 800;
+}
+
+:where(body.page-login) .hero-text span {
+    font-size: 24px;
+    letter-spacing: 4px;
+}
+
+:where(body.page-login) .features {
+    margin-top: 60px;
+}
+
+:where(body.page-login) .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+:where(body.page-login) .feature-item img {
+    width: 55px;
+    height: 55px;
+}
+
+:where(body.page-login) .feature-item strong {
+    display: block;
+    font-size: 20px;
+    color: var(--text);
+}
+
+:where(body.page-login) .feature-item small {
+    color: var(--muted);
+}
+
+:where(body.page-login) .login-side {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+:where(body.page-login) .login-card {
+    width: 430px;
+    padding: 45px;
+    border-radius: 30px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(25px);
+    box-shadow: 0 30px 80px rgba(0,0,0,.35);
+}
+
+:where(body.page-login) .login-card h2 {
+    text-align: center;
+    font-size: 38px;
+    margin: 0;
+    color: var(--text);
+}
+
+:where(body.page-login) .login-card p {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 35px;
+}
+
+:where(body.page-login) .input-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+:where(body.page-login) .input-group > img {
+    position: absolute;
+    right: 18px;
+    top: 18px;
+    width: 25px;
+}
+
+:where(body.page-login) .input-group input {
+    width: 100%;
+    height: 62px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text);
+    padding: 0 60px;
+    font-size: 16px;
+    outline: none;
+}
+
+:where(body.page-login) .input-group input::placeholder {
+    color: var(--muted);
+}
+
+:where(body.page-login) #showPassword {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+:where(body.page-login) #showPassword img {
+    width: 25px;
+}
+
+:where(body.page-login) .options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0 25px;
+    color: var(--text);
+}
+
+:where(body.page-login) .options a {
+    color: #6da7ff;
+    text-decoration: none;
+}
+
+:where(body.page-login) .login-btn {
+    width: 100%;
+    height: 62px;
+    border: 0;
+    border-radius: 16px;
+    cursor: pointer;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    background: linear-gradient(
+    135deg,
+    var(--primary),
+    var(--primary-light)
+    );
+    box-shadow: 0 15px 35px rgba(37,99,255,.35);
+}
+
+@media(max-width:1100px) {
+    :where(body.page-login) .login-layout {
+        grid-template-columns: minmax(0, 1fr);
+        overflow: auto;
+    }
+
+    :where(body.page-login) .brand-side {
+        text-align: center;
+        padding: 40px;
+    }
+
+    :where(body.page-login) .hero-text h1 {
+        font-size: 40px;
+    }
+
+    :where(body.page-login) .login-side {
+        padding: 30px;
+    }
+
+}
+
+@media(max-width:600px) {
+    :where(body.page-login) .login-card {
+        width: 100%;
+        padding: 30px;
+    }
+
+}
+
+body.theme-dark:where(.page-login) .login-card {
+    box-shadow: 0 0 20px rgba(37,99,255,.25),
+    0 0 60px rgba(109,167,255,.18),
+    0 30px 80px rgba(0,0,0,.55);
+}
+
+body.theme-dark:where(.page-login) .login-btn {
+    box-shadow: 0 0 15px rgba(37,99,255,.8),
+    0 0 35px rgba(109,167,255,.55);
+}
+
+body.theme-dark:where(.page-login) .logo {
+    filter: drop-shadow(
+    0 0 18px rgba(109,167,255,.8)
+    );
+}
+
+:where(body.page-login) .login-card {
+    position: relative;
+    overflow: hidden;
+}
+
+:where(body.page-login) .login-card::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,.18),
+    transparent
+    );
+    transform: rotate(25deg);
+    animation: cardShine 7s infinite;
+    pointer-events: none;
+}
+
+@keyframes cardShine {
+
+
+    0%{
+
+
+        transform:
+
+        translateX(-100%)
+
+        rotate(25deg);
+
+
+    }
+
+
+    50%{
+
+
+        transform:
+
+        translateX(100%)
+
+        rotate(25deg);
+
+
+    }
+
+
+    100%{
+
+
+        transform:
+
+        translateX(100%)
+
+        rotate(25deg);
+
+
+    }
+
+
+}
+
+body.theme-dark:where(.page-login)::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+    circle,
+    rgba(37,99,255,.22) 1px,
+    transparent 2px
+    );
+    background-size: 55px 55px;
+    animation: movingParticles 25s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes movingParticles {
+
+
+    from{
+
+
+        background-position:
+
+        0 0;
+
+
+    }
+
+
+    to{
+
+
+        background-position:
+
+        120px 120px;
+
+
+    }
+
+
+}
+
+body.theme-light:where(.page-login) .login-card {
+    box-shadow: 0 12px 35px rgba(15,23,42,.10),
+    0 0 18px rgba(59,130,246,.12),
+    0 0 40px rgba(147,197,253,.18);
+}
+
+body.theme-light:where(.page-login) .login-btn {
+    box-shadow: 0 10px 25px rgba(59,130,246,.18),
+    0 0 18px rgba(96,165,250,.22);
+}
+
+body.theme-light:where(.page-login) .logo {
+    filter: drop-shadow(0 0 10px rgba(96,165,250,.25));
+}
+
+body.theme-light:where(.page-login) .login-card::before {
+    background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,.55),
+    transparent
+    );
+}
+
+body.theme-light:where(.page-login)::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+    circle,
+    rgba(59,130,246,.10) 1px,
+    transparent 2px
+    );
+    background-size: 60px 60px;
+    animation: movingParticles 28s linear infinite;
+    pointer-events: none;
+}
+
+:where(body.page-login) .login-btn {
+    position: relative;
+    transform: translateY(0);
+    transition: transform .15s ease,
+    box-shadow .15s ease;
+}
+
+:where(body.page-login) .login-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgba(37,99,255,.45);
+}
+
+:where(body.page-login) .login-btn:active {
+    transform: translateY(4px)
+    scale(.98);
+    box-shadow: 0 5px 15px rgba(37,99,255,.35);
+}
+
+body.theme-dark:where(.page-login) .login-btn:active {
+    box-shadow: 0 0 20px rgba(109,167,255,.8),
+    inset 0 3px 8px rgba(0,0,0,.35);
+}
+
+body.theme-light:where(.page-login) .login-btn:active {
+    box-shadow: 0 5px 15px rgba(59,130,246,.25),
+    inset 0 3px 8px rgba(0,0,0,.12);
+}
+
+
+/* V95 Modern Glass Login Enhancements & Strict Hidden Rule */
+[hidden] { display: none !important; }
+
+:where(body.page-login) .login-ui-bar {
+    position: fixed;
+    top: 22px;
+    left: 28px;
+    z-index: 30;
+    display: inline-flex;
+    gap: 6px;
+    background: rgba(8, 25, 48, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 5px 8px;
+    border-radius: 999px;
+    backdrop-filter: blur(16px);
+}
+:where(body.page-login) .login-ui-bar button {
+    border: 0;
+    background: transparent;
+    color: #cbd5e1;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+}
+:where(body.page-login) .login-ui-bar button.active {
+    background: linear-gradient(135deg, #2563ff, #38bdf8);
+    color: #ffffff;
+}
+:where(body.page-login) .login-footer-switch {
+    margin-top: 22px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    text-align: center;
+    font-size: 14px;
+}
+:where(body.page-login) .login-footer-switch a {
+    color: #6da7ff;
+    font-weight: 800;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-right: 6px;
+}
+:where(body.page-login) .auth-feedback {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 14px;
+    text-align: center;
+}
+:where(body.page-login) .auth-feedback.bad {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.45);
+    color: #fecaca;
+}
+:where(body.page-login) .auth-feedback.good {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.45);
+    color: #a7f3d0;
+}

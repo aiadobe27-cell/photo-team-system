@@ -1,0 +1,651 @@
+/* ============================================================================
+   📌 ملف التنسيق (daily_sales.css): تنسيقات وألوان daily_sales.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/daily_sales.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-daily_sales)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+:where(body.page-daily_sales) {
+    --neon-cyan: #0284c7;
+    --neon-green: #059669;
+    --neon-amber: #ffea00;
+    --border-glass: rgba(255, 255, 255, 0.05);
+    --bg-glass: rgba(30, 30, 30, 0.4);
+}
+
+:where(body.page-daily_sales) .logic-tabs {
+    background: var(--bg-surface);
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+:where(body.page-daily_sales) .logic-tabs .logic-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:where(body.page-daily_sales) .logic-tabs .logic-tab:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-main);
+}
+
+:where(body.page-daily_sales) .logic-tabs .logic-tab.active {
+    background: linear-gradient(135deg, #0284c7, #06b6d4);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+}
+
+:where(body.page-daily_sales) #dsEntry.active {
+    display: grid !important;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+:where(body.page-daily_sales) .coin-split {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+:where(body.page-daily_sales) .form-grid {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+:where(body.page-daily_sales) .form-grid.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:where(body.page-daily_sales) .form-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+:where(body.page-daily_sales) .form-grid.four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1100px) {
+    :where(body.page-daily_sales) .form-grid.three,
+    :where(body.page-daily_sales) .form-grid.four {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 950px) {
+    :where(body.page-daily_sales) #dsEntry.active,
+    :where(body.page-daily_sales) .coin-split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+@media (max-width: 768px) {
+    :where(body.page-daily_sales) .form-grid.two,
+    :where(body.page-daily_sales) .form-grid.three,
+    :where(body.page-daily_sales) .form-grid.four {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+:where(body.page-daily_sales) .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+:where(body.page-daily_sales) .panel-head {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+:where(body.page-daily_sales) .panel-head h2 {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+:where(body.page-daily_sales) #dsEntry > .panel:first-child {
+    padding: 0 !important;
+    height: 780px;
+    overflow: hidden;
+}
+
+:where(body.page-daily_sales) #dsEntry > .panel:first-child .panel-head {
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.05) 0%, transparent 100%);
+    margin-bottom: 0;
+}
+
+:where(body.page-daily_sales) .quick-date-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+:where(body.page-daily_sales) #quickEntryDate,
+:where(body.page-daily_sales) #dsEntryDate {
+    background: var(--bg-body);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    outline: none;
+}
+
+:where(body.page-daily_sales) #quickEntryDate:focus,
+:where(body.page-daily_sales) #dsEntryDate:focus {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.15);
+}
+
+:where(body.page-daily_sales) #quickEntryDate {
+    width: 35%;
+}
+
+:where(body.page-daily_sales) #dsEntryDate {
+    flex: 1;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+:where(body.page-daily_sales) #dsEntry > .panel:first-child .table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    border: none;
+    padding: 15px;
+    background: transparent;
+    margin: 0;
+}
+
+/* إظهار الجدول كحاوية، وإخفاء الرأس (thead) فقط */
+:where(body.page-daily_sales) #dsEntry > .panel:first-child table {
+    display: block;
+    width: 100%;
+}
+
+:where(body.page-daily_sales) #dsEntry > .panel:first-child thead {
+    display: none;
+}
+:where(body.page-daily_sales) #eligibleBody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+:where(body.page-daily_sales) #eligibleBody tr {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:where(body.page-daily_sales) #eligibleBody tr:hover {
+    border-color: var(--neon-cyan);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 229, 255, 0.08);
+}
+
+:where(body.page-daily_sales) #eligibleBody tr.selected {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 229, 255, 0.05);
+    box-shadow: inset 3px 0 0 var(--neon-cyan);
+}
+
+:where(body.page-daily_sales) #eligibleBody td {
+    display: block;
+    padding: 3px 0;
+    border: none;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    background: transparent !important;
+}
+
+:where(body.page-daily_sales) #eligibleBody td:first-child {
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+:where(body.page-daily_sales) #eligibleBody td:nth-child(2)::before {
+    content: "👤 السيلز: ";
+    font-weight: bold;
+    color: #94a3b8;
+}
+
+:where(body.page-daily_sales) #eligibleBody td:nth-child(3)::before {
+    content: "📸 المصور: ";
+    font-weight: bold;
+    color: #94a3b8;
+}
+
+:where(body.page-daily_sales) #eligibleBody td:nth-child(4) {
+    margin-top: 6px;
+    display: inline-block;
+    width: max-content;
+    font-size: 10px;
+}
+
+:where(body.page-daily_sales) #eligibleBody td:nth-child(5) {
+    display: none;
+}
+
+:where(body.page-daily_sales) #dsEntry > .panel:last-child {
+    height: 780px;
+    overflow-y: auto;
+    padding: 35px 40px;
+}
+
+:where(body.page-daily_sales) #selectedOrderInfo {
+    color: var(--neon-cyan);
+    font-weight: bold;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+:where(body.page-daily_sales) .field label {
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+:where(body.page-daily_sales) .field input,
+:where(body.page-daily_sales) .field select {
+    background: var(--bg-body);
+    border: 1px solid var(--border);
+    padding: 12px 15px;
+    border-radius: 10px;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+:where(body.page-daily_sales) .field input:focus,
+:where(body.page-daily_sales) .field select:focus {
+    border-color: var(--neon-cyan);
+    background: var(--bg-surface);
+    box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1);
+    outline: none;
+}
+
+:where(body.page-daily_sales) #saleUsd {
+    border-bottom: 2px solid #3b82f6 !important;
+}
+
+:where(body.page-daily_sales) #saleEur {
+    border-bottom: 2px solid #eab308 !important;
+}
+
+:where(body.page-daily_sales) #saleCash,
+:where(body.page-daily_sales) #saleOffice {
+    border-bottom: 2px solid var(--neon-green) !important;
+}
+
+:where(body.page-daily_sales) .money-summary {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 25px 0;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+:where(body.page-daily_sales) .summary-box {
+    text-align: center;
+    background: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+}
+
+:where(body.page-daily_sales) .summary-box small {
+    color: #94a3b8;
+    font-size: 12px;
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+:where(body.page-daily_sales) .summary-box strong {
+    font-size: 24px;
+    font-weight: 900;
+    color: #1e3a8a;
+}
+
+:where(body.page-daily_sales) #saleNet {
+    color: var(--neon-green);
+    text-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+}
+
+:where(body.page-daily_sales) #saleCosts {
+    color: #ef4444;
+}
+
+:where(body.page-daily_sales) .photo-split-preview {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 15px 20px;
+    margin-bottom: 15px;
+}
+
+:where(body.page-daily_sales) .modal-actions {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+:where(body.page-daily_sales) .btn.green {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 900;
+    border-radius: 12px;
+    width: 100%;
+    transition: 0.3s;
+    border: none;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+:where(body.page-daily_sales) .btn.green:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+    filter: brightness(1.1);
+}
+
+:where(body.page-daily_sales) .btn:not(.green):not(.primary):not(.red):not(.amber):not(.purple) {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+:where(body.page-daily_sales) .btn:not(.green):not(.primary):not(.red):not(.amber):not(.purple):hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+}
+
+:where(body.page-daily_sales) .kpi-grid.seven {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+:where(body.page-daily_sales) .kpi-grid.three {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+:where(body.page-daily_sales) .kpi-card {
+    background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-card) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+:where(body.page-daily_sales) .kpi-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 10px 20px rgba(0, 229, 255, 0.05);
+}
+
+:where(body.page-daily_sales) .kpi-card small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+:where(body.page-daily_sales) .kpi-card strong {
+    display: block;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-daily_sales) .modern-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    text-align: right;
+}
+
+:where(body.page-daily_sales) .modern-table thead th {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 0 15px 10px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    z-index: 10;
+}
+
+:where(body.page-daily_sales) .modern-table tbody tr {
+    background: var(--bg-surface);
+    transition: 0.2s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+:where(body.page-daily_sales) .modern-table tbody tr:hover {
+    transform: scale(1.01);
+    border-color: var(--border);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+:where(body.page-daily_sales) .modern-table tbody td {
+    padding: 15px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+:where(body.page-daily_sales) .modern-table tbody td:first-child {
+    border-right: 1px solid var(--border);
+    border-radius: 0 12px 12px 0;
+    font-weight: 900;
+    color: var(--neon-cyan);
+}
+
+:where(body.page-daily_sales) .modern-table tbody td:last-child {
+    border-left: 1px solid var(--border);
+    border-radius: 12px 0 0 12px;
+}
+
+:where(body.page-daily_sales) .timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+:where(body.page-daily_sales) .timeline-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 15px 20px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: 0.2s;
+}
+
+:where(body.page-daily_sales) .timeline-card:hover {
+    transform: translateX(-5px);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 4px 15px rgba(0, 229, 255, 0.1);
+}
+
+:where(body.page-daily_sales) .timeline-card b {
+    color: var(--text-muted);
+    font-size: 16px;
+    width: 40px;
+    font-weight: 900;
+}
+
+:where(body.page-daily_sales) .timeline-card span {
+    flex: 1;
+    font-weight: bold;
+    color: var(--text-main);
+    font-size: 15px;
+}
+
+:where(body.page-daily_sales) .timeline-card strong {
+    color: var(--neon-green);
+    font-size: 18px;
+    font-weight: 900;
+}
+
+:where(body.page-daily_sales) #dsSearch .action-grid {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+:where(body.page-daily_sales) #dsSearch .action-grid .btn,
+:where(body.page-daily_sales) #dsSearch .action-grid select {
+    width: auto !important;
+    margin: 0;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+
+:where(body.page-daily_sales) #dsSearch .action-grid select {
+    min-width: 160px;
+}
+
+:where(body.page-daily_sales) .toolbar.multi {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 15px;
+    align-items: end;
+    background: var(--bg-surface);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+@media (max-width: 1000px) {
+    :where(body.page-daily_sales) .toolbar.multi {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+}
+
+@media (max-width: 600px) {
+    :where(body.page-daily_sales) .toolbar.multi {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+}
+
+/* V80: شريط وأزرار وضع تعديل الدخل المسجل */
+:where(body.page-daily_sales) .edit-income-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 1.5px solid #60a5fa;
+    border-right: 5px solid #1d4ed8;
+    border-radius: 14px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+}
+
+:where(body.page-daily_sales) .edit-income-banner strong {
+    display: block;
+    color: #1e3a8a;
+    font-size: 13.5px;
+    font-weight: 900;
+}
+
+:where(body.page-daily_sales) .edit-income-banner p {
+    margin: 3px 0 0;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+:where(body.page-daily_sales) .btn.edit-mode {
+    background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%) !important;
+    color: #ffffff !important;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 900;
+    border-radius: 12px;
+    width: 100%;
+    border: none;
+    box-shadow: 0 4px 15px rgba(29, 78, 216, 0.30);
+}
+
+:where(body.page-daily_sales) .btn.edit-mode:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(29, 78, 216, 0.42);
+    filter: brightness(1.07);
+}
+
+:where(body.page-daily_sales) #eligibleBody tr.has-saved-income {
+    border-right: 4px solid #059669;
+}

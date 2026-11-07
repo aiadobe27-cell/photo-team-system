@@ -1,0 +1,244 @@
+/* ============================================================================
+   📌 ملف التنسيق (dashboard.css): تنسيقات وألوان dashboard.css
+   ============================================================================ */
+
+/* PHOTO TEAM SYSTEM V80 — Sapphire White & Blue Dashboard */
+
+:where(body.page-dashboard) .dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+:where(body.page-dashboard) .dash-top-row {
+    display: flex;
+    gap: 16px;
+    min-height: 128px;
+    align-items: stretch;
+}
+
+:where(body.page-dashboard) .dash-welcome {
+    flex: 0 0 300px;
+    min-width: 285px;
+    border-radius: 18px;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #0284c7 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 12px 28px rgba(29, 78, 216, 0.22) !important;
+}
+
+:where(body.page-dashboard) .welcome-text h1 {
+    margin: 0 0 6px;
+    font-size: 21px;
+    font-weight: 900;
+    color: #ffffff !important;
+}
+
+:where(body.page-dashboard) .welcome-text p {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.86) !important;
+}
+
+:where(body.page-dashboard) .date-picker-glass {
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+}
+
+:where(body.page-dashboard) .date-picker-glass input {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    outline: none;
+    cursor: pointer;
+}
+
+:where(body.page-dashboard) .kpi-group {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    flex-grow: 1;
+}
+
+:where(body.page-dashboard) .kpi-card {
+    min-height: 128px;
+    align-items: flex-start;
+    justify-content: space-between;
+    text-align: right;
+    padding: 18px;
+    border-radius: 18px !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-strong) !important;
+    border-top: 4px solid var(--primary) !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+:where(body.page-dashboard) .kpi-card.featured {
+    background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%) !important;
+    border-color: #93c5fd !important;
+    border-top: 4px solid #1d4ed8 !important;
+}
+
+:where(body.page-dashboard) .kpi-card small {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-muted);
+}
+
+:where(body.page-dashboard) .kpi-card strong {
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--text-heading);
+    line-height: 1;
+}
+
+:where(body.page-dashboard) .kpi-card.featured strong {
+    color: #1d4ed8;
+}
+
+:where(body.page-dashboard) .dash-panels {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+}
+
+:where(body.page-dashboard) .bento-panel {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 18px !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+:where(body.page-dashboard) .panel-team { grid-column: span 8; }
+:where(body.page-dashboard) .panel-upcoming { grid-column: span 4; grid-row: span 2; }
+:where(body.page-dashboard) .panel-sales { grid-column: span 4; }
+:where(body.page-dashboard) .panel-dresses { grid-column: span 4; }
+
+:where(body.page-dashboard) .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--bg-surface-2);
+    border-bottom: 1px solid var(--border);
+}
+
+:where(body.page-dashboard) .panel-header .icon {
+    width: 32px;
+    height: 32px;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 900;
+}
+
+:where(body.page-dashboard) .panel-header h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text-heading);
+}
+
+:where(body.page-dashboard) .panel-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+:where(body.page-dashboard) .availability-chip {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 15px;
+    margin: 4px;
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e3a8a;
+}
+
+:where(body.page-dashboard) .availability-chip small {
+    color: #0284c7;
+    font-weight: 700;
+}
+
+:where(body.page-dashboard) .availability-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+:where(body.page-dashboard) .capacity-bar {
+    flex: 1;
+    height: 10px;
+    border-radius: 20px;
+    background: #e2e8f0;
+    overflow: hidden;
+}
+
+:where(body.page-dashboard) .capacity-bar i {
+    display: block;
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #1d4ed8, #38bdf8);
+}
+
+:where(body.page-dashboard) .sales-person-card {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+    border: 1px solid var(--border-strong);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+:where(body.page-dashboard) .sales-person-card:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    transform: translateX(-3px);
+}
+
+:where(body.page-dashboard) .sales-person-card strong {
+    margin-right: auto;
+    font-size: 22px;
+    color: var(--primary);
+    font-weight: 900;
+}
+
+@media (max-width: 1024px) {
+    :where(body.page-dashboard) .dash-top-row { flex-direction: column; }
+    :where(body.page-dashboard) .kpi-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    :where(body.page-dashboard) .dash-panels { display: flex; flex-direction: column; }
+}

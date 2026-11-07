@@ -1,0 +1,134 @@
+<!-- =========================================================================
+     📌 ملف القالب (bank_accounts.html): شاشة حسابات البنك ومطابقة الفيزا وجميع أنواع الدخل (خاص بالأونر CEO فقط)
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}bank_accounts{% endblock %}
+{% block title %}حسابات البنك والدخل الشامل - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+    <div class="bento-box bento-header">
+        <div class="title-area">
+            <div class="icon">🏦</div>
+            <div>
+                <h1>حسابات البنك ومطابقة الفيزا وإجمالي جميع أنواع الدخل <span class="badge amber">👑 خاص بالأونر CEO فقط</span></h1>
+                <p>متابعة شاملة لجميع أنواع الدخل (دولار • يورو • جنيه كاش • فيزا البنك • عرابين) مع الفلترة بالفنادق ومطابقة ماكينات الـ POS</p>
+            </div>
+        </div>
+        <div class="toolbar-right" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-mini green" onclick="settleAllBankVisa()">✅ تأكيد نزول كل الفيزا المعلقة بالبنك</button>
+            <button class="btn-mini primary" onclick="exportBankOverviewExcel()">📥 تصدير كشف حسابات البنك Excel</button>
+            <button class="btn-mini outline" onclick="printBankOverviewPDF()">🖨️ طباعة التقرير PDF</button>
+            <button class="btn-mini amber" onclick="triggerSystemBackupSaveAs()">💾 حفظ نسخة احتياطية كاملة</button>
+        </div>
+    </div>
+
+    <!-- شريط الفلترة بالفنادق والتاريخ ونوع الدخل -->
+    <div class="bento-box">
+        <div class="toolbar-row" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <span class="tool-label">🏨 الفندق:</span>
+                <select class="select-mini" id="bkHotel" onchange="loadBankAccountsOverview()" style="min-width:170px;">
+                    <option value="">🌐 جميع الفنادق (إجمالي الكل)</option>
+                </select>
+
+                <span class="tool-label">📅 من:</span>
+                <input type="date" class="input-mini" id="bkFrom" onchange="loadBankAccountsOverview()">
+                <span class="tool-label">إلى:</span>
+                <input type="date" class="input-mini" id="bkTo" onchange="loadBankAccountsOverview()">
+
+                <span class="tool-label">💰 نوع الدخل:</span>
+                <select class="select-mini" id="bkIncomeType" onchange="renderBankAccountsData()">
+                    <option value="ALL">💎 جميع أنواع الدخل</option>
+                    <option value="VISA">💳 فيزا البنك فقط (POS Visa)</option>
+                    <option value="USD">💵 الكاش الدولار فقط (USD)</option>
+                    <option value="EUR">💶 الكاش اليورو فقط (EUR)</option>
+                    <option value="LE_CASH">💷 الكاش المصري فقط (LE Cash)</option>
+                    <option value="DEPOSIT">🔖 العرابين فقط (Deposits)</option>
+                </select>
+
+                <span class="tool-label">🏦 حالة الفيزا:</span>
+                <select class="select-mini" id="bkVisaStatus" onchange="renderBankAccountsData()">
+                    <option value="ALL">كل الحالات (محصل + معلق)</option>
+                    <option value="SETTLED">✅ نزل في حساب البنك</option>
+                    <option value="PENDING">⏳ معلق بالبنك</option>
+                </select>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;">
+                <span class="tool-label">✂️ عمولة البنك %:</span>
+                <input type="number" step="0.1" id="bkFeePct" class="input-mini" value="1.5" style="width:70px;" oninput="renderBankAccountsData()">
+                <button class="btn-mini primary" onclick="loadBankAccountsOverview()">🔄 تحديث</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- بطاقات إجمالي جميع أنواع الدخل -->
+    <div class="kpi-strip" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px;">
+        <div class="bento-box" style="margin:0;"><small>💵 إجمالي الكاش الدولار (USD)</small><strong id="kpiBkUsd" style="font-size:20px;color:#059669;display:block;">$0.00</strong></div>
+        <div class="bento-box" style="margin:0;"><small>💶 إجمالي الكاش اليورو (EUR)</small><strong id="kpiBkEur" style="font-size:20px;color:#0284c7;display:block;">€0.00</strong></div>
+        <div class="bento-box" style="margin:0;"><small>💷 إجمالي الكاش المصري (LE Cash)</small><strong id="kpiBkLeCash" style="font-size:20px;color:#059669;display:block;">0 LE</strong></div>
+        <div class="bento-box" style="margin:0;"><small>💳 إجمالي مقبوضات فيزا البنك (POS)</small><strong id="kpiBkVisaGross" style="font-size:20px;color:#7c3aed;display:block;">0 LE</strong><small id="kpiBkVisaFee" style="color:var(--text-muted);">عمولة الماكينة: 0 LE</small></div>
+        <div class="bento-box" style="margin:0;"><small>🏦 صافي الفيزا في حساب البنك</small><strong id="kpiBkVisaNet" style="font-size:20px;color:#2563eb;display:block;">0 LE</strong><small id="kpiBkVisaSplit" style="color:var(--text-muted);">✅ نزل: 0 | ⏳ معلق: 0</small></div>
+        <div class="bento-box" style="margin:0;border:2px solid #10b981;"><small>💎 الإجمالي العام الموحد لكل الدخل</small><strong id="kpiBkGrandUsd" style="font-size:20px;color:#10b981;display:block;">$0.00</strong><small id="kpiBkGrandEgp" style="color:var(--text-muted);">المعادل بالمصري: 0 LE</small></div>
+    </div>
+
+    <!-- جدول ملخص الفنادق -->
+    <div class="bento-box">
+        <h2 style="margin:0 0 10px 0;font-size:15px;font-weight:900;">🏨 ملخص جميع أنواع الدخل وحسابات البنك لكل فندق</h2>
+        <div class="compact-table-wrap">
+            <table class="wide-table">
+                <thead>
+                    <tr>
+                        <th>الفندق</th>
+                        <th>عدد الأوردرات</th>
+                        <th>دولار ($)</th>
+                        <th>يورو (€)</th>
+                        <th>كاش مصري (LE)</th>
+                        <th>إجمالي الفيزا (LE)</th>
+                        <th>✅ نزل بالبنك (LE)</th>
+                        <th>⏳ معلق بالبنك (LE)</th>
+                        <th>صافي الفيزا بعد العمولة (LE)</th>
+                        <th>💎 إجمالي الدخل ($)</th>
+                        <th>💎 المعادل بالمصري (LE)</th>
+                    </tr>
+                </thead>
+                <tbody id="bkHotelsSummaryBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- جدول مطابقة عمليات الفيزا وتفاصيل جميع أنواع الدخل -->
+    <div class="bento-box">
+        <div class="toolbar-row" style="margin-bottom:10px;">
+            <h2 style="margin:0;font-size:15px;font-weight:900;">💳 دفتر مطابقة عمليات الفيزا وتفاصيل الدخل اليومي</h2>
+            <input class="input-mini" id="bkSearch" placeholder="🔍 ابحث بالغرفة أو الموظف أو الفندق..." oninput="renderBankAccountsData()" style="min-width:220px;">
+        </div>
+        <div class="compact-table-wrap">
+            <table class="wide-table">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الفندق</th>
+                        <th>الغرفة</th>
+                        <th>السيلز / المصور</th>
+                        <th>دولار ($)</th>
+                        <th>يورو (€)</th>
+                        <th>كاش مصري (LE)</th>
+                        <th>فيزا البنك (LE)</th>
+                        <th>عمولة البنك (LE)</th>
+                        <th>صافي الفيزا (LE)</th>
+                        <th>إجمالي الأوردر ($)</th>
+                        <th>حالة حساب البنك</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="bkLedgerBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/bank_accounts.js') }}"></script>
+{% endblock %}

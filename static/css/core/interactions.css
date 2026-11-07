@@ -1,0 +1,45 @@
+/* ============================================================================
+   📌 ملف التنسيق (interactions.css): تنسيقات الحركات التفاعلية، الإشعارات، ونافذة المساعد الذكي
+   ============================================================================ */
+
+/* PHOTO TEAM — core/interactions.css
+   Interaction polish (hover / focus)
+   Loaded on every page (templates/base.html). Page-specific rules live in css/pages/<page>.css */
+
+:root {
+    --v45-radius: 16px;
+    --v45-shadow: 0 12px 35px rgba(0, 0, 0, .12);
+}
+
+button,
+.btn {
+    border-radius: 12px;
+    transition: .25s ease;
+}
+
+button:hover,
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+.card,
+.panel {
+    border-radius: var(--v45-radius);
+    box-shadow: var(--v45-shadow);
+}
+
+input,
+select,
+textarea {
+    font-size: 15px;
+    padding: 10px 14px;
+    border-radius: 12px;
+}
+
+.table tr {
+    transition: .2s;
+}
+
+.table tr:hover {
+    transform: scale(1.002);
+}

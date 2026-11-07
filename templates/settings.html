@@ -1,0 +1,76 @@
+<!-- =========================================================================
+     📌 ملف القالب (settings.html): شاشة إعدادات النظام، أسعار الصرف، ونسب العمولات والتارجت
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}settings{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/settings.css') }}">{% endblock %}
+{% block title %}الإعدادات العامة - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+
+    <!-- 1. الهيدر Bento -->
+    <div class="bento-header-card">
+        <div class="header-info">
+            <div class="header-icon">⚙️</div>
+            <div class="header-text">
+                <h1>
+                    لوحة التحكم والإعدادات
+                    <span class="header-badge">نشط ومحدث</span>
+                </h1>
+                <p>إدارة معايير التشغيل: أسعار الصرف، تارجت المبيعات، ونسب البونص التلقائية</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-action reload" onclick="loadSettings()">🔄 تحديث</button>
+            <button class="btn-action save" onclick="triggerFullBackupSaveAs()" style="background:#059669;">💾 حفظ نسخة احتياطية كاملة (Save As)</button>
+            <button class="btn-action reload" onclick="document.getElementById('restoreBackupFileInput').click()">📂 استرجاع نسخة احتياطية</button>
+            <input type="file" id="restoreBackupFileInput" accept=".json" style="display:none;" onchange="restoreFullBackupFromFile(this)">
+            <button class="btn-action save" onclick="saveSettings()">💾 حفظ التغييرات</button>
+        </div>
+    </div>
+
+    <!-- 2. كروت إيضاحية سريعة -->
+    <div class="overview-ribbon">
+        <div class="ribbon-card">
+            <div class="ribbon-icon">💱</div>
+            <div class="ribbon-info">
+                <small>سعر الصرف المعتمد</small>
+                <span>يستخدم في حساب المبيعات والعمولات</span>
+            </div>
+        </div>
+        <div class="ribbon-card">
+            <div class="ribbon-icon">🎯</div>
+            <div class="ribbon-info">
+                <small>تارجت البونص والتحفيز</small>
+                <span>الحد الأدنى لاستحقاق النسب الإضافية</span>
+            </div>
+        </div>
+        <div class="ribbon-card">
+            <div class="ribbon-icon">🔒</div>
+            <div class="ribbon-info">
+                <small>حفظ فوري لقاعدة البيانات</small>
+                <span>يطبق تلقائياً على كل الحسابات المفتوحة</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. شبكة المتغيرات والقيم -->
+    <div class="settings-panel">
+        <div class="settings-panel-head">
+            <h2>أسعار الصرف ونسب العمولات والتارجت</h2>
+            <span>عدّل القيمة ثم اضغط زر الحفظ بالأعلى</span>
+        </div>
+
+        <div class="settings-grid" id="settingsGrid">
+            <div class="empty-state">جاري قراءة إعدادات النظام من الخادم...</div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/settings.js') }}"></script>
+{% endblock %}

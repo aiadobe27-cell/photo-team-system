@@ -1,0 +1,359 @@
+/* ============================================================================
+   📌 ملف التنسيق (assets.css): تنسيقات وألوان assets.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/assets.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-assets)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+:where(body.page-assets) .field .hint {
+    display: block;
+    color: var(--text-muted, #607791);
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+:where(body.page-assets) .brand {
+    margin-bottom: 40px;
+}
+
+:where(body.page-assets) .brand strong {
+    display: block;
+    font-size: 20px;
+}
+
+:where(body.page-assets) .brand {
+    padding-bottom: 25px;
+}
+
+:where(body.page-assets) .brand {
+    color: var(--text);
+    text-decoration: none;
+}
+
+:where(body.page-assets) .brand small {
+    display: block;
+    color: var(--muted);
+}
+
+:where(body.page-assets) .brand {
+    padding: 20px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    border-bottom: 1px solid var(--border) !important;
+    background: linear-gradient(90deg, var(--primary-glow) 0%, transparent 100%) !important;
+}
+
+:where(body.page-assets) .brand div strong {
+    display: block;
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: 1px;
+}
+
+:where(body.page-assets) .brand div small {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+}
+
+body.theme-light:where(.page-assets) .brand {
+    background: transparent !important;
+}
+
+body.theme-light:where(.page-assets) .brand small {
+    color: var(--muted) !important;
+}
+
+:where(body.page-assets) {
+    --neon-cyan: #0284c7;
+    --neon-green: #059669;
+    --neon-amber: #ffea00;
+    --eye-care-1: linear-gradient(0deg, rgba(15, 23, 42, 0.035), rgba(15, 23, 42, 0.035));
+    --eye-care-2: linear-gradient(0deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.06));
+}
+
+:where(body.page-assets) .logic-tabs {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+:where(body.page-assets) .logic-tabs .logic-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+:where(body.page-assets) .logic-tabs .logic-tab:hover {
+    background: rgba(15, 23, 42, 0.05);
+    color: var(--text-main);
+}
+
+:where(body.page-assets) .logic-tabs .logic-tab.active {
+    background: linear-gradient(135deg, #0284c7, #06b6d4);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+:where(body.page-assets) .panel {
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+:where(body.page-assets) .asset-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+    :where(body.page-assets) .asset-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 500px) {
+    :where(body.page-assets) .asset-kpis {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+:where(body.page-assets) .kpi-card {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+:where(body.page-assets) .kpi-card:hover {
+    transform: translateY(-3px);
+    border-color: #0284c7;
+}
+
+:where(body.page-assets) .kpi-card small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+:where(body.page-assets) .kpi-card strong {
+    display: block;
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-assets) .action-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: var(--bg-body);
+    background-image: var(--eye-care-2);
+    padding: 15px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+:where(body.page-assets) .action-grid .btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    transition: 0.2s;
+}
+
+:where(body.page-assets) .action-grid .btn.green {
+    background: #10b981;
+    color: #fff;
+    border: none;
+}
+
+:where(body.page-assets) .action-grid .btn.amber {
+    background: #f59e0b;
+    color: #fff;
+    border: none;
+}
+
+:where(body.page-assets) .action-grid .btn.red {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+}
+
+:where(body.page-assets) .action-grid .input.search {
+    flex: 1;
+    min-width: 220px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 15px;
+    color: var(--text-main);
+}
+
+:where(body.page-assets) .action-grid .input.search:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+}
+
+:where(body.page-assets) .wide-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    text-align: right;
+}
+
+:where(body.page-assets) .wide-table thead th {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 800;
+    padding: 0 12px 8px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    z-index: 10;
+}
+
+:where(body.page-assets) .wide-table tbody tr {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-1);
+    transition: 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+:where(body.page-assets) .wide-table tbody tr:hover {
+    transform: scale(1.01);
+    border-color: var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+:where(body.page-assets) .wide-table tbody td {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+:where(body.page-assets) .wide-table tbody td:first-child {
+    border-right: 1px solid var(--border);
+    border-radius: 0 10px 10px 0;
+    font-weight: 900;
+    color: #0284c7;
+}
+
+:where(body.page-assets) .wide-table tbody td:last-child {
+    border-left: 1px solid var(--border);
+    border-radius: 10px 0 0 10px;
+}
+
+:where(body.page-assets) .mini-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+}
+
+:where(body.page-assets) .mini-btn.purple {
+    background: rgba(147, 51, 234, 0.1);
+    color: #9333ea;
+}
+
+:where(body.page-assets) .mini-btn.purple:hover {
+    background: #9333ea;
+    color: #fff;
+}
+
+:where(body.page-assets) .mini-btn.blue {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+
+:where(body.page-assets) .mini-btn.blue:hover {
+    background: #2563eb;
+    color: #fff;
+}
+
+:where(body.page-assets) td[data-color="أحمر"],
+:where(body.page-assets) td[data-color="احمر"],
+:where(body.page-assets) td[data-color="نبيتي"] {
+    color: #ef4444 !important;
+    font-weight: 900;
+}
+
+:where(body.page-assets) td[data-color="أزرق"],
+:where(body.page-assets) td[data-color="ازرق"],
+:where(body.page-assets) td[data-color="كحلي"] {
+    color: #3b82f6 !important;
+    font-weight: 900;
+}
+
+:where(body.page-assets) td[data-color="أخضر"],
+:where(body.page-assets) td[data-color="اخضر"],
+:where(body.page-assets) td[data-color="زيتي"] {
+    color: #10b981 !important;
+    font-weight: 900;
+}
+
+:where(body.page-assets) td[data-color="أسود"],
+:where(body.page-assets) td[data-color="اسود"] {
+    color: #111827 !important;
+    font-weight: 900;
+}
+
+:where(body.page-assets) td[data-color="أبيض"],
+:where(body.page-assets) td[data-color="ابيض"] {
+    color: #94a3b8 !important;
+    font-weight: 900;
+}
+
+:where(body.page-assets) td[data-color="أصفر"],
+:where(body.page-assets) td[data-color="اصفر"],
+:where(body.page-assets) td[data-color="ذهبي"] {
+    color: #eab308 !important;
+    font-weight: 900;
+}
+
+:where(body.page-assets) td[data-color="وردي"],
+:where(body.page-assets) td[data-color="بمبي"] {
+    color: #ec4899 !important;
+    font-weight: 900;
+}

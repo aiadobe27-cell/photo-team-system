@@ -1,0 +1,164 @@
+<!-- =========================================================================
+     📌 ملف القالب (reports.html): شاشة التقارير المالية الشاملة وإحصائيات الفنادق
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}reports{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/reports.css') }}">{% endblock %}
+{% block title %}التقارير - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+
+    <!-- 1. الهيدر وأدوات الفلترة الشاملة -->
+    <div class="bento-box bento-header">
+        <div class="title-area">
+            <div class="icon">📊</div>
+            <div>
+                <h1>لوحة التقارير الشاملة</h1>
+                <p>ملخص المبيعات، أداء الموظفين، الفنادق، والمصروفات</p>
+            </div>
+        </div>
+        
+        <div class="filters-area">
+            <!-- الفلترة الأساسية (التاريخ) -->
+            <div class="toolbar-row" style="background: transparent; border: none; padding: 0;">
+                <span class="tool-label">الفترة من:</span>
+                <input type="date" id="reportStart" class="input-mini">
+                <span class="tool-label">إلى:</span>
+                <input type="date" id="reportEnd" class="input-mini">
+                <button class="btn-mini primary" onclick="loadReport()">🔍 تطبيق واستخراج</button>
+                <button class="btn-mini green" onclick="exportReportCSV()">📥 تصدير Excel (CSV)</button>
+                <button class="btn-mini outline" onclick="printComprehensiveReportPDF()">🖨️ معاينة وطباعة PDF</button>
+            </div>
+            
+            <!-- الفلترة المتقدمة المتعددة -->
+            <div class="toolbar-row">
+                <span class="tool-label">تخصيص العرض:</span>
+                <select id="reportHotel" class="select-mini" style="width: 140px;" onchange="loadReport()">
+                    <option value="">🏨 جميع الفنادق</option>
+                    <!-- سيتم ملؤها برمجياً بالفنادق -->
+                    <option value="1">Albatros Aqua</option>
+                    <option value="2">Sea World</option>
+                </select>
+                
+                <select id="reportEmployee" class="select-mini" style="width: 140px;" onchange="loadReport()">
+                    <option value="">📸 جميع الموظفين</option>
+                    <!-- سيتم ملؤها برمجياً بأعضاء الفريق -->
+                    <option value="Ahmed">أحمد</option>
+                    <option value="Mahmoud">محمود</option>
+                </select>
+                
+                <select id="reportType" class="select-mini" style="width: 130px;" onchange="loadReport()">
+                    <option value="">📊 كل الأقسام</option>
+                    <option value="photo">التصوير فقط</option>
+                    <option value="laundry">المغسلة فقط</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. المؤشرات المالية (6 كروت) -->
+    <div class="bento-box" style="padding: 10px;">
+        <div class="kpi-grid">
+            <article class="kpi-card" style="border-color: rgba(16, 185, 129, 0.3);">
+                <small>الدخل المحصل</small>
+                <strong id="rpIncome" style="color: #10b981;">0</strong>
+            </article>
+            <article class="kpi-card" style="border-color: rgba(239, 68, 68, 0.3);">
+                <small>إجمالي التكاليف</small>
+                <strong id="rpCosts" style="color: #ef4444;">0</strong>
+            </article>
+            <article class="kpi-card" style="background: rgba(2, 132, 199, 0.05); border-color: #0284c7;">
+                <small>صافي الربح التقديري</small>
+                <strong id="rpNetProfit" style="color: #0284c7;">0</strong>
+            </article>
+            <article class="kpi-card">
+                <small>قيمة الاتفاقات الكلية</small>
+                <strong id="rpAgreed" style="color: #8b5cf6;">0</strong>
+            </article>
+            <article class="kpi-card">
+                <small>المتبقي للتحصيل</small>
+                <strong id="rpRemaining" style="color: #f59e0b;">0</strong>
+            </article>
+            <article class="kpi-card">
+                <small>إجمالي الحجوزات</small>
+                <strong id="rpBookings" style="color: #64748b;">0</strong>
+            </article>
+        </div>
+    </div>
+
+    <!-- 3. الرسوم البيانية -->
+    <div class="dashboard-grid">
+        <div class="bento-box">
+            <div class="section-title">
+                <h3>📈 اتجاه الدخل اليومي</h3>
+                <span>إيرادات كل يوم للمحدد أعلاه</span>
+            </div>
+            <div id="trendChart" class="bar-chart"></div>
+        </div>
+
+        <div class="bento-box">
+            <div class="section-title">
+                <h3>🧩 مصادر الإيرادات</h3>
+                <span>توزيع تقريبي للمحدد أعلاه</span>
+            </div>
+            <ul class="mini-list" id="revenueSourcesList" style="margin-top: 20px;">
+                <li><span class="name">الدفع كاش</span><span class="value green">65%</span></li>
+                <li><span class="name">الدفع بالفيزا</span><span class="value green">20%</span></li>
+                <li><span class="name">تحويلات غرف</span><span class="value green">15%</span></li>
+                <li style="margin-top: 15px; border: none; text-align: center; color: var(--text-muted); font-size: 10px;">
+                    * سيتم ربط هذه البيانات لاحقاً بناءً على الفلاتر
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 4. الجداول التحليلية السريعة -->
+    <div class="tables-grid">
+        <div class="bento-box">
+            <div class="section-title">
+                <h3>📸 أعلى الموظفين مبيعات</h3>
+                <span>أعلى مبيعات بالفترة</span>
+            </div>
+            <ul class="mini-list" id="topTeamList">
+                <li><span class="name">1. أحمد (مثال)</span><span class="value">1,500 $</span></li>
+                <li><span class="name">2. محمود (مثال)</span><span class="value">1,200 $</span></li>
+                <li><span class="name">3. سارة (مثال)</span><span class="value">900 $</span></li>
+                <li><span class="name">4. خالد (مثال)</span><span class="value">750 $</span></li>
+                <li style="justify-content: center; color: var(--text-muted); font-size: 10px; border:none; margin-top:5px;">جاري تجهيز الربط البرمجي...</li>
+            </ul>
+        </div>
+
+        <div class="bento-box">
+            <div class="section-title">
+                <h3>🏨 إحصائيات الفنادق</h3>
+                <span>أعلى إيراد بالفترة</span>
+            </div>
+            <ul class="mini-list" id="topHotelsList">
+                <li><span class="name">Albatros Aqua (مثال)</span><span class="value">3,000 $</span></li>
+                <li><span class="name">Sea World (مثال)</span><span class="value">2,500 $</span></li>
+                <li><span class="name">Royal Lagoons (مثال)</span><span class="value">1,100 $</span></li>
+                <li style="justify-content: center; color: var(--text-muted); font-size: 10px; border:none; margin-top:5px;">جاري تجهيز الربط البرمجي...</li>
+            </ul>
+        </div>
+
+        <div class="bento-box">
+            <div class="section-title">
+                <h3>⚙️ ملخص التكاليف</h3>
+                <span>منصرفات الفترة</span>
+            </div>
+            <ul class="mini-list" id="expensesSummaryList">
+                <li><span class="name">مرتبات وعمولات</span><span class="value red">- 45,000 LE</span></li>
+                <li><span class="name">تكلفة المغسلة</span><span class="value red">- 2,300 LE</span></li>
+                <li><span class="name">صيانة معدات</span><span class="value red">- 1,500 LE</span></li>
+                <li style="justify-content: center; color: var(--text-muted); font-size: 10px; border:none; margin-top:5px;">جاري تجهيز الربط البرمجي...</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/reports.js') }}"></script>
+{% endblock %}

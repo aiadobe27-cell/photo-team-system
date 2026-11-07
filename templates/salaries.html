@@ -1,0 +1,154 @@
+<!-- =========================================================================
+     📌 ملف القالب (salaries.html): شاشة حساب وصرف المرتبات الشهرية
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}salaries{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/salaries.css') }}">{% endblock %}
+{% block title %}حساب وصرف المرتبات - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+
+    <!-- الهيدر والمؤشرات (مدمجة) -->
+    <div class="bento-box bento-header">
+        <div class="title-area">
+            <div class="icon">💳</div>
+            <div>
+                <h1>حساب وصرف المرتبات</h1>
+                <p>المرتب الأساسي + العمولة + البونص - الخصومات، والتقفيلات.</p>
+            </div>
+        </div>
+        <div class="kpi-strip">
+            <div class="kpi-mini"><small>الفترة المحددة</small><strong id="salPeriodText" style="font-size:14px; color:#8b5cf6;">-</strong></div>
+            <div class="kpi-mini"><small>إجمالي التشغيل</small><strong id="salGrandSales" style="color:#0284c7;">0</strong></div>
+            <div class="kpi-mini" style="border-color: rgba(16, 185, 129, 0.4);"><small>الصافي المستحق</small><strong id="salGrandNet" style="color:#10b981;">0</strong></div>
+            <div class="kpi-mini"><small>سعر الصرف (اليوم)</small><strong id="salRate" style="color:#f59e0b;">0</strong></div>
+        </div>
+    </div>
+
+    <!-- التبويبات -->
+    <div class="logic-tabs" data-tab-group>
+        <button class="logic-tab active" data-tab-target="salCurrent">💳 المرتبات الحالية المستحقة</button>
+        <button class="logic-tab" data-tab-target="salArchive">📂 أرشيف التقفيلات والصرف</button>
+    </div>
+
+    <!-- تابة المرتبات الحالية -->
+    <section id="salCurrent" class="tab-pane active">
+        <!-- لوحة التحكم بالفلاتر والأدوات -->
+        <div class="bento-box">
+            <!-- سطر الفلاتر الأساسية -->
+            <div class="toolbar-row">
+                <span class="tool-label">الفلترة:</span>
+                <input class="input-mini" type="month" id="salMonth" style="width: 120px;">
+                
+                <select class="select-mini" id="salPeriod">
+                    <option value="full">الشهر بالكامل</option>
+                    <option value="p1">دفعة 1 (1 إلى 10)</option>
+                    <option value="p2">دفعة 2 (11 إلى 20)</option>
+                    <option value="p3">دفعة 3 (21 إلى 31)</option>
+                    <option value="custom">فترة مخصصة</option>
+                </select>
+                
+                <span class="custom-sal tool-label" style="display:none;">من:</span>
+                <input class="input-mini custom-sal" type="number" min="1" max="31" id="salFrom" value="1" style="width: 50px; display:none;">
+                <span class="custom-sal tool-label" style="display:none;">إلى:</span>
+                <input class="input-mini custom-sal" type="number" min="1" max="31" id="salTo" value="31" style="width: 50px; display:none;">
+                
+                <select class="select-mini" id="salHotel" style="max-width: 120px;">
+                    <option value="">جميع الفنادق</option>
+                </select>
+                
+                <select class="select-mini" id="salEmployee" style="max-width: 130px;">
+                    <option value="">جميع الموظفين</option>
+                </select>
+                
+                <button class="btn-mini primary" onclick="loadSalaries()">🔍 عرض</button>
+            </div>
+
+            <!-- سطر أدوات الإدارة السريعة -->
+            <div class="toolbar-row">
+                <span class="tool-label">الإعدادات والتقارير:</span>
+                <button class="btn-mini outline" onclick="openBaseSalarySettings()">⚙️ المرتبات الثابتة</button>
+                <button class="btn-mini outline" onclick="openHotelBonusSettings()">⚙️ بونص الفنادق</button>
+                <button class="btn-mini purple" onclick="openSalaryAnalytics()">📊 تحليل وأداء</button>
+                <button class="btn-mini outline" onclick="printDeductionsReport()">📑 بيان السلف</button>
+                <button class="btn-mini outline" onclick="printPayroll()">📑 مسير المرتبات PDF</button><button class="btn-mini green" onclick="downloadBankSheet()">💾 حفظ شيت البنك الأهلي (اختر مكان الحفظ — بطاقات وحسابات ON US-3 (1) 2006.xlsx)</button>
+                <button class="btn-mini primary" onclick="openNbeBankSheetModal()">👁️ معاينة شيت البنك الأهلي</button>
+                <button class="btn-mini outline" onclick="exportSalariesCSV()">📥 مسير المرتبات Excel</button>
+                
+                <div style="flex-grow: 1;"></div>
+                <button class="btn-mini outline" onclick="openSalaryAudit()">📜 المراقبة</button>
+            </div>
+
+            <!-- سطر إجراءات الدفع -->
+            <div class="toolbar-row" style="background: transparent; border: none; padding: 0; margin-top: 10px;">
+                <button class="btn-mini green" onclick="paySelected()">💳 صرف المحدد</button>
+                <button class="btn-mini primary" onclick="payAll()">💸 تقفيل وصرف الكل</button>
+                <button class="btn-mini outline" onclick="printSelectedPayslip()">🖨️ طباعة إيصال المفردات</button>
+                <button class="btn-mini purple" onclick="openBonusForm()">🏆 إضافة مكافأة مخصصة</button>
+                
+                <div style="flex-grow: 1;"></div>
+                <button class="btn-mini amber" onclick="undoSelectedPayment()">↩️ التراجع عن الصرف المحدد</button>
+            </div>
+        </div>
+
+        <!-- الجدول -->
+        <div class="bento-box" style="padding: 6px;">
+            <div class="compact-table-wrap">
+                <table class="wide-table">
+                    <thead>
+                        <tr>
+                            <th>✓</th>
+                            <th>الموظف</th>
+                            <th>الوظيفة</th>
+                            <th>الفندق</th>
+                            <th>أساسي الفترة</th>
+                            <th>حجم التشغيل $</th>
+                            <th>العمولة $</th>
+                            <th>المكافآت LE</th>
+                            <th>بونص الفندق LE</th>
+                            <th>الخصومات LE</th>
+                            <th>الصافي LE</th>
+                            <th>الحالة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salaryBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- تابة أرشيف المرتبات -->
+    <section id="salArchive" class="tab-pane">
+        <div class="bento-box">
+            <div class="toolbar-row" style="margin-bottom: 15px;">
+                <button class="btn-mini primary" onclick="loadSalaryArchive()">🔄 تحديث بيانات الأرشيف</button>
+                <button class="btn-mini outline" onclick="printArchiveReport()">🖨️ طباعة الأرشيف المجمع</button>
+            </div>
+            
+            <div class="compact-table-wrap">
+                <table class="wide-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الموظف</th>
+                            <th>الشهر</th>
+                            <th>الفترة</th>
+                            <th>الصافي المصروف LE</th>
+                            <th>تاريخ الصرف الفعلي</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salaryArchiveBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/salaries.js') }}"></script>
+{% endblock %}

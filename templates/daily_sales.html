@@ -1,0 +1,367 @@
+<!-- =========================================================================
+     📌 ملف القالب (daily_sales.html): شاشة الدخل اليومي، تسجيل مبيعات الأوردرات، وملاحظات الدخل (وارد + / منصرف -)
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}daily_sales{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/daily_sales.css') }}">{% endblock %}
+{% block title %}الدخل اليومي والمبيعات - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<!-- الهيدر السريع -->
+<section class="page-heading" style="margin-bottom: 15px; padding: 15px 25px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 45px; height: 45px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+            💰
+        </div>
+        <div>
+            <h1 style="margin:0; font-size:21px; font-weight: 900; color: var(--text-heading);">الدخل اليومي والمبيعات</h1>
+            <p style="margin:3px 0 0; font-size:12px; color:var(--text-muted); font-weight:600;">تسجيل الدخل الجديد أو تعديل الدخل المسجل للأوردرات مع تقسيم عمولة المصورين تلقائياً</p>
+        </div>
+    </div>
+    <div class="heading-actions" style="display:flex; gap:10px; align-items:center;">
+        <select class="input compact" id="dsHotel" style="border-radius: 10px; width: 170px;"><option value="">الكل</option></select>
+        {% if not photographer_only and not sales_only %}
+        <button class="btn amber" style="border-radius: 10px; font-weight:900;" onclick="openDailyIncomeNoteModal()">📝➕ إضافة حركة (وارد / منصرف)</button>
+        {% endif %}
+        <button class="btn primary" style="border-radius: 10px;" onclick="refreshDailyAll()">🔄 تحديث</button>
+    </div>
+</section>
+
+<!-- شريط قفل واعتماد حسابات اليوم + طلبات التعديل للمحاسب -->
+<section id="dayLockControlBar" class="panel" style="margin-bottom:12px;padding:10px 16px !important;border:1.5px solid var(--border-strong);border-radius:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span id="dayLockStatusBadge" class="badge green" style="font-size:12px;padding:4px 10px;">🟢 حسابات اليوم مفتوحة للتعديل</span>
+        <small id="dayLockSubText" style="color:var(--text-muted);font-weight:700;">يمكن للمحاسب قفل حسابات اليوم بعد المراجعة لمنع أي تعديل إلا بإذن</small>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" id="dayLockActionBtns">
+        {% if full_access or accountant_only %}
+        <button type="button" id="btnToggleDayLock" class="btn red" onclick="toggleCurrentDayLock()">🔒 قفل واعتماد حسابات اليوم</button>
+        <button type="button" id="btnViewLockRequests" class="btn purple" onclick="openDayLockRequestsModal()">📬 طلبات تعديل المدير (<span id="dayLockPendingCount">0</span>)</button>
+        {% else %}
+        <button type="button" id="btnRequestDayUnlock" class="btn amber" onclick="openRequestDayUnlockModal()">📩 طلب إذن تعديل من المحاسب</button>
+        {% endif %}
+    </div>
+</section>
+
+<!-- التبويبات -->
+<div class="logic-tabs" data-tab-group>
+    {% if not (photographer_only or sales_only) %}
+    <button class="logic-tab active" data-tab-target="dsEntry">📝 تسجيل وتعديل الدخل</button>
+    {% endif %}
+    <button class="logic-tab {{ 'active' if (photographer_only or sales_only) else '' }}" data-tab-target="dsSearch">🔍 {{ 'مبيعاتي وعمولتي فقط' if (photographer_only or sales_only) else 'بحث وعرض الدخل والعرابين' }}</button>
+    {% if not (photographer_only or sales_only) %}
+    <button class="logic-tab" data-tab-target="dsAnalytics">📊 لوحة تحليلات الأداء</button>
+    <button class="logic-tab" data-tab-target="dsCoin">🪙 خزنة الكوين</button>
+    {% endif %}
+</div>
+
+<!-- =========================
+     TAB 1: تسجيل وتعديل الدخل
+========================= -->
+<section id="dsEntry" class="tab-pane {{ '' if (photographer_only or sales_only) else 'active' }}" {% if photographer_only or sales_only %}hidden style="display:none !important;"{% endif %}>
+    <!-- الجانب الأيمن (الأوردرات) -->
+    <section class="panel">
+        <div class="panel-head">
+            <div>
+                <h2>📅 أوردرات اليوم</h2>
+                <small style="color:var(--text-muted); font-weight:700; font-size:11.5px;">اضغط على أي أوردر لتسجيل دخله أو لتعديل دخله المسجل</small>
+            </div>
+            <div class="quick-date-row">
+                <select id="quickEntryDate" onchange="applyQuickEntryDate()">
+                    <option value="today">اليوم</option>
+                    <option value="yesterday">الأمس</option>
+                    <option value="custom">مخصص...</option>
+                </select>
+                <input type="date" id="dsEntryDate">
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>رقم الغرفة / الأوردر</th><th>السيلز</th><th>المصور</th><th>حالة الدخل</th><th>الحالة</th></tr></thead>
+                <tbody id="eligibleBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- الجانب الأيسر (الفورم) -->
+    <section class="panel">
+        <div class="panel-head" style="flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div>
+                <h2 id="saleFormTitle">📝 تفاصيل الأوردر وتسجيل الدخل</h2>
+                <p id="selectedOrderInfo" style="margin:4px 0 0;">اختر أوردر من القائمة الجانبية للبدء أو لتعديل دخل مسجل</p>
+            </div>
+            <span id="saleModeBadge" class="badge blue" hidden>وضع التعديل ✏️</span>
+        </div>
+
+        <!-- شريط تنبيه وضع التعديل + سبب التعديل وسجل التعديلات -->
+        <div id="saleEditBanner" class="edit-income-banner" hidden style="flex-direction: column; align-items: stretch; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <strong id="saleEditBannerTitle">✏️ تعديل سجل دخل مسجل مسبقاً</strong>
+                    <p id="saleEditBannerText">يمكنك تعديل أي مبلغ أو تكلفة أو تغيير المصورين ثم الضغط على "حفظ تعديلات الدخل".</p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn" onclick="openIncomeAdjustments(num($('saleId')?.value))" style="min-height:34px; padding:6px 12px; font-size:12px;">📜 سجل تعديلات الأوردر</button>
+                    <button type="button" class="btn red" id="saleDeleteBtn" onclick="deleteCurrentSaleFromForm()" style="min-height:34px; padding:6px 12px; font-size:12px;">🗑️ حذف السجل</button>
+                </div>
+            </div>
+            <div>
+                <input class="input" id="saleAdjustReason" placeholder="✍️ سبب التعديل (اختياري — مثال: إضافة ألبوم، تعديل عملة الدفع، تصحيح تكلفة)..." style="background:#ffffff; border-color:#93c5fd;">
+            </div>
+        </div>
+
+        <form id="saleForm">
+            <input type="hidden" id="saleId">
+            <input type="hidden" id="saleBookingId">
+            <input type="hidden" id="saleRoomNumber">
+            <input type="hidden" id="saleHotelId">
+            <input type="hidden" id="saleIncomeDate">
+
+            <div class="form-grid three">
+                <div class="field"><label>سيلز التنفيذ</label><select class="input" id="saleSales"></select></div>
+                <div class="field">
+                    <label>المصورين المشاركين</label>
+                    <input class="input" id="salePhotog" list="photoNamesList" placeholder="مثال: Ahmed, Ali">
+                    <datalist id="photoNamesList"></datalist>
+                </div>
+                <div class="field"><label>إجمالي العربون المسدد ($)</label><input class="input sale-calc" id="saleDeposit" type="number" step=".01" value="0"></div>
+            </div>
+            <hr class="sep" style="border-color: var(--border); margin: 15px 0;">
+            <div class="form-grid two">
+                <div class="field"><label>دخل $ (دولار)</label><input class="input sale-calc" id="saleUsd" type="number" step=".01" value="0"></div>
+                <div class="field"><label>دخل Euro (يورو)</label><input class="input sale-calc" id="saleEur" type="number" step=".01" value="0"></div>
+            </div>
+            <div class="form-grid three" style="margin-top: 15px;">
+                <div class="field"><label>دخل L.E كاش</label><input class="input sale-calc" id="saleCash" type="number" step=".01" value="0"></div>
+                <div class="field"><label>دخل L.E مكتب</label><input class="input sale-calc" id="saleOffice" type="number" step=".01" value="0"></div>
+                <div class="field"><label>سعر الريت (Rate)</label><input class="input sale-calc" id="saleRate" type="number" step=".01" value="50"></div>
+            </div>
+            
+            <div class="detail-row" style="background: var(--bg-surface-2); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px solid var(--border-strong);">
+                <small style="color: var(--text-muted); font-size: 13px; font-weight:bold;">مقابل الجنيه بالدولار</small> 
+                <b style="color: var(--primary); font-size: 18px; margin-right: 15px;" id="saleConverted">0.00 $</b>
+            </div>
+            
+            <hr class="sep" style="border-color: var(--border); margin: 15px 0;">
+            <div class="form-grid three">
+                <div class="field"><label>تكلفة فستان (Dress)</label><input class="input sale-calc" id="costDress" type="number" step=".01" value="0"></div>
+                <div class="field"><label>تكلفة فلاشة (USB)</label><input class="input sale-calc" id="costUsb" type="number" step=".01" value="0"></div>
+                <div class="field"><label>تكلفة ألبوم (Album)</label><input class="input sale-calc" id="costAlbum" type="number" step=".01" value="0"></div>
+            </div>
+            
+            <div class="money-summary">
+                <div class="summary-box"><small>إجمالي الدخل</small><strong id="saleGross">0.00 $</strong></div>
+                <div class="summary-box"><small>إجمالي التكاليف</small><strong id="saleCosts">0.00 $</strong></div>
+                <div class="summary-box"><small>الصافي</small><strong id="saleNet">0.00 $</strong></div>
+            </div>
+            
+            <div class="photo-split-preview">
+                <div class="photo-split-title" style="display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                    <strong style="color: var(--text-heading); font-size: 14px;">📸 تقسيم حصة المصورين</strong>
+                    <span id="photoSplitCount" style="color: var(--text-muted); font-size: 12px;">لا يوجد مصور محدد</span>
+                </div>
+                <div id="photoSplitRows" class="photo-split-rows" style="font-size: 13px;"><div class="empty-state compact" style="padding: 10px;">اختر أوردر لعرض تقسيم صافي الدخل.</div></div>
+            </div>
+            
+            <div class="modal-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button id="saleSubmitBtn" class="btn green" type="submit">💾 حفظ سجل الدخل (Enter)</button>
+                <button type="button" class="btn purple" onclick="printCurrentSaleFormPosReceipt()">🖨️ طباعة إيصال مبيعات حراري (POS)</button>
+                <button type="button" class="btn" onclick="clearSaleForm()">تفريغ / إلغاء التحديد</button>
+            </div>
+        </form>
+    </section>
+</section>
+
+<!-- =========================
+     TAB 2: البحث والعرابين
+========================= -->
+<section id="dsSearch" class="tab-pane {{ 'active' if (photographer_only or sales_only) else '' }}">
+    <section class="panel">
+        <div class="action-grid">
+            {% if not photographer_only and not sales_only %}
+            <button class="btn primary" onclick="location.href='/api/backup/sql'">نسخ احتياطي</button>
+            <button class="btn purple" onclick="openIncomeAdjustments()">📜 سجل تعديلات الدخل</button>
+            <button class="btn" onclick="openAudit()">Audit</button>
+            {% endif %}
+            <button class="btn green" onclick="exportSalesCSV()">Excel</button>
+            <button class="btn red" onclick="printSalesReport()">طباعة التقرير اليومي PDF</button>
+            <button class="btn primary" onclick="printAllHotelsReportPDF()">طباعة كل الفنادق PDF</button>
+            <button class="btn primary" onclick="loadSalesSearch()">🔍 بحث وتحديث</button>
+            <select class="input compact" id="dsDataType" {% if photographer_only %}style="display:none"{% endif %}>
+                <option value="all" selected>عرض الكل (الدخل اليومي + العرابين معاً)</option>
+                <option value="sales">عرض الدخل اليومي فقط</option>
+                {% if not photographer_only %}
+                <option value="deposits">العرابين المعتمدة (Deposits)</option>
+                {% endif %}
+            </select>
+        </div>
+        <div class="toolbar multi">
+            <div class="field">
+                <label>فترة سريعة</label>
+                <select class="input" id="quickDateFilter" onchange="applyQuickDates()">
+                    <option value="custom">مخصص...</option>
+                    <option value="today">اليوم</option>
+                    <option value="yesterday">الأمس</option>
+                    <option value="this_month">الشهر الحالي</option>
+                    <option value="last_month">الشهر السابق</option>
+                </select>
+            </div>
+            <div class="field"><label>من</label><input class="input" type="date" id="dsStart"></div>
+            <div class="field"><label>إلى</label><input class="input" type="date" id="dsEnd"></div>
+            <div class="field"><label>السيلز</label><select class="input" id="dsSalesFilter"><option value="">الكل</option></select></div>
+            <div class="field"><label>المصور</label><select class="input" id="dsPhotoFilter"><option value="">الكل</option></select></div>
+        </div>
+    </section>
+    
+    <section class="kpi-grid seven">
+        <article class="kpi-card"><small>دخل $</small><strong id="kUsd" style="color: var(--neon-cyan);">0</strong></article>
+        <article class="kpi-card"><small>دخل €</small><strong id="kEur" style="color: #eab308;">0</strong></article>
+        <article class="kpi-card"><small>دخل كاش</small><strong id="kCash">0</strong></article>
+        <article class="kpi-card"><small>دخل مكتب</small><strong id="kOffice">0</strong></article>
+        <article class="kpi-card"><small>تسوية كوين</small><strong id="kCoin" style="color: #f59e0b;">0</strong></article>
+        <article class="kpi-card"><small>رصيد الخزنة</small><strong id="kCoinBal" style="color: #eab308;">0</strong></article>
+        <article class="kpi-card"><small>الصافي النهائي (بعد الملاحظات)</small><strong id="kNet" style="color: var(--neon-green);">0</strong></article>
+    </section>
+
+    {% if not photographer_only and not sales_only %}
+    <section class="panel compact-notes-bar" id="dailyIncomeNotesPanel" style="margin-bottom:10px;padding:7px 14px !important;border:1px solid var(--border-strong);border-radius:10px;">
+        <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:0;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <h2 style="margin:0;font-size:13px;font-weight:800;">📝 ملاحظات الصادر والوارد (اختياري)</h2>
+                <button type="button" class="mini-btn blue" style="padding:2px 8px;font-size:11px;" onclick="const w=this.closest('#dailyIncomeNotesPanel').querySelector('.table-wrap');w.hidden=!w.hidden;this.textContent=w.hidden?'📂 عرض السجل':'🔼 إخفاء السجل';">📂 عرض السجل</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                <span class="badge blue" style="font-size:11px;padding:2px 7px;">صافي الأوردرات: <b id="dinOrdersNet">$0.00</b></span>
+                <span class="badge green" style="font-size:11px;padding:2px 7px;">➕ وارد: <b id="dinTotalIn">+$0.00</b></span>
+                <span class="badge red" style="font-size:11px;padding:2px 7px;">➖ منصرف: <b id="dinTotalOut">-$0.00</b></span>
+                <span class="badge amber" style="font-size:11.5px;padding:2px 8px;">💰 الصافي النهائي: <b id="dinFinalNet">$0.00</b></span>
+                <button type="button" class="btn green" style="min-height:26px !important;height:26px !important;padding:2px 10px !important;font-size:11.5px !important;" onclick="openDailyIncomeNoteModal()">➕ حركة</button>
+            </div>
+        </div>
+        <div class="table-wrap" hidden style="max-height:170px;overflow-y:auto;margin-top:8px;">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>التاريخ</th>
+                        <th>الفندق</th>
+                        <th>النوع</th>
+                        <th>الشخص / الجهة</th>
+                        <th>البيان</th>
+                        <th>$</th>
+                        <th>€</th>
+                        <th>كاش LE</th>
+                        <th>مكتب LE</th>
+                        <th>الصافي المعادل ($)</th>
+                        <th>بواسطة</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="dailyIncomeNotesBody">
+                    <tr><td colspan="13" class="empty-state">لا توجد ملاحظات مسجلة في هذه الفترة</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+    
+    <section class="panel">
+        <div class="table-wrap maxh" style="border:none; padding:0; height: 600px; overflow-y: auto;">
+            <table class="modern-table">
+                <thead id="searchHead"></thead>
+                <tbody id="searchBody"></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<!-- =========================
+     TAB 3: التحليلات
+========================= -->
+<section id="dsAnalytics" class="tab-pane">
+    <section class="panel">
+        <div class="toolbar multi" style="margin-bottom: 0; display: flex; gap: 15px; grid-template-columns: none !important;">
+            <div class="field" style="flex:1;"><label>الشهر</label><input class="input" type="month" id="anMonth"></div>
+            <div class="field" style="flex:2;">
+                <label>الفترة</label>
+                <select class="input" id="anPeriod">
+                    <option value="full">الشهر المختار كاملاً</option>
+                    <option value="p1">العشرة الأولى (1 - 10)</option>
+                    <option value="p2">العشرة الثانية (11 - 20)</option>
+                    <option value="p3">العشرة الأخيرة (21 - نهاية الشهر)</option>
+                </select>
+            </div>
+            <div class="field" style="justify-content: flex-end;">
+                <button class="btn primary" style="padding: 12px 25px; border-radius: 10px; font-weight: 800;" onclick="loadAnalytics()">تحديث التحليل</button>
+            </div>
+        </div>
+    </section>
+    <div class="split-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <section class="panel">
+            <h2 style="color: var(--text-main); font-size: 18px; margin-bottom: 15px; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px;">🏆 ترتيب مبيعات المصورين</h2>
+            <div id="photoRanking" class="timeline-list"></div>
+        </section>
+        <section class="panel">
+            <h2 style="color: var(--text-main); font-size: 18px; margin-bottom: 15px; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px;">💼 ترتيب إنجاز السيلز</h2>
+            <div id="salesRanking" class="timeline-list"></div>
+        </section>
+    </div>
+    <section class="panel">
+        <h2 style="color: var(--text-main); font-size: 18px; margin-bottom: 15px; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px;">📈 اتجاه صافي الدخل</h2>
+        <div id="trendList" class="timeline-list"></div>
+    </section>
+</section>
+
+<!-- =========================
+     TAB 4: خزنة الكوين (شاشة منقسمة)
+========================= -->
+<section id="dsCoin" class="tab-pane" {% if photographer_only or sales_only %}hidden style="display:none !important;"{% endif %}>
+    <section class="kpi-grid three">
+        <article class="kpi-card"><small>رصيد خزنة الكوين (€)</small><strong id="coinBalance" style="color:#eab308;">0</strong></article>
+        <article class="kpi-card"><small>إجمالي الداخل</small><strong id="coinIn" style="color: var(--neon-green);">0</strong></article>
+        <article class="kpi-card"><small>إجمالي الخارج</small><strong id="coinOut" style="color:#ef4444;">0</strong></article>
+    </section>
+    
+    <div class="coin-split">
+        <!-- الجانب الأيمن (الإدخال) -->
+        <section class="panel" style="margin-bottom: 0;">
+            <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin: 0;">تسجيل حركة نقدية فرعية</h2>
+            </div>
+            <form id="coinForm">
+                <input type="hidden" id="coinId">
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="field"><label>الفندق</label><select class="input" id="coinHotel"></select></div>
+                    <div class="field"><label>نوع الحركة</label><select class="input" id="coinType"><option value="IN">IN - دخول كوين</option><option value="OUT">OUT - خروج / تسوية</option></select></div>
+                    <div class="field"><label>المبلغ (€)</label><input class="input" type="number" step=".01" id="coinAmount" required></div>
+                    <div class="field"><label>ملاحظات</label><input class="input" id="coinNotes"></div>
+                </div>
+                <div class="modal-actions" style="margin-top: 25px; display: flex; flex-direction: column; gap:12px;">
+                    <button class="btn green" style="width: 100%; margin: 0;">حفظ حركة الكوين</button>
+                    <button type="button" class="btn" style="width: 100%;" onclick="cancelCoinEdit()">إلغاء التعديل</button>
+                </div>
+            </form>
+        </section>
+        
+        <!-- الجانب الأيسر (الجدول) -->
+        <section class="panel" style="margin-bottom: 0;">
+            <div style="border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+                <h2 style="font-size: 18px; font-weight: 900; color: var(--text-main); margin: 0;">سجل الحركات السابقة</h2>
+            </div>
+            <div class="table-wrap maxh" style="border:none; padding:0; height: 500px; overflow-y: auto;">
+                <table class="modern-table">
+                    <thead>
+                        <tr><th>#</th><th>الفندق</th><th>المستخدم</th><th>نوع الحركة</th><th>المبلغ €</th><th>الملاحظات</th><th>التاريخ</th><th>الإجراءات</th></tr>
+                    </thead>
+                    <tbody id="coinBody"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/daily_sales.js') }}"></script>
+{% endblock %}

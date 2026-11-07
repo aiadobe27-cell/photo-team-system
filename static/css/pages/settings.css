@@ -1,0 +1,283 @@
+/* ============================================================================
+   📌 ملف التنسيق (settings.css): تنسيقات وألوان settings.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/settings.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-settings)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+:where(body.page-settings) {
+    --eye-care-1: linear-gradient(0deg, rgba(15, 23, 42, 0.035), rgba(15, 23, 42, 0.035));
+    --eye-care-2: linear-gradient(0deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.06));
+}
+
+:where(body.page-settings) .bento-container {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+:where(body.page-settings) .bento-header-card {
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+:where(body.page-settings) .header-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+:where(body.page-settings) .header-icon {
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, rgba(2, 132, 199, 0.15), rgba(139, 92, 246, 0.15));
+    border: 1px solid rgba(2, 132, 199, 0.25);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+:where(body.page-settings) .header-text h1 {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 900;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+:where(body.page-settings) .header-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 20px;
+    font-weight: 800;
+}
+
+:where(body.page-settings) .header-text p {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+:where(body.page-settings) .header-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+:where(body.page-settings) .btn-action {
+    padding: 8px 16px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 800;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 36px;
+}
+
+:where(body.page-settings) .btn-action.reload {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+:where(body.page-settings) .btn-action.reload:hover {
+    background: rgba(0,0,0,0.03);
+    transform: translateY(-1px);
+}
+
+:where(body.page-settings) .btn-action.save {
+    background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+:where(body.page-settings) .btn-action.save:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+    box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+}
+
+:where(body.page-settings) .overview-ribbon {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 850px) {
+    :where(body.page-settings) .overview-ribbon {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+:where(body.page-settings) .ribbon-card {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+:where(body.page-settings) .ribbon-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+}
+
+:where(body.page-settings) .ribbon-info small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+:where(body.page-settings) .ribbon-info span {
+    display: block;
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--text-main);
+    margin-top: 1px;
+}
+
+:where(body.page-settings) .settings-panel {
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+:where(body.page-settings) .settings-panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+:where(body.page-settings) .settings-panel-head h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-settings) .settings-panel-head span {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+:where(body.page-settings) .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 14px;
+}
+
+:where(body.page-settings) .setting-card {
+    background: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    border: 1px solid var(--border);
+    border-right: 3px solid #0284c7;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.25s ease;
+    position: relative;
+}
+
+:where(body.page-settings) .setting-card:hover {
+    border-color: rgba(2, 132, 199, 0.4);
+    border-right-color: #0284c7;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+}
+
+:where(body.page-settings) .setting-card label {
+    font-size: 11px;
+    font-weight: 900;
+    color: #0284c7;
+    direction: ltr;
+    text-align: right;
+    font-family: 'Consolas', 'Courier New', monospace;
+    letter-spacing: 0.3px;
+    background: rgba(2, 132, 199, 0.08);
+    padding: 3px 8px;
+    border-radius: 6px;
+    width: fit-content;
+    border: 1px solid rgba(2, 132, 199, 0.15);
+}
+
+:where(body.page-settings) .setting-card .input.setting-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-main);
+    height: 38px;
+    box-sizing: border-box;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+:where(body.page-settings) .setting-card .input.setting-input:focus {
+    border-color: #0284c7;
+    outline: none;
+    background: var(--bg-surface);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+:where(body.page-settings) .setting-card small {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+:where(body.page-settings) .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 800;
+    padding: 50px 0;
+}

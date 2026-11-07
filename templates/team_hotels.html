@@ -1,0 +1,123 @@
+<!-- =========================================================================
+     📌 ملف القالب (team_hotels.html): شاشة إدارة الموظفين، الصلاحيات، الفنادق، ونقل الموظفين بين الفنادق
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}team_hotels{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/team_hotels.css') }}">{% endblock %}
+{% block title %}الفريق والفنادق - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+    <!-- الهيدر المدمج -->
+    <div class="bento-box bento-header">
+        <div class="title-area">
+            <div class="icon">👥</div>
+            <div>
+                <h1>إدارة الموظفين والفنادق</h1>
+                <p>إدارة بيانات الموظفين، الصلاحيات، والفنادق المسجلة</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- التبويبات (Tabs) -->
+    <div class="logic-tabs" data-tab-group>
+        <button class="logic-tab active" data-tab-target="teamTab">👥 فريق العمل والصلاحيات</button>
+        {% if full_access %}<button class="logic-tab" data-tab-target="hotelsTab">🏨 الفنادق والقرى السياحية</button>{% endif %}
+    </div>
+
+    <!-- تابة الفريق -->
+    <section id="teamTab" class="tab-pane active">
+        <div class="bento-box">
+            <div class="toolbar-row">
+                <div class="toolbar-left">
+                    <h2 style="margin: 0; font-size: 15px; font-weight: 900; color: var(--text-main);">سجل الموظفين</h2>
+                </div>
+                <div class="toolbar-right" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    <input class="input-mini" id="teamSearchInput" placeholder="🔍 ابحث بالاسم أو اللقب أو الرقم القومي..." oninput="renderTeam()" style="min-width:240px;">
+                    <button class="btn-mini outline" onclick="loadTeamHotels()">🔄 تحديث القائمة</button>
+                    <button class="btn-mini green" onclick="openTeamForm()">➕ إضافة موظف جديد</button>
+                </div>
+            </div>
+            <div class="compact-table-wrap">
+                <table class="wide-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم بالكامل (بالبنك)</th>
+                            <th>اللقب / الشهرة</th>
+                            <th>الرقم القومي (رقم الموظف)</th>
+                            <th>حساب البنك الأهلي (ON US)</th>
+                            <th>الوظيفة</th>
+                            <th>الفنادق المسندة</th>
+                            <th>الراتب / العمولة</th>
+                            <th>اسم المستخدم</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- تابة الفنادق -->
+    {% if full_access %}
+    <section id="hotelsTab" class="tab-pane">
+        <div class="split-grid">
+            <!-- جدول الفنادق -->
+            <div class="bento-box">
+                <div class="toolbar-row">
+                    <div class="toolbar-left">
+                        <h2 style="margin: 0; font-size: 15px; font-weight: 900; color: var(--text-main);">سجل القرى والفنادق</h2>
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn-mini outline" onclick="loadTeamHotels()">🔄 تحديث</button>
+                    </div>
+                </div>
+                <div class="compact-table-wrap" style="height: 400px;">
+                    <table class="wide-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>اسم الفندق / الموقع</th>
+                                <th>الفندق الرئيسي</th>
+                                <th>تاريخ الإضافة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hotelsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- إضافة فندق جديد -->
+            <div class="bento-box">
+                <div style="border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 15px;">
+                    <h2 style="margin: 0; font-size: 15px; font-weight: 900; color: var(--text-main);">إضافة فندق / قرية جديدة</h2>
+                    <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-muted);">يمكن ربطه بفندق رئيسي</p>
+                </div>
+                <form id="hotelInlineForm">
+                    <div class="field">
+                        <label>اسم الفندق أو القرية</label>
+                        <input class="input-mini" id="hName" placeholder="اكتب اسم الفندق" required autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label>التبعية (اختياري)</label>
+                        <select class="select-mini" id="hParent">
+                            <option value="">-- فندق رئيسي / مستقل --</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-mini green" style="width: 100%; justify-content: center; margin-top: 15px; height: 38px;">➕ حفظ الفندق</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+<script>window.IS_CEO_USER = {{ "true" if full_access else "false" }};</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/team_hotels.js') }}"></script>
+{% endblock %}

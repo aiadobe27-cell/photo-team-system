@@ -1,0 +1,82 @@
+/* ============================================================================
+   📌 ملف التنسيق (forbidden.css): تنسيقات وألوان forbidden.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/forbidden.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-forbidden)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+:where(body.page-forbidden) {
+    --eye-care-1: linear-gradient(0deg, rgba(15, 23, 42, 0.035), rgba(15, 23, 42, 0.035));
+    --eye-care-2: linear-gradient(0deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.06));
+}
+
+:where(body.page-forbidden) .forbidden-wrapper {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+:where(body.page-forbidden) .forbidden-box {
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+:where(body.page-forbidden) .forbidden-icon-badge {
+    width: 58px;
+    height: 58px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+}
+
+:where(body.page-forbidden) .forbidden-box h1 {
+    margin: 4px 0 0;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-forbidden) .forbidden-box p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+:where(body.page-forbidden) .forbidden-btn {
+    margin-top: 8px;
+    padding: 8px 20px;
+    background: #0284c7;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: 0.2s ease;
+}
+
+:where(body.page-forbidden) .forbidden-btn:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}

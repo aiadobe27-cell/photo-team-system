@@ -1,0 +1,194 @@
+<!-- =========================================================================
+     📌 ملف القالب (login.html): شاشة تسجيل الدخول، إنشاء حساب جديد، وتغيير كلمة السر
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHOTO TEAM SYSTEM — تسجيل الدخول</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/pages/login.css">
+</head>
+<body class="theme-dark page-login">
+
+<div class="theme-toggle">
+    <button id="darkBtn" class="active" type="button" title="الوضع الليلي الزجاجي">🌙</button>
+    <button id="lightBtn" type="button" title="الوضع النهاري المضيء">☀</button>
+</div>
+
+<main class="login-layout">
+
+    <!-- Branding Side (Original Luxury Design) -->
+    <section class="brand-side">
+        <div class="brand-header">
+            <img src="/static/assets/logo/logo.svg" class="logo" alt="PHOTO TEAM">
+            <p>إدارة التصوير الاحترافي والفنادق السياحية</p>
+        </div>
+
+        <div class="hero-text">
+            <h1>كل لحظة .. تحكي قصة</h1>
+            <span>CAPTURE • ORGANIZE • DELIVER</span>
+        </div>
+
+        <div class="features">
+            <div class="feature-item">
+                <img src="/static/assets/icons/camera.svg" alt="">
+                <div>
+                    <strong>إدارة الحجوزات</strong>
+                    <small>Organize Bookings</small>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <img src="/static/assets/icons/team.svg" alt="">
+                <div>
+                    <strong>إدارة الفريق والصلاحيات</strong>
+                    <small>Manage Team & Roles</small>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <img src="/static/assets/icons/gallery.svg" alt="">
+                <div>
+                    <strong>معرض الصور والعهدة</strong>
+                    <small>Photo Gallery & Assets</small>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <img src="/static/assets/icons/reports.svg" alt="">
+                <div>
+                    <strong>تقارير متقدمة</strong>
+                    <small>Advanced Reports</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Card Side -->
+    <section class="login-side">
+        <div class="login-card">
+            <h2 id="authCardTitle">مرحباً بعودتك</h2>
+            <p id="authCardSub">سجل الدخول إلى حسابك</p>
+
+            <div id="authFeedbackBox" class="auth-feedback" hidden></div>
+
+            <!-- 1. قائمة تسجيل الدخول الأساسية -->
+            <form id="loginForm">
+                <div class="input-group">
+                    <img src="/static/assets/icons/mail.svg" alt="">
+                    <input id="username" type="text" placeholder="اسم المستخدم" required autocomplete="username">
+                </div>
+
+                <div class="input-group">
+                    <img src="/static/assets/icons/lock.svg" alt="">
+                    <input id="password" type="password" placeholder="كلمة المرور" required autocomplete="current-password">
+                    <button type="button" id="showPassword" title="إظهار / إخفاء كلمة المرور">
+                        <img src="/static/assets/icons/eye.svg" alt="">
+                    </button>
+                </div>
+
+                <div class="options" style="justify-content:flex-start;margin:10px 0 18px;">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                        <input type="checkbox" id="remember" checked>
+                        <span>تذكرني على هذا الجهاز</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    تسجيل الدخول →
+                </button>
+
+                <!-- بالأسفل بجانب بعض تحت زر الدخول مباشرة: إنشاء حساب جديد + تغيير كلمة السر -->
+                <div class="login-footer-switch" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.16);">
+                    <button type="button" onclick="switchAuthTab('register')" style="height:44px;border-radius:12px;border:1px solid rgba(109,167,255,0.4);background:rgba(37,99,255,0.16);color:#fff;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;">
+                        ➕ إنشاء حساب جديد
+                    </button>
+                    <button type="button" onclick="switchAuthTab('reset')" style="height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#cbd5e1;font-family:inherit;font-size:13.5px;font-weight:800;cursor:pointer;">
+                        🔑 تغيير كلمة السر
+                    </button>
+                </div>
+            </form>
+
+            <!-- 2. قائمة إنشاء حساب جديد (تفتح عند الضغط على إنشاء حساب جديد بالأسفل) -->
+            <form id="registerForm" hidden>
+                <div class="input-group" style="margin-bottom:10px;height:50px;">
+                    <img src="/static/assets/icons/team.svg" alt="">
+                    <input id="regFullName" type="text" placeholder="الاسم الحقيقي رباعي *" required style="height:50px;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="input-group" style="margin-bottom:10px;height:50px;">
+                        <input id="regUsername" type="text" placeholder="اسم المستخدم (الشهرة) *" required style="height:50px;padding:0 14px;">
+                    </div>
+                    <div class="input-group" style="margin-bottom:10px;height:50px;">
+                        <select id="regRole" required style="width:100%;height:50px;border-radius:16px;border:none;background:transparent;color:var(--text);padding:0 14px;font-size:14px;font-weight:700;">
+                            <option value="Sales" style="color:#000;">💼 سيلز (Sales)</option>
+                            <option value="Photographer" style="color:#000;">📸 مصور (Photographer)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group" style="margin-bottom:10px;height:50px;">
+                    <select id="regHotel" style="width:100%;height:50px;border-radius:16px;border:none;background:transparent;color:var(--text);padding:0 14px;font-size:14px;font-weight:700;">
+                        <option value="" style="color:#000;">🏨 اختر الفندق المخصص للعمل...</option>
+                    </select>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="input-group" style="margin-bottom:10px;height:50px;">
+                        <input id="regPhone" type="tel" placeholder="رقم الهاتف *" dir="ltr" required style="height:50px;padding:0 14px;">
+                    </div>
+                    <div class="input-group" style="margin-bottom:10px;height:50px;">
+                        <input id="regNationalId" type="text" maxlength="14" placeholder="رقم البطاقة (14 رقم) *" dir="ltr" required style="height:50px;padding:0 14px;">
+                    </div>
+                </div>
+                <div class="input-group" style="margin-bottom:14px;height:50px;">
+                    <img src="/static/assets/icons/lock.svg" alt="">
+                    <input id="regPassword" type="password" placeholder="كلمة المرور *" required style="height:50px;">
+                </div>
+                <button type="submit" class="login-btn" style="height:52px;font-size:17px;">
+                    إنشاء الحساب والدخول →
+                </button>
+                <div class="login-footer-switch">
+                    <a onclick="switchAuthTab('login')">← العودة لتسجيل الدخول</a>
+                </div>
+            </form>
+
+            <!-- 3. قائمة تغيير / نسيت كلمة السر (تفتح عند الضغط على تغيير كلمة السر بالأسفل) -->
+            <form id="resetPasswordForm" hidden>
+                <div class="input-group" style="margin-bottom:10px;height:50px;">
+                    <img src="/static/assets/icons/mail.svg" alt="">
+                    <input id="rstUsername" type="text" placeholder="اسم المستخدم المسجل *" required style="height:50px;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="input-group" style="margin-bottom:10px;height:50px;">
+                        <input id="rstNationalId" type="text" maxlength="14" placeholder="رقم البطاقة (14 رقم) *" dir="ltr" required style="height:50px;padding:0 14px;">
+                    </div>
+                    <div class="input-group" style="margin-bottom:10px;height:50px;">
+                        <input id="rstPhone" type="tel" placeholder="رقم الهاتف المسجل *" dir="ltr" required style="height:50px;padding:0 14px;">
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="input-group" style="margin-bottom:14px;height:50px;">
+                        <input id="rstNewPassword" type="password" placeholder="كلمة السر الجديدة *" required style="height:50px;padding:0 14px;">
+                    </div>
+                    <div class="input-group" style="margin-bottom:14px;height:50px;">
+                        <input id="rstConfirmPassword" type="password" placeholder="تأكيد كلمة السر *" required style="height:50px;padding:0 14px;">
+                    </div>
+                </div>
+                <button type="submit" class="login-btn" style="height:52px;font-size:17px;">
+                    حفظ كلمة السر الجديدة →
+                </button>
+                <div class="login-footer-switch">
+                    <a onclick="switchAuthTab('login')">← العودة لتسجيل الدخول</a>
+                </div>
+            </form>
+
+        </div>
+    </section>
+
+</main>
+
+<script src="/static/js/pages/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+/* ============================================================================
+   📌 ملف التنسيق (command-dock.css): تنسيقات شريط البحث السريع (Ctrl+K)
+   ============================================================================ */
+
+/* PHOTO TEAM SYSTEM V80 — Sapphire White & Blue Edition
+   core/command-dock.css: Unified White & Blue Dock Layer */
+
+:root {
+    --dock-bg: #f0f6ff;
+    --dock-sidebar: #ffffff;
+    --dock-surface: #ffffff;
+    --dock-surface-2: #f8fbff;
+    --dock-line: #dbeafe;
+    --dock-text: #0f172a;
+    --dock-muted: #475569;
+    --dock-blue: #1d4ed8;
+    --dock-green: #059669;
+    --dock-orange: #d97706;
+    --dock-red: #e11d48;
+    --dock-purple: #4f46e5;
+    --dock-radius: 16px;
+}
+
+body.theme-light {
+    --bg-body: #f0f6ff;
+    --bg-card: #ffffff;
+    --bg-surface: #f8fbff;
+    --bg-hover: #e0effe;
+    --border: #dbeafe;
+    --primary: #1d4ed8;
+    --primary-light: #3b82f6;
+    --primary-glow: rgba(37, 99, 235, 0.16);
+    --text-main: #0f172a;
+    --text-muted: #475569;
+    --danger: #e11d48;
+    --shadow-card: 0 4px 20px -2px rgba(30, 64, 175, 0.06);
+}

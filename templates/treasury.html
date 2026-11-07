@@ -1,0 +1,95 @@
+<!-- =========================================================================
+     📌 ملف القالب (treasury.html): شاشة الخزنة والمصروفات (إيداع العهدة للأونر وخصم المصروفات تلقائياً)
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}treasury{% endblock %}
+{% block title %}الخزنة والمصروفات - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<section class="page-heading" style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="kpi-svg-badge" style="width:40px;height:40px;font-size:19px;margin:0;">🏦</div>
+        <div>
+            <h1 style="margin:0; font-size:18px; font-weight: 900; color: var(--text-heading);">الخزنة والمصروفات</h1>
+        </div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        {% if full_access %}
+        <button type="button" class="btn primary" onclick="openTreasuryModal('DEPOSIT')">➕ إيداع رصيد بالخزنة</button>
+        {% endif %}
+        <button type="button" class="btn amber" onclick="openTreasuryModal('EXPENSE')">💸 تسجيل مصروف</button>
+        <button type="button" class="btn green" onclick="exportTreasuryCSV()">📥 تصدير Excel</button>
+        <button type="button" class="btn purple" onclick="printTreasuryPDF()">🖨️ طباعة PDF</button>
+    </div>
+</section>
+
+<section class="kpi-grid four" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:12px;">
+    <article class="kpi-card featured">
+        <small>🏦 إجمالي الإيداعات</small>
+        <strong id="trsTotalDeposits">0.00 LE</strong>
+    </article>
+    <article class="kpi-card">
+        <small>💸 إجمالي المصروفات</small>
+        <strong id="trsTotalExpenses" style="color:#ef4444;">0.00 LE</strong>
+    </article>
+    <article class="kpi-card">
+        <small>💰 الرصيد الحالي بالخزنة</small>
+        <strong id="trsNetBalance" style="color:#10b981;">0.00 LE</strong>
+    </article>
+    <article class="kpi-card">
+        <small>📊 عدد حركات الصرف</small>
+        <strong id="trsExpenseCount">0</strong>
+    </article>
+</section>
+
+<div style="display:grid; grid-template-columns: 320px 1fr; gap:12px; align-items:start;">
+    <section class="panel" style="margin:0;">
+        <div class="panel-head" style="margin-bottom:10px;">
+            <h2 style="font-size:14.5px;margin:0;">📊 توزيع المصروفات</h2>
+        </div>
+        <div id="trsCategoryBreakdown" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </section>
+
+    <section class="panel" style="margin:0;">
+        <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+            <h2 style="font-size:14.5px;margin:0;">📜 سجل حركات الخزنة</h2>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <input type="month" class="input compact" id="trsMonthFilter" style="width:135px;" onchange="loadTreasuryData()">
+                <select class="input compact" id="trsTypeFilter" style="width:140px;" onchange="loadTreasuryData()">
+                    <option value="">كل الحركات</option>
+                    <option value="DEPOSIT">الإيداعات فقط</option>
+                    <option value="EXPENSE">المصروفات فقط</option>
+                </select>
+                <select class="input compact" id="trsHotelFilter" style="width:150px;" onchange="loadTreasuryData()">
+                    <option value="">كل الفنادق</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-wrap maxh">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>التاريخ</th>
+                        <th>نوع الحركة</th>
+                        <th>البند</th>
+                        <th>الفندق</th>
+                        <th>المستلم / الجهة</th>
+                        <th>البيان</th>
+                        <th>المبلغ (LE)</th>
+                        <th>طريقة الدفع</th>
+                        <th>المسؤول</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="trsTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/treasury.js') }}"></script>
+{% endblock %}

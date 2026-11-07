@@ -1,0 +1,202 @@
+<!-- =========================================================================
+     📌 ملف القالب (control_room.html): شاشة متابعة السيشنات والتشغيل اليومي وتوزيع المصورين
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}control_room{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/control_room.css') }}">{% endblock %}
+{% block title %}Control Room OS - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="bento-ops-container">
+
+    <!-- 1. الهيدر وأدوات التحكم الذكية -->
+    <header class="ops-header">
+        <div class="ops-title-area">
+            <div class="icon">⚡</div>
+            <div>
+                <span style="font-size: 9px; font-weight: 900; color: #0284c7; letter-spacing: 0.5px; display: block;">COMMAND OS 2026</span>
+                <h1 style="margin: 0; font-size: 17px; font-weight: 900; color: var(--text-main);">متابعة السيشنات والتشغيل اليومي</h1>
+                <p style="margin: 1px 0 0; font-size: 10px; color: var(--text-muted);">متابعة مواعيد التصوير وحالة السيشنات اليومية</p>
+            </div>
+        </div>
+
+        <div class="ops-header-actions">
+            <!-- زر كتم/تشغيل الصوت التنبيهي -->
+            <button id="soundToggleBtn" class="btn-compact outline" onclick="toggleSoundFx()" title="تشغيل أو كتم المؤثرات الصوتية">🔔 صوت التنبيه: يعمل</button>
+
+            <!-- زر وضع التلفزيون الميداني -->
+            <button class="btn-compact outline" onclick="toggleKioskMode()" title="عرض بكامل الشاشة على تلفزيون المقر">🖥️ وضع الشاشة (TV)</button>
+            <button class="btn-compact outline exit-kiosk-btn" onclick="toggleKioskMode()">❌ إنهاء وضع الشاشة</button>
+
+            <!-- فلاتر العرض -->
+            <select id="opsHotelFilter" class="select-compact" onchange="renderFilteredOps()">
+                <option value="">🏨 جميع الفنادق</option>
+            </select>
+            <input type="text" id="opsSearch" class="input-compact" placeholder="🔍 غرفة / مصور..." oninput="renderFilteredOps()" style="width: 120px;">
+            <input type="date" id="opsDate" class="input-compact" onchange="loadOps()">
+            <button class="btn-compact" onclick="loadOps()">تحديث مباشر ↻</button>
+        </div>
+    </header>
+
+    <!-- 2. شريط مؤشر الساعة الذهبية والطقس (Golden Hour & Sun Tracker) -->
+    <section class="golden-hour-ribbon">
+        <div class="gh-info">
+            <span class="gh-badge">🌅 SUN TRACKER</span>
+            <span id="goldenHourTitle">جاري احتساب موعد الساعة الذهبية اليوم...</span>
+        </div>
+        <div class="gh-times">
+            <span>بداية الساعة الذهبية: <b id="ghStartTime">--:--</b></span>
+            <span>الغروب الفعلي: <b id="ghSunsetTime">--:--</b></span>
+            <span>أفضل وقت للتصوير الخارجي: <b style="color:#10b981;">شواطئ & فساتين 👗</b></span>
+        </div>
+    </section>
+
+    <!-- 3. المؤشرات الستة (KPIs) -->
+    <section class="ops-kpi-grid">
+        <article class="ops-kpi-card">
+            <div class="ops-kpi-top"><small>أوردرات اليوم</small><span class="kpi-icon blue">▣</span></div>
+            <strong id="opTotal" style="color: #0284c7;">0</strong>
+            <em>جميع الحالات</em>
+        </article>
+        <article class="ops-kpi-card">
+            <div class="ops-kpi-top"><small>مؤكد / جاري</small><span class="kpi-icon green">✓</span></div>
+            <strong id="opConfirmed" style="color: #10b981;">0</strong>
+            <em>جاهز للتشغيل</em>
+        </article>
+        <article class="ops-kpi-card">
+            <div class="ops-kpi-top"><small>متأخر</small><span class="kpi-icon red">!</span></div>
+            <strong id="opLate" style="color: #ef4444;">0</strong>
+            <em>يحتاج تدخل</em>
+        </article>
+        <article class="ops-kpi-card">
+            <div class="ops-kpi-top"><small>بدون مصور</small><span class="kpi-icon amber">📷</span></div>
+            <strong id="opUnassigned" style="color: #f59e0b;">0</strong>
+            <em>تعيين مطلوب</em>
+        </article>
+        <article class="ops-kpi-card">
+            <div class="ops-kpi-top"><small>عليه متبقي</small><span class="kpi-icon purple">$</span></div>
+            <strong id="opDue" style="color: #8b5cf6;">0</strong>
+            <em>مراجعة تحصيل</em>
+        </article>
+        <article class="ops-kpi-card">
+            <div class="ops-kpi-top"><small>صيانة مفتوحة</small><span class="kpi-icon cyan">🛠</span></div>
+            <strong id="opMaintenance" style="color: #06b6d4;">0</strong>
+            <em>معدات خارج الخدمة</em>
+        </article>
+    </section>
+
+    <!-- 4. التنبيهات وضغط المصورين -->
+    <div class="split-grid-2">
+        <section class="bento-panel">
+            <div class="bento-panel-head">
+                <div>
+                    <h2>🚨 تنبيهات التشغيل اللحظية</h2>
+                    <p>المشكلات التي تحتاج تدخلاً فوريًا (اضغط لتحديد الغرفة)</p>
+                </div>
+                <span class="badge red" id="alertCount" style="padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 800; background: rgba(239,68,68,0.15); color: #ef4444;">0</span>
+            </div>
+            <div class="alert-list" id="opsAlerts" style="max-height: 160px; overflow-y: auto;"></div>
+        </section>
+
+        <section class="bento-panel">
+            <div class="bento-panel-head">
+                <div>
+                    <h2>📸 توزيع شغل المصورين اليوم</h2>
+                    <p>متابعة الطاقة الاستيعابية وتوزيع الأوردرات</p>
+                </div>
+            </div>
+            <div id="photographerLoad" class="stat-list" style="max-height: 160px; overflow-y: auto;"></div>
+        </section>
+    </div>
+
+    <!-- 5. طابور الجلسات الفعلي (Live Queue) -->
+    <section class="bento-panel">
+        <div class="bento-panel-head">
+            <div>
+                <h2>⏱ جدول السيشنات الجارية</h2>
+                <p>يمكن تعديل الحالة أو تعيين المصور مباشرة من السطر</p>
+            </div>
+            <a href="/reservations" class="btn-action-mini" style="text-decoration:none;">فتح الحجوزات ↗</a>
+        </div>
+        <div class="ops-table-wrap">
+            <table class="ops-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">الوقت</th>
+                        <th style="width:90px;">العد التنازلي</th>
+                        <th>الغرفة والملابس</th>
+                        <th>الفندق</th>
+                        <th>الحالة</th>
+                        <th>المصور المسند</th>
+                        <th>السيلز</th>
+                        <th>المتبقي</th>
+                        <th style="width:90px;">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="opsQueue"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 6. المهام، الشيفت، وأداء الفنادق -->
+    <div class="split-grid-3">
+        <section class="bento-panel">
+            <div class="bento-panel-head">
+                <div>
+                    <h2>✅ مهام التشغيل</h2>
+                    <p>المهام الحالية المفتوحة</p>
+                </div>
+                <button class="btn-compact" onclick="openTaskModal()" style="height:24px; padding:2px 8px; font-size:11px;">+ مهمة</button>
+            </div>
+            <div id="opsTasks" class="timeline" style="max-height: 160px; overflow-y: auto;"></div>
+        </section>
+
+        <section class="bento-panel">
+            <div class="bento-panel-head">
+                <div>
+                    <h2>🔁 تسليم الشيفت</h2>
+                    <p>ملاحظات الورديات المتبادلة</p>
+                </div>
+                <button class="btn-action-mini" onclick="openHandoverModal()" style="height:24px; padding:2px 8px; font-size:11px;">+ ملاحظة</button>
+            </div>
+            <div id="handoverList" class="timeline" style="max-height: 160px; overflow-y: auto;"></div>
+        </section>
+
+        <section class="bento-panel">
+            <div class="bento-panel-head">
+                <div>
+                    <h2>🏨 أداء الفنادق اليوم</h2>
+                    <p>حجوزات / متبقي / صافي</p>
+                </div>
+            </div>
+            <div id="hotelOps" class="rank-list" style="max-height: 160px; overflow-y: auto;"></div>
+        </section>
+    </div>
+
+    <!-- 7. التقفيل اليومي ومطابقة الخزينة -->
+    <section class="bento-panel" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+            <h2 style="margin:0; font-size:13px; font-weight:900;">💰 مطابقة الخزينة والتقفيل اليومي (Cash Reconciliation)</h2>
+            <p style="margin:2px 0 0; font-size:11px; color:var(--text-muted);">مطابقة المتوقع بالنظام مع الفعلي في الدرج قبل إغلاق الشيفت</p>
+        </div>
+        <button class="btn-compact" onclick="openClosingModal()">فتح شاشة التقفيل اليومي</button>
+    </section>
+
+</div>
+
+<!-- نافذة لوحة الأوامر السريعة (Command Palette) -->
+<div id="quickCmdPalette" class="cmd-overlay" style="display: none;" onclick="closeCommandPalette(event)">
+    <div class="cmd-box" onclick="event.stopPropagation()">
+        <div class="cmd-input-wrap">
+            <span>⚡</span>
+            <input id="quickCmdInput" class="cmd-input" placeholder="ابحث عن رقم غرفة، اسم مصور، أو اكتب أمراً..." autocomplete="off">
+            <kbd style="font-size:10px; background:var(--bg-surface); border:1px solid var(--border); padding:2px 6px; border-radius:4px; color:var(--text-muted);">ESC</kbd>
+        </div>
+        <div id="quickCmdResults" class="cmd-results"></div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/control_room.js') }}"></script>
+{% endblock %}

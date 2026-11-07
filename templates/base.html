@@ -1,0 +1,1686 @@
+<!-- =========================================================================
+     📌 ملف القالب (base.html): القالب الأساسي للنظام (يحتوي على القائمة الجانبية Sidebar، الشريط العلوي Header، ونافذة المساعد الذكي الصوتي)
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="icon" type="image/png" href="/static/img/photo_team_icon.png">
+    <link rel="apple-touch-icon" href="/static/img/photo_team_icon.png">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}PHOTO TEAM SYSTEM{% endblock %}</title>
+
+    <!-- خط تجوال للأرقام والنصوص -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/core/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/core/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/core/interactions.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/core/context-menu.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/core/command-dock.css') }}">
+    {% block styles %}{% endblock %}
+</head>
+
+<body class="theme-light  system-mode-1 page-{% block page %}{% endblock %}">
+
+
+<div class="app">
+
+    <!-- ================= SIDEBAR (WHITE & BLUE DOCK) ================= -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo-sq" style="padding:0;overflow:hidden;"><img src="/static/img/photo_team_icon.png" alt="PHOTO TEAM" style="width:100%;height:100%;object-fit:cover;border-radius:10px;"></div>
+            <div class="brand-details">
+                <strong>PHOTO TEAM</strong>
+                <small>STUDIO SYSTEM</small>
+            </div>
+        </div>
+
+        <nav>
+            {% if photographer_only %}
+            <div class="nav-group-label"><span>حساب المصور (أوردراتي ومبيعاتي فقط)</span></div>
+            <a href="/" class="{{ 'active' if request.path == '/' else '' }}">
+                <span class="nav-icon-box">⌂</span>
+                <span class="nav-label">الرئيسية</span>
+            </a>
+            <a href="/reservations" class="{{ 'active' if request.path.startswith('/reservations') else '' }}">
+                <span class="nav-icon-box">📸</span>
+                <span class="nav-label">أوردراتي المصورة</span>
+            </a>
+            <a href="/daily-sales" class="{{ 'active' if request.path.startswith('/daily-sales') else '' }}">
+                <span class="nav-icon-box">💰</span>
+                <span class="nav-label">مبيعاتي وعمولتي</span>
+            </a>
+            {% elif sales_only %}
+            <div class="nav-group-label"><span>حساب السيلز (الحجوزات ومبيعاتي)</span></div>
+            <a href="/reservations" class="{{ 'active' if request.path.startswith('/reservations') else '' }}">
+                <span class="nav-icon-box">📅</span>
+                <span class="nav-label">قائمة الحجوزات</span>
+            </a>
+            <a href="/daily-sales" class="{{ 'active' if request.path.startswith('/daily-sales') else '' }}">
+                <span class="nav-icon-box">💰</span>
+                <span class="nav-label">مبيعاتي وأوردراتي</span>
+            </a>
+            <a href="/" class="{{ 'active' if request.path == '/' else '' }}">
+                <span class="nav-icon-box">⌂</span>
+                <span class="nav-label">ملخص شغلي اليوم</span>
+            </a>
+            {% elif accountant_only %}
+            <div class="nav-group-label"><span>حسابات جميع الفنادق</span></div>
+            <a href="/" class="{{ 'active' if request.path == '/' else '' }}">
+                <span class="nav-icon-box">⌂</span>
+                <span class="nav-label">الرئيسية للحسابات</span>
+            </a>
+            <a href="/daily-sales" class="{{ 'active' if request.path.startswith('/daily-sales') else '' }}">
+                <span class="nav-icon-box">💰</span>
+                <span class="nav-label">الدخل اليومي (كل الفنادق)</span>
+            </a>
+            <a href="/treasury" class="{{ 'active' if request.path.startswith('/treasury') else '' }}">
+                <span class="nav-icon-box">🏦</span>
+                <span class="nav-label">الخزنة والمصاريف</span>
+            </a>
+            <a href="/commissions" class="{{ 'active' if request.path.startswith('/commissions') else '' }}">
+                <span class="nav-icon-box">%</span>
+                <span class="nav-label">العمولات والتقفيلات</span>
+            </a>
+            <a href="/salaries" class="{{ 'active' if request.path.startswith('/salaries') else '' }}">
+                <span class="nav-icon-box">💳</span>
+                <span class="nav-label">المرتبات والسلف</span>
+            </a>
+            <a href="/reports" class="{{ 'active' if request.path.startswith('/reports') else '' }}">
+                <span class="nav-icon-box">▥</span>
+                <span class="nav-label">التقارير المالية</span>
+            </a>
+            {% else %}
+            <div class="nav-group-label"><span>الحجوزات والتشغيل</span></div>
+            <a href="/" class="{{ 'active' if request.path == '/' else '' }}">
+                <span class="nav-icon-box">⌂</span>
+                <span class="nav-label">الرئيسية</span>
+            </a>
+
+            {% if full_access or 'bookings_access' in user_permissions %}
+            <a href="/reservations" class="{{ 'active' if request.path.startswith('/reservations') else '' }}">
+                <span class="nav-icon-box">📅</span>
+                <span class="nav-label">الحجوزات</span>
+            </a>
+            <a href="/control-room" class="{{ 'active' if request.path.startswith('/control-room') else '' }}">
+                <span class="nav-icon-box">⚡</span>
+                <span class="nav-label">متابعة السيشنات</span>
+            </a>
+            {% endif %}
+
+            {% if full_access or 'sales_access' in user_permissions or 'finances_access' in user_permissions %}
+            <div class="nav-group-label"><span>الحسابات والمالية</span></div>
+            {% endif %}
+
+            {% if full_access or 'sales_access' in user_permissions %}
+            <a href="/daily-sales" class="{{ 'active' if request.path.startswith('/daily-sales') else '' }}">
+                <span class="nav-icon-box">💰</span>
+                <span class="nav-label">الدخل اليومي</span>
+            </a>
+            <a href="/treasury" class="{{ 'active' if request.path.startswith('/treasury') else '' }}">
+                <span class="nav-icon-box">🏦</span>
+                <span class="nav-label">الخزنة والمصاريف</span>
+            </a>
+            {% if full_access %}
+            <a href="/bank-accounts" class="{{ 'active' if request.path.startswith('/bank-accounts') else '' }}" style="border:1px dashed rgba(245,158,11,0.45);">
+                <span class="nav-icon-box">💳</span>
+                <span class="nav-label">حسابات البنك والدخل الشامل</span>
+            </a>
+            {% endif %}
+            <a href="/commissions" class="{{ 'active' if request.path.startswith('/commissions') else '' }}">
+                <span class="nav-icon-box">%</span>
+                <span class="nav-label">العمولات والخصومات</span>
+            </a>
+            {% endif %}
+
+            {% if full_access or 'finances_access' in user_permissions %}
+            <a href="/salaries" class="{{ 'active' if request.path.startswith('/salaries') else '' }}">
+                <span class="nav-icon-box">💳</span>
+                <span class="nav-label">المرتبات</span>
+            </a>
+            <a href="/reports" class="{{ 'active' if request.path.startswith('/reports') else '' }}">
+                <span class="nav-icon-box">▥</span>
+                <span class="nav-label">التقارير</span>
+            </a>
+            {% endif %}
+
+            {% if full_access or 'assets_access' in user_permissions or 'laundry_access' in user_permissions %}
+            <div class="nav-group-label"><span>الفساتين والمغسلة</span></div>
+            {% endif %}
+
+            {% if full_access or 'assets_access' in user_permissions %}
+            <a href="/assets" class="{{ 'active' if request.path.startswith('/assets') else '' }}">
+                <span class="nav-icon-box">👗</span>
+                <span class="nav-label">الفساتين والمعدات</span>
+            </a>
+            {% endif %}
+
+            {% if full_access or 'laundry_access' in user_permissions %}
+            <a href="/laundry" class="{{ 'active' if request.path.startswith('/laundry') else '' }}">
+                <span class="nav-icon-box">🧺</span>
+                <span class="nav-label">المغسلة</span>
+            </a>
+            {% endif %}
+
+            {% if full_access or 'team_access' in user_permissions or 'finances_access' in user_permissions %}
+            <div class="nav-group-label"><span>الإدارة والإعدادات</span></div>
+            {% endif %}
+
+            {% if full_access or 'team_access' in user_permissions %}
+            <a href="/team-hotels" class="{{ 'active' if request.path.startswith('/team-hotels') else '' }}">
+                <span class="nav-icon-box">👥</span>
+                <span class="nav-label">الموظفين والفنادق</span>
+            </a>
+            {% endif %}
+
+            {% if full_access or 'finances_access' in user_permissions %}
+            <a href="/settings" class="{{ 'active' if request.path.startswith('/settings') else '' }}">
+                <span class="nav-icon-box">⚙</span>
+                <span class="nav-label">الإعدادات</span>
+            </a>
+            {% endif %}
+            {% endif %}
+                    <a href="/chat" class="{{ 'active' if request.path.startswith('/chat') else '' }}">
+                <span class="nav-icon-box">💬</span>
+                <span class="nav-label">المحادثات</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-status-box">
+                <span id="dbStatus">● متصل بقاعدة البيانات</span>
+                <span id="footerClock">--:--</span>
+            </div>
+            <button class="btn-logout" onclick="logout()">
+                <span>🚪</span> تسجيل الخروج
+            </button>
+        </div>
+    </aside>
+
+    <!-- ================= MAIN SECTION ================= -->
+    <section class="main">
+        <header class="header">
+            <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="فتح القائمة">☰</button>
+            <div class="search">
+                <span style="color: var(--primary); font-size: 15px;">🔍</span>
+                <input id="globalSearchInput" placeholder="بحث سريع في النظام... (Ctrl+K)">
+            </div>
+
+            <div class="actions">
+                <div class="header-clock-pill" title="التاريخ والوقت الفعلي">
+                    <span>🗓️</span>
+                    <span id="sideDate"></span>
+                    <span>•</span>
+                    <strong id="sideClock" dir="ltr"></strong>
+                </div>
+                <button id="aiTopbarButton" class="ai-topbar-trigger" type="button" title="المساعد الذكي Photo Team AI (Alt+A)" onclick="toggleAiCopilot()">
+                    <span class="ai-sparkle-icon">🤖</span>
+                    <span>المساعد الذكي AI</span>
+                </button>
+                                <button id="offlineQueueTopBtn" class="notification-trigger" type="button" title="وضع عدم الاتصال المؤقت للموبايل (Offline Queue)" onclick="openOfflineQueueModal()" style="position:relative;">
+                    <span>📡</span>
+                    <span id="offlineQueueCount" class="notification-count" data-zero="1">0</span>
+                </button>
+                <button id="notificationButton" class="notification-trigger" type="button" title="مركز الإشعارات" onclick="openNotifications()" aria-label="مركز الإشعارات">
+                    <span class="notification-bell">🔔</span>
+                    <span id="notifCount" class="notification-count" data-zero="1">0</span>
+                </button>
+                <!-- زر تبديل المظهر المدمج الصغير -->
+                <div class="dual-mode-top-switcher" id="dualModeTopSwitcher" title="تبديل المظهر (الأبيض والأزرق ⇄ الأسود والذهبي)">
+                    <button type="button" id="btnSwitchMode1" class="dm-switch-btn active-mode1" onclick="switchMainSystemMode(1)" title="المظهر الفاتح (الأبيض والأزرق)">☀️</button>
+                    <button type="button" id="btnSwitchMode2" class="dm-switch-btn" onclick="switchMainSystemMode(2)" title="المظهر الداكن (أسود أونيكس وذهبي)">👑</button>
+                </div>
+                <button type="button" id="mode1SubArchBtn" class="mode1-subarch-btn" onclick="toggleMode1MenuArch()" title="تبديل مكان القائمة (شريط سفلي ⇄ قائمة جانبية)">📐</button>
+                <div class="user">
+                    <div>
+                        <strong>{{ user.nickname or user.full_name or 'باسم' }}</strong>
+                        <small>{{ user.role or 'CEO' }}</small>
+                    </div>
+                    <div class="avatar">
+                        {{ (user.nickname or user.full_name or 'ب')[:1] }}
+                    </div>
+                </div>
+                <button id="headerLogoutBtn" class="btn red" type="button" style="min-height:38px;padding:0 14px;border-radius:999px;font-size:12.5px;font-weight:800;" onclick="logout()" title="تسجيل الخروج من النظام">🚪 تسجيل الخروج</button>
+            </div>
+        </header>
+
+        <!-- ⏱️ الخط الزمني بالساعة (Hourly Shoot Timeline Strip) -->
+        <div class="pt-hourly-timeline-bar">
+            <strong style="font-size:12.5px;color:var(--text-heading);white-space:nowrap;">⏱️ الخط الزمني للساعات:</strong>
+            <span class="pt-hour-chip active" onclick="filterPageByTimelineHour('', this)">🌐 كل الساعات</span>
+            <span class="pt-hour-chip" onclick="filterPageByTimelineHour('13:', this)">🕐 13:00 م</span>
+            <span class="pt-hour-chip" onclick="filterPageByTimelineHour('14:', this)">🕑 14:00 م</span>
+            <span class="pt-hour-chip" onclick="filterPageByTimelineHour('15:', this)">🕒 15:00 م</span>
+            <span class="pt-hour-chip golden" onclick="filterPageByTimelineHour('16:', this)">🌅 16:00 م ★ الغروب</span>
+            <span class="pt-hour-chip golden" onclick="filterPageByTimelineHour('17:', this)">🌇 17:00 م ★ الغروب</span>
+            <span class="pt-hour-chip" onclick="filterPageByTimelineHour('18:', this)">🕕 18:00 م</span>
+            <span class="pt-hour-chip" onclick="filterPageByTimelineHour('19:', this)">🕖 19:00 م</span>
+        </div>
+
+        <main class="content">
+            {% block content %}{% endblock %}
+        </main>
+    </section>
+</div>
+
+<!-- ================= MODALS & OVERLAYS ================= -->
+<div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+<div id="globalModal" class="modal-backdrop" hidden role="dialog" aria-modal="true">
+    <div class="modal-card modal-xl">
+        <button type="button" class="modal-close" onclick="closeModal()" aria-label="إغلاق">×</button>
+        <div id="globalModalBody"></div>
+    </div>
+</div>
+
+
+<!-- ================= PHOTO TEAM AI COPILOT DRAWER ================= -->
+<button id="aiFloatingLauncher" class="ai-floating-orb" type="button" onclick="toggleAiCopilot()" title="المساعد الذكي Photo Team AI (Alt+A)">
+    <span class="ai-orb-icon">🤖</span>
+    <span class="ai-orb-label">مساعد AI الذكي</span>
+</button>
+
+<aside id="aiCopilotDrawer" class="ai-copilot-drawer" hidden aria-label="المساعد الذكي Photo Team AI">
+    <div class="ai-copilot-header">
+        <div class="ai-copilot-title-row">
+            <div class="ai-avatar-badge">🤖</div>
+            <div>
+                <h3>المساعد الذكي للنظام</h3>
+                <p id="aiScopeSubtitle">تسجيل الحجوزات والدخل والخصومات بالصوت أو الكتابة</p>
+            </div>
+        </div>
+        <div class="ai-header-actions">
+            <button type="button" class="ai-icon-btn" onclick="toggleAiSettingsBox()" title="إعدادات ربط Gemini / OpenAI API">⚙️</button>
+            <button type="button" class="ai-icon-btn" onclick="clearAiChatHistory()" title="مسح المحادثة">🗑️</button>
+            <button type="button" class="ai-icon-btn ai-close-btn" onclick="toggleAiCopilot(false)" title="إغلاق">×</button>
+        </div>
+    </div>
+
+    <div id="aiSettingsBox" class="ai-settings-box" hidden>
+        <div style="font-weight:800;font-size:12px;margin-bottom:6px;color:var(--primary);">⚙️ محرك الذكاء الاصطناعي (المدمج + مفتاح خارجي اختياري)</div>
+        <p style="margin:0 0 8px;font-size:11px;color:var(--text-muted);line-height:1.5;">
+            يعمل المساعد الذكي تلقائياً بمحرك التحليل الفوري المدمج بدون إنترنت. ويمكنك اختيارياً إدخال مفتاح <b>Gemini API</b> أو <b>OpenAI API</b> لتفعيل المحادثة التوليدية المتقدمة:
+        </p>
+        <div style="display:flex;gap:6px;">
+            <input id="aiExternalApiKey" type="password" class="input" style="min-height:34px;font-size:12px;" placeholder="AIza... (Gemini) أو sk-... (OpenAI)">
+            <button type="button" class="btn primary" style="min-height:34px;padding:6px 12px;font-size:12px;" onclick="saveAiExternalApiKey()">حفظ</button>
+        </div>
+    </div>
+
+    <div id="aiQuickChips" class="ai-quick-chips" hidden style="display:none !important;"></div>
+
+    <div id="aiMessagesList" class="ai-messages-list"></div>
+
+    <div id="aiExecQuickChipsBar" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:var(--bg-surface-2);border-bottom:1px solid var(--border);">
+        <span style="width:100%;font-size:10.5px;font-weight:900;color:var(--primary);">⚡ أوامر تنفيذية سريعة (صوت 🎤 أو كتابة):</span>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('احجز اوردر يوم 2026-11-05 الساعة 16:00 رقم الغرفة 412 معاه فستان أحمر ملكي وفستان أبيض ودافع عربون 20 دولار')">➕ حجز أوردر كامل</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('نزل خصم على احمد 200 جنيه بسبب تأخير')">💸 خصم على موظف</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('عدل دخل اوردر غرفة 214 خليه 220 دولار')">✏️ تعديل دخل</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('ضيف دخل اوردر غرفة 305 بمبلغ 180 دولار')">💰 إضافة دخل</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('غير ميعاد اوردر غرفة 214 ليوم 2026-11-06 الساعة 17:00')">⏰ تغيير ميعاد</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('قفل عهدة السيلز اليومية بالكامل')">💼 تقفيل عهدة السيلز</button>
+    </div>
+    <div id="aiVoiceStatusBanner" hidden style="padding:8px 12px;background:#fef2f2;border-top:1px solid #fecaca;color:#b91c1c;font-size:11.5px;font-weight:800;"></div>
+    <form id="aiChatForm" class="ai-input-bar" onsubmit="handleAiChatSubmit(event)">
+        <button type="button" id="aiMicBtn" onclick="toggleBackendAiVoiceMic()" title="تحدث بالمايك وتحويل الصوت لكلام كتابة" style="width:38px;height:38px;min-width:38px;border-radius:12px;border:1.5px solid #cbd5e1;background:#f8fafc;font-size:17px;cursor:pointer;">🎤</button>
+        <input id="aiChatInput" type="text" class="ai-chat-input" placeholder="اكتب سؤالك هنا..." autocomplete="off">
+        <button type="submit" id="aiSendBtn" class="ai-send-btn">🚀 إرسال</button>
+    </form>
+</aside>
+
+<div id="commandOverlay" class="command-overlay" hidden>
+    <div class="command-box" role="dialog" aria-label="البحث السريع">
+        <div class="command-head">
+            <span>⌕</span>
+            <input id="commandInput" type="search" placeholder="ابحث داخل النظام..." autocomplete="off">
+        </div>
+        <div id="commandList" class="command-list"></div>
+    </div>
+</div>
+
+<script>
+window.CURRENT_USER={{ (user or {})|tojson }};
+window.USER_HOTEL_NAME={{ (user_hotel_name or '')|tojson }};
+window.USER_PERMISSIONS={{ (user_permissions|list)|tojson }};
+window.USER_ROLES={{ (user_roles|list)|tojson }};
+window.FULL_ACCESS={{ 'true' if full_access else 'false' }};
+window.PERSONAL_SCOPE={{ 'true' if personal_scope else 'false' }};
+window.PHOTOGRAPHER_ONLY={{ 'true' if photographer_only else 'false' }};
+window.SALES_ONLY={{ 'true' if sales_only else 'false' }};
+window.ACCOUNTANT_ONLY={{ 'true' if accountant_only else 'false' }};
+window.MANAGER_ONLY={{ 'true' if manager_only else 'false' }};
+</script>
+
+<script src="{{ url_for('static',filename='js/core/app.js') }}"></script>
+<script src="{{ url_for('static', filename='js/core/context-menu.js') }}"></script>
+
+{% block scripts %}{% endblock %}
+
+<script>
+(function () {
+    document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            const overlay = document.getElementById('commandOverlay');
+            if (overlay) {
+                overlay.hidden = !overlay.hidden;
+                if (!overlay.hidden) document.getElementById('commandInput')?.focus();
+            }
+        }
+    });
+
+    document.getElementById('commandOverlay')?.addEventListener('click', function (e) {
+        if (e.target === this) this.hidden = true;
+    });
+
+    document.getElementById('globalSearchInput')?.addEventListener('focus', function () {
+        const overlay = document.getElementById('commandOverlay');
+        if (overlay) {
+            overlay.hidden = false;
+            document.getElementById('commandInput')?.focus();
+        }
+    });
+})();
+</script>
+
+<!-- ⚓ الدوك السفلي العائم (Floating Bottom Dock) -->
+<nav class="pt-floating-bottom-dock">
+    <a href="/" class="pt-dock-btn {{ 'active' if request.path == '/' else '' }}"><span>⌂</span><small>الرئيسية</small></a>
+    {% if photographer_only %}
+    <a href="/reservations" class="pt-dock-btn {{ 'active' if request.path.startswith('/reservations') else '' }}"><span>📸</span><small>شغلي وأوردراتي</small></a>
+    <a href="/daily-sales" class="pt-dock-btn {{ 'active' if request.path.startswith('/daily-sales') else '' }}"><span>🔍</span><small>مبيعاتي والبحث</small></a>
+    {% elif sales_only %}
+    <a href="/reservations" class="pt-dock-btn {{ 'active' if request.path.startswith('/reservations') else '' }}"><span>📅</span><small>الحجوزات</small></a>
+    <a href="/daily-sales" class="pt-dock-btn {{ 'active' if request.path.startswith('/daily-sales') else '' }}"><span>💰</span><small>مبيعاتي والبحث</small></a>
+    {% else %}
+    <a href="/reservations" class="pt-dock-btn {{ 'active' if request.path.startswith('/reservations') else '' }}"><span>📅</span><small>الحجوزات</small></a>
+    <a href="/control-room" class="pt-dock-btn {{ 'active' if request.path.startswith('/control-room') else '' }}"><span>⚡</span><small>العمليات</small></a>
+    <a href="/daily-sales" class="pt-dock-btn {{ 'active' if request.path.startswith('/daily-sales') else '' }}"><span>💰</span><small>الدخل اليومي</small></a>
+    <a href="/commissions" class="pt-dock-btn {{ 'active' if request.path.startswith('/commissions') else '' }}"><span>🏆</span><small>العمولات</small></a>
+    <a href="/salaries" class="pt-dock-btn {{ 'active' if request.path.startswith('/salaries') else '' }}"><span>💳</span><small>المرتبات</small></a>
+    <a href="/reports" class="pt-dock-btn {{ 'active' if request.path.startswith('/reports') else '' }}"><span>📈</span><small>التقارير</small></a>
+    <a href="/assets" class="pt-dock-btn {{ 'active' if request.path.startswith('/assets') else '' }}"><span>👗</span><small>الفساتين</small></a>
+    <a href="/laundry" class="pt-dock-btn {{ 'active' if request.path.startswith('/laundry') else '' }}"><span>🧺</span><small>المغسلة</small></a>
+    <a href="/team-hotels" class="pt-dock-btn {{ 'active' if request.path.startswith('/team-hotels') else '' }}"><span>👥</span><small>الفريق</small></a>
+    <a href="/settings" class="pt-dock-btn {{ 'active' if request.path.startswith('/settings') else '' }}"><span>⚙️</span><small>الإعدادات</small></a>
+    {% endif %}
+    <button type="button" class="pt-dock-btn" onclick="openNotifications()"><span>🔔</span><small>الإشعارات</small></button>
+    <button type="button" class="pt-dock-btn" onclick="toggleAiCopilot()"><span>🤖</span><small>مساعد AI</small></button>
+    <button type="button" class="pt-dock-btn" style="color:#fda4af;border-color:rgba(244,63,94,0.35);" onclick="logout()"><span>🚪</span><small>خروج</small></button>
+</nav>
+<script>
+function filterPageByTimelineHour(hourPrefix, chipEl) {
+    document.querySelectorAll('.pt-hour-chip').forEach(c => c.classList.remove('active'));
+    if (chipEl) chipEl.classList.add('active');
+    document.querySelectorAll('tbody tr').forEach(tr => {
+        if (!hourPrefix) { tr.style.display = ''; return; }
+        tr.style.display = tr.textContent.includes(hourPrefix) ? '' : 'none';
+    });
+}
+</script>
+
+<!-- ==========================================================================
+     🏢 ENTERPRISE ERP DESIGN SYSTEM (Odoo / Oracle Opera PMS / Stripe Standard)
+     ========================================================================== -->
+
+
+<script id="enterpriseErpCleanerJS">
+// Clean cartoon emojis from text nodes & replace sidebar/nav icons with crisp Enterprise SVG Vector Icons
+(function() {
+  const NAV_SVG_MAP = {
+    'dashboard': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>',
+    'reservations': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    'control_room': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    'ops': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    'daily_sales': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    'daily-sales': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+    'treasury': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="16" cy="14" r="1.5"/></svg>',
+    'commissions': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>',
+    'salaries': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
+    'reports': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+    'assets': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    'dresses': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    'laundry': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"/><circle cx="12" cy="13" r="4"/><path d="M3 6l2-4h14l2 4"/></svg>',
+    'team_hotels': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    'team-hotels': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    'team': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    'hotels': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><line x1="9" y1="7" x2="9" y2="7.01"/><line x1="15" y1="7" x2="15" y2="7.01"/><line x1="9" y1="11" x2="9" y2="11.01"/><line x1="15" y1="11" x2="15" y2="11.01"/><line x1="9" y1="15" x2="9" y2="15.01"/><line x1="15" y1="15" x2="15" y2="15.01"/></svg>',
+    'settings': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    'chat': '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+  };
+
+  // Regex matching decorative cartoon emojis
+  const EMOJI_RE = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{FE0F}]/gu;
+
+  function stripEmojisFromTextNodes(rootEl) {
+    if (!rootEl) return;
+    const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null, false);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const node of nodes) {
+      const parent = node.parentElement;
+      if (!parent) continue;
+      const tag = parent.tagName;
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'INPUT') continue;
+      // Keep clean text inside buttons, headings, labels, badges, table cells
+      const orig = node.nodeValue;
+      if (EMOJI_RE.test(orig)) {
+        const cleaned = orig.replace(EMOJI_RE, '').replace(/\s{2,}/g, ' ');
+        // Only replace if it doesn't leave a button completely empty
+        if (cleaned.trim().length > 0 || parent.children.length > 0) {
+          node.nodeValue = cleaned;
+        }
+      }
+    }
+  }
+
+  function applyEnterpriseSvgIcons() {
+    // 1. Sidebar nav icons
+    document.querySelectorAll('.sidebar nav a').forEach(a => {
+      const pageKey = a.getAttribute('data-page') || (a.getAttribute('href') || '').replace(/^[\/#]+/, '') || 'dashboard';
+      const iconBox = a.querySelector('.nav-icon-box');
+      if (iconBox && NAV_SVG_MAP[pageKey]) {
+        iconBox.innerHTML = NAV_SVG_MAP[pageKey];
+      }
+    });
+
+    // 2. Mobile 8-Icon Squircle Launcher
+    const squircleOrder = ['reservations', 'daily_sales', 'treasury', 'chat', 'assets', 'team', 'hotels', 'reports'];
+    document.querySelectorAll('.mob-squircle-grid .mob-squircle').forEach((sq, idx) => {
+      const key = squircleOrder[idx] || 'dashboard';
+      if (NAV_SVG_MAP[key]) sq.innerHTML = NAV_SVG_MAP[key];
+    });
+
+    // 3. Mobile Bottom Dock Icons
+    document.querySelectorAll('#floatingBottomDock .dock-item-btn').forEach(btn => {
+      const oc = btn.getAttribute('onclick') || '';
+      const sp = btn.querySelector('span');
+      if (!sp) return;
+      for (const k of Object.keys(NAV_SVG_MAP)) {
+        if (oc.includes(k)) {
+          sp.innerHTML = NAV_SVG_MAP[k];
+          break;
+        }
+      }
+    });
+
+    // 4. Topbar Bell, Mic, Menu, Search
+    const bell = document.querySelector('.notification-bell');
+    if (bell) bell.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+    const aiIcon = document.querySelector('.ai-sparkle-icon');
+    if (aiIcon) aiIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+    const aiBtnLabel = document.querySelector('#aiTopbarButton span:last-child, #aiTopbarTriggerBtn span:last-child');
+    if (aiBtnLabel) aiBtnLabel.textContent = 'الأوامر الصوتية والسريعة';
+    const micBtn = document.getElementById('aiMicBtn');
+    if (micBtn) micBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+
+    // 5. Table action mini-buttons: replace single-emoji labels with clear Arabic micro-labels
+    document.querySelectorAll('.context-actions .mini-btn').forEach(mb => {
+      const title = mb.getAttribute('title') || '';
+      const txt = (mb.textContent || '').trim();
+      if (txt.length <= 2) {
+        if (title.includes('Checkout') || title.includes('تسليم')) mb.textContent = 'تسليم';
+        else if (title.includes('عربون')) mb.textContent = 'عربون';
+        else if (title.includes('ميعاد')) mb.textContent = 'ميعاد';
+        else if (title.includes('التفاصيل')) mb.textContent = 'عرض';
+        else if (title.includes('طباعة')) mb.textContent = 'إيصال';
+        else if (title.includes('تعديل')) mb.textContent = 'تعديل';
+        else if (title.includes('حذف')) mb.textContent = 'حذف';
+      }
+    });
+
+    // 6. Strip remaining decorative emojis from visible text nodes
+    
+  // Replace remaining header/panel cartoon icons with clean SVGs or text
+  document.querySelectorAll('.header .search > span:first-child').forEach(el => {
+    el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  });
+  document.querySelectorAll('.header .header-clock-pill > span:first-child').forEach(el => {
+    el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  });
+  const bMode1 = document.getElementById('btnSwitchMode1');
+  if (bMode1 && !bMode1.innerHTML.includes('<svg')) {
+    bMode1.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><span>نهاري</span>';
+    bMode1.style.width = 'auto';
+  }
+  const bMode2 = document.getElementById('btnSwitchMode2');
+  if (bMode2 && !bMode2.innerHTML.includes('<svg')) {
+    bMode2.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><span>ليلي</span>';
+    bMode2.style.width = 'auto';
+  }
+  document.querySelectorAll('.sidebar .btn-logout span, #headerLogoutBtn').forEach(el => {
+    if (el.id === 'headerLogoutBtn') el.textContent = 'تسجيل الخروج';
+    else el.innerHTML = '';
+  });
+
+    
+  document.querySelectorAll('#aiTopbarButton span:first-child, #aiTopbarTriggerBtn span:first-child, .ai-sparkle-icon').forEach(el => {
+    el.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>';
+  });
+
+    stripEmojisFromTextNodes(document.body);
+  }
+
+  window.applyEnterpriseSvgIcons = applyEnterpriseSvgIcons;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    applyEnterpriseSvgIcons();
+    setTimeout(applyEnterpriseSvgIcons, 200);
+    setTimeout(applyEnterpriseSvgIcons, 600);
+    // Keep clean after dynamic renders
+    const obs = new MutationObserver(function() {
+      if (window._entCleanTimer) clearTimeout(window._entCleanTimer);
+      window._entCleanTimer = setTimeout(applyEnterpriseSvgIcons, 60);
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+  });
+})();
+</script>
+
+
+<!-- ==========================================================================
+     ✨ ULTRA-LUXURY AURORA & GLASSMORPHISM DESIGN SYSTEM (High-End Pro UI)
+     ========================================================================== -->
+
+
+<script id="ultraLuxuryAuroraJS">
+(function() {
+  const LUX_MAP = {
+    'dashboard': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7.5" height="9.5" rx="2.2" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.9"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="2" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.9"/><rect x="13.5" y="11.5" width="7.5" height="9.5" rx="2.2" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.9"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="2" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.9"/></svg>',
+    'reservations': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="3" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><path d="M3 9.5H21" stroke="currentColor" stroke-width="1.9"/><path d="M8 2.5V5.5M16 2.5V5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8.5" cy="14" r="1.3" fill="currentColor"/><circle cx="12" cy="14" r="1.3" fill="currentColor"/><circle cx="15.5" cy="14" r="1.3" fill="currentColor"/></svg>',
+    'control_room': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.9"/><path d="M5.5 12H9L11 8L13.5 16L15.5 12H18.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'ops': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.9"/><path d="M5.5 12H9L11 8L13.5 16L15.5 12H18.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    'daily_sales': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><path d="M12 6.5V17.5M14.8 9.2C14.8 8 13.6 7.2 12 7.2C10.4 7.2 9.2 8 9.2 9.2C9.2 10.5 10.5 11.1 12 11.6C13.5 12.1 14.8 12.7 14.8 14.2C14.8 15.5 13.6 16.3 12 16.3C10.4 16.3 9.2 15.5 9.2 14.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+    'daily-sales': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9.5" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><path d="M12 6.5V17.5M14.8 9.2C14.8 8 13.6 7.2 12 7.2C10.4 7.2 9.2 8 9.2 9.2C9.2 10.5 10.5 11.1 12 11.6C13.5 12.1 14.8 12.7 14.8 14.2C14.8 15.5 13.6 16.3 12 16.3C10.4 16.3 9.2 15.5 9.2 14.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+    'treasury': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5.5" width="19" height="14" rx="3" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><path d="M2.5 10H21.5" stroke="currentColor" stroke-width="1.9"/><circle cx="16.5" cy="14.5" r="1.6" fill="currentColor"/></svg>',
+    'commissions': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.9"/><path d="M16.5 7.5L7.5 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="8.5" cy="8.5" r="1.8" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.8" fill="currentColor"/></svg>',
+    'salaries': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M6 9V15M18 9V15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    'reports': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.9"/><path d="M8 16V12M12 16V8M16 16V10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    'assets': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 20H4C2.9 20 2 19.1 2 18V8C2 6.9 2.9 6 4 6H7L9 3.5H15L17 6H20C21.1 6 22 6.9 22 8V18C22 19.1 21.1 20 20 20Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="13" r="3.6" stroke="currentColor" stroke-width="1.9"/></svg>',
+    'dresses': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 20H4C2.9 20 2 19.1 2 18V8C2 6.9 2.9 6 4 6H7L9 3.5H15L17 6H20C21.1 6 22 6.9 22 8V18C22 19.1 21.1 20 20 20Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="13" r="3.6" stroke="currentColor" stroke-width="1.9"/></svg>',
+    'laundry': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3.5" y="3" width="17" height="18" rx="3" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="13" r="4.2" stroke="currentColor" stroke-width="1.9"/><path d="M7 6.5H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    'team_hotels': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.5" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.9"/><path d="M2.5 19.5C2.5 16.5 5.4 14 9 14C12.6 14 15.5 16.5 15.5 19.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="17" cy="8.5" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M17.5 14.2C19.8 14.7 21.5 16.5 21.5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    'team-hotels': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.5" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.9"/><path d="M2.5 19.5C2.5 16.5 5.4 14 9 14C12.6 14 15.5 16.5 15.5 19.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="17" cy="8.5" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M17.5 14.2C19.8 14.7 21.5 16.5 21.5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    'team': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="7.5" r="3.5" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.9"/><path d="M2.5 19.5C2.5 16.5 5.4 14 9 14C12.6 14 15.5 16.5 15.5 19.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="17" cy="8.5" r="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M17.5 14.2C19.8 14.7 21.5 16.5 21.5 19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    'hotels': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="4.5" y="3" width="15" height="18" rx="2.5" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9"/><path d="M9 7.5H10.5M13.5 7.5H15M9 11.5H10.5M13.5 11.5H15M10.5 21V16.5H13.5V21" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+    'settings': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.9"/><path d="M12 2.5V5M12 19V21.5M4.2 4.2L6 6M18 18L19.8 19.8M2.5 12H5M19 12H21.5M4.2 19.8L6 18M18 6L19.8 4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>',
+    'chat': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 14.5C21 16.2 19.7 17.5 18 17.5H8L3.5 21V6.5C3.5 4.8 4.8 3.5 6.5 3.5H18C19.7 3.5 21 4.8 21 6.5V14.5Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><path d="M8 9.5H16M8 13H13" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>'
+  };
+
+  function upgradeToLuxuryDuotoneIcons() {
+    document.querySelectorAll('.sidebar nav a').forEach(a => {
+      const pageKey = a.getAttribute('data-page') || (a.getAttribute('href') || '').replace(/^[\/#]+/, '') || 'dashboard';
+      const iconBox = a.querySelector('.nav-icon-box');
+      if (iconBox && LUX_MAP[pageKey]) iconBox.innerHTML = LUX_MAP[pageKey];
+    });
+
+    const squircleOrder = ['reservations', 'daily_sales', 'treasury', 'chat', 'assets', 'team', 'hotels', 'reports'];
+    document.querySelectorAll('.mob-squircle-grid .mob-squircle').forEach((sq, idx) => {
+      const key = squircleOrder[idx] || 'dashboard';
+      if (LUX_MAP[key]) sq.innerHTML = LUX_MAP[key];
+    });
+
+    document.querySelectorAll('.kpi-svg-badge').forEach((badge, i) => {
+      const keys = ['reservations', 'control_room', 'daily_sales', 'treasury', 'assets', 'team'];
+      badge.innerHTML = LUX_MAP[keys[i % keys.length]];
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(upgradeToLuxuryDuotoneIcons, 100);
+    setTimeout(upgradeToLuxuryDuotoneIcons, 500);
+  });
+})();
+</script>
+
+
+
+
+
+<!-- ==========================================================================
+     ✨ MENU & BUTTON GLOW EFFECTS + COMPACT PROPORTIONS ON PREVIOUS INTERFACE
+     ========================================================================== -->
+<style id="menuAndBtnGlowCompactCSS">
+@keyframes menuBtnLightSweep {
+  0% { transform: translateX(130%) skewX(-25deg); }
+  45%, 100% { transform: translateX(-180%) skewX(-25deg); }
+}
+@keyframes activeMenuPulseGlow {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.55), 0 0 12px rgba(56, 189, 248, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(37, 99, 235, 0.8), 0 0 20px rgba(56, 189, 248, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+}
+
+/* 1. GLOWING EFFECTS ON SIDEBAR MENUS & BOTTOM DOCK MENUS */
+html body #sidebar.sidebar nav a {
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+html body #sidebar.sidebar nav a::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0; bottom: 0; width: 45% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent) !important;
+  transform: translateX(150%) skewX(-25deg) !important;
+  transition: transform 0.55s ease !important;
+  pointer-events: none !important;
+}
+html body #sidebar.sidebar nav a:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.28), rgba(6, 182, 212, 0.18)) !important;
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.35), inset 0 0 8px rgba(96, 165, 250, 0.2) !important;
+  color: #ffffff !important;
+  transform: translateX(-3px) !important;
+}
+html body #sidebar.sidebar nav a:hover::after {
+  transform: translateX(-180%) skewX(-25deg) !important;
+}
+html body #sidebar.sidebar nav a.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #0284c7 100%) !important;
+  border: 1px solid #93c5fd !important;
+  color: #ffffff !important;
+  animation: activeMenuPulseGlow 3s infinite ease-in-out !important;
+}
+html body #sidebar.sidebar nav a.active::after {
+  animation: menuBtnLightSweep 4.5s infinite ease-in-out !important;
+}
+
+/* Mobile Bottom Dock & Quick App Icons Menu Glow */
+html body.mobile-phone-edition #floatingBottomDock .dock-item-btn.active {
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.5), 0 0 12px rgba(56, 189, 248, 0.4) !important;
+}
+html body.mobile-phone-edition .mob-app-icon-btn:hover .mob-squircle,
+html body.mobile-phone-edition .mob-app-icon-btn:active .mob-squircle {
+  box-shadow: 0 0 18px rgba(37, 99, 235, 0.45) !important;
+  transform: translateY(-2px) scale(1.05) !important;
+}
+
+/* 2. GLOWING LIGHTING EFFECTS ON ALL BUTTONS (.btn & .mini-btn) */
+html body .btn {
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+html body .btn::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0; bottom: 0; width: 50% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent) !important;
+  transform: translateX(150%) skewX(-25deg) !important;
+  pointer-events: none !important;
+}
+html body .btn:hover::after {
+  animation: menuBtnLightSweep 1.2s ease-out !important;
+}
+html body .btn:hover {
+  transform: translateY(-1.5px) !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25), 0 0 12px rgba(59, 130, 246, 0.22) !important;
+  border-color: #60a5fa !important;
+}
+html body .btn.primary,
+html body .btn.blue {
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38), 0 0 10px rgba(56, 189, 248, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+html body .btn.primary::after,
+html body .btn.green::after {
+  animation: menuBtnLightSweep 5s infinite ease-in-out !important;
+}
+html body .btn.primary:hover,
+html body .btn.blue:hover {
+  box-shadow: 0 8px 22px rgba(37, 99, 235, 0.55), 0 0 18px rgba(56, 189, 248, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+html body .btn.green {
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35), 0 0 10px rgba(52, 211, 153, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+html body .btn.green:hover {
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.55), 0 0 16px rgba(52, 211, 153, 0.4) !important;
+}
+html body .btn.amber {
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35), 0 0 10px rgba(251, 191, 36, 0.2) !important;
+}
+html body .btn.amber:hover {
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.55), 0 0 16px rgba(251, 191, 36, 0.4) !important;
+}
+html body .btn.purple {
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35), 0 0 10px rgba(167, 139, 250, 0.2) !important;
+}
+html body .btn.purple:hover {
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.55), 0 0 16px rgba(167, 139, 250, 0.4) !important;
+}
+
+/* 3. SHRINK UNNECESSARY / OVERSIZED ELEMENTS (تصغير الحاجات اللي ملهاش لازمة) */
+/* A. Shrink top header height & pills */
+html body:not(.mobile-phone-edition) .header {
+  min-height: 46px !important;
+  height: 46px !important;
+  padding: 4px 12px !important;
+  margin-bottom: 8px !important;
+  border-radius: 12px !important;
+}
+html body .header .search {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+}
+html body .header .search input {
+  font-size: 11.5px !important;
+}
+html body .header .header-clock-pill {
+  height: 28px !important;
+  padding: 0 9px !important;
+  font-size: 11px !important;
+}
+html body .header .ai-topbar-trigger,
+html body .header .notification-trigger {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 11.5px !important;
+}
+html body .header .user {
+  padding: 2px 7px !important;
+}
+html body .header .user strong {
+  font-size: 11.5px !important;
+}
+html body .header .user small {
+  font-size: 9.5px !important;
+}
+html body .header .user .avatar {
+  width: 26px !important;
+  height: 26px !important;
+  font-size: 11px !important;
+}
+
+/* B. Shrink the 30-min alert strip & CEO quick-tools banner into slim 1-line bars */
+html body .thirty-min-live-strip {
+  padding: 5px 10px !important;
+  margin-bottom: 6px !important;
+  border-radius: 10px !important;
+  min-height: 34px !important;
+}
+html body .thirty-min-live-strip span {
+  font-size: 11px !important;
+}
+html body .thirty-min-live-strip .btn {
+  height: 25px !important;
+  min-height: 25px !important;
+  padding: 0 8px !important;
+  font-size: 10.5px !important;
+}
+
+html body #roleDedicatedDashboardHost > .bento-panel {
+  padding: 6px 12px !important;
+  margin-bottom: 8px !important;
+  border-radius: 10px !important;
+}
+html body #roleDedicatedDashboardHost > .bento-panel h2 {
+  font-size: 12px !important;
+  margin: 0 !important;
+}
+html body #roleDedicatedDashboardHost > .bento-panel .badge {
+  font-size: 10px !important;
+  padding: 1px 6px !important;
+}
+html body #roleDedicatedDashboardHost > .bento-panel .btn {
+  height: 26px !important;
+  min-height: 26px !important;
+  padding: 0 9px !important;
+  font-size: 10.5px !important;
+  border-radius: 8px !important;
+}
+
+/* C. Shrink Dashboard Welcome Box & KPI Cards so they are sleek and proportional */
+html body .dash-welcome {
+  padding: 8px 14px !important;
+  border-radius: 12px !important;
+  min-height: 58px !important;
+}
+html body .dash-welcome h1 {
+  font-size: 14px !important;
+  margin: 0 !important;
+}
+html body .dash-welcome p {
+  font-size: 10.5px !important;
+  margin: 2px 0 0 !important;
+}
+html body .dash-welcome input[type="date"] {
+  height: 26px !important;
+  font-size: 11px !important;
+  padding: 0 6px !important;
+}
+html body .kpi-card,
+html body .res-kpi {
+  padding: 8px 12px !important;
+  min-height: 56px !important;
+  border-radius: 12px !important;
+}
+html body .kpi-card small,
+html body .res-kpi h3 {
+  font-size: 11px !important;
+  margin: 0 !important;
+}
+html body .kpi-card strong,
+html body .res-kpi strong {
+  font-size: 17px !important;
+}
+html body .kpi-svg-badge {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 9px !important;
+}
+
+/* D. Shrink Page Headings, Toolbars, Buttons & Filter Inputs */
+html body .page-heading,
+html body .res-header {
+  padding: 8px 14px !important;
+  margin-bottom: 8px !important;
+  border-radius: 12px !important;
+  min-height: 44px !important;
+}
+html body .page-heading h1,
+html body .res-header h1 {
+  font-size: 15px !important;
+  margin: 0 !important;
+}
+html body .page-heading p,
+html body .res-header p {
+  font-size: 11px !important;
+  margin: 1px 0 0 !important;
+}
+html body .btn {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 11.5px !important;
+  border-radius: 8px !important;
+}
+html body .input,
+html body select.input,
+html body .res-filters .input,
+html body .toolbar .input {
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 2px 8px !important;
+  font-size: 11.5px !important;
+  border-radius: 8px !important;
+}
+html body .field label {
+  font-size: 11px !important;
+  margin-bottom: 2px !important;
+}
+html body .res-toolbar,
+html body .res-filters,
+html body .toolbar {
+  padding: 8px 10px !important;
+  gap: 6px !important;
+  margin-bottom: 8px !important;
+}
+html body .panel,
+html body .bento-panel {
+  padding: 10px 12px !important;
+  border-radius: 14px !important;
+}
+html body .panel-head {
+  margin-bottom: 8px !important;
+  padding-bottom: 6px !important;
+}
+html body .panel-head h2 {
+  font-size: 13.5px !important;
+}
+</style>
+
+
+<!-- ==========================================================================
+     🎨 UNIFIED PERFECT LIGHT & DARK THEME SYSTEM (V102)
+     - LIGHT MODE (system-mode-1): Pure White & Soft Sky Blue (Zero Dark Navy #0f172a)
+     - DARK MODE (system-mode-2): Deep Onyx & Royal Gold (Zero White Patches)
+     - PURE SLIDING TOGGLE SWITCH (Icon-Only Knob, Zero Text)
+     ========================================================================== -->
+<style id="completeDarkModeAndModernToggleCSS">
+@keyframes luxuryLightSweep {
+  0% { transform: translateX(120%) skewX(-22deg); }
+  50%, 100% { transform: translateX(-160%) skewX(-22deg); }
+}
+@keyframes viewSmoothReveal {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+html body .spa-page.active-view {
+  animation: viewSmoothReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* ============================================================================
+   1. LIGHT MODE (system-mode-1): 100% WHITE & SOFT SKY BLUE (ZERO DARK NAVY)
+   ============================================================================ */
+html body.system-mode-1,
+html body:not(.system-mode-2) {
+  --bg-body: #f0f7ff !important;
+  --bg-card: #ffffff !important;
+  --bg-surface: #f8fbff !important;
+  --bg-surface-1: #ffffff !important;
+  --bg-surface-2: #eff6ff !important;
+  --border: #dbeafe !important;
+  --border-strong: #bfdbfe !important;
+  --text-main: #1e3a8a !important;
+  --text-heading: #1e3a8a !important;
+  --text-muted: #475569 !important;
+  background: linear-gradient(180deg, #f0f7ff 0%, #f8fbff 55%, #eef6ff 100%) !important;
+  color: #1e3a8a !important;
+}
+
+html:has(body.system-mode-1),
+html:has(body:not(.system-mode-2)) {
+  background: #e0f2fe !important;
+}
+
+/* Sidebar in Light Mode: Crisp White & Soft Sky Blue (overrides :not(.arch-layout3) #sidebar.sidebar) */
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar,
+html body.theme-light:not([data-black-style]):not(.arch-layout3) #sidebar.sidebar,
+html body:not(.system-mode-2) #sidebar.sidebar,
+html body.system-mode-1 #sidebar,
+html body.system-mode-1 aside.sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 55%, #e0f2fe 100%) !important;
+  border: 1px solid #bae6fd !important;
+  border-left: 1.5px solid #93c5fd !important;
+  box-shadow: -6px 0 24px rgba(37, 99, 235, 0.08) !important;
+  color: #1e3a8a !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .sidebar-brand,
+html body:not(.system-mode-2) #sidebar.sidebar .sidebar-brand,
+html body.system-mode-1 .sidebar-brand {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  border: 1px solid #93c5fd !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .sidebar-brand strong,
+html body:not(.system-mode-2) .sidebar-brand .brand-details strong {
+  color: #1e3a8a !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .sidebar-brand small,
+html body:not(.system-mode-2) .sidebar-brand .brand-details small {
+  color: #2563eb !important;
+  font-weight: 700 !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .nav-group-label,
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .nav-group-label span,
+html body:not(.system-mode-2) #sidebar .nav-group-label span {
+  color: #2563eb !important;
+  font-weight: 800 !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .nav-group-label::after,
+html body:not(.system-mode-2) #sidebar .nav-group-label::after {
+  background: #bfdbfe !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a,
+html body.theme-light:not([data-black-style]):not(.arch-layout3) #sidebar.sidebar nav a,
+html body:not(.system-mode-2) #sidebar nav a {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #1e3a8a !important;
+  border: 1px solid #dbeafe !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.04) !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a .nav-label,
+html body:not(.system-mode-2) #sidebar nav a .nav-label {
+  color: #1e3a8a !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a .nav-icon-box,
+html body:not(.system-mode-2) #sidebar nav a .nav-icon-box {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a:hover,
+html body:not(.system-mode-2) #sidebar nav a:hover {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.16) !important;
+  transform: translateX(-3px) !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a:hover .nav-label,
+html body:not(.system-mode-2) #sidebar nav a:hover .nav-label {
+  color: #1d4ed8 !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a.active,
+html body.theme-light:not([data-black-style]):not(.arch-layout3) #sidebar.sidebar nav a.active,
+html body:not(.system-mode-2) #sidebar nav a.active {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #1d4ed8 !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32) !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a.active .nav-label,
+html body:not(.system-mode-2) #sidebar nav a.active .nav-label,
+html body:not(.system-mode-2) #sidebar nav a.active span {
+  color: #ffffff !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar nav a.active .nav-icon-box,
+html body:not(.system-mode-2) #sidebar nav a.active .nav-icon-box {
+  background: rgba(255, 255, 255, 0.24) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .sidebar-footer,
+html body:not(.system-mode-2) #sidebar .sidebar-footer {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-top: 1px solid #bae6fd !important;
+  color: #1e3a8a !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .sidebar-status-box,
+html body:not(.system-mode-2) .sidebar-status-box {
+  background: #f0f9ff !important;
+  border: 1px solid #bae6fd !important;
+  color: #1e3a8a !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .sidebar-status-box #dbStatus,
+html body:not(.system-mode-2) .sidebar-status-box #dbStatus {
+  color: #059669 !important;
+}
+
+html body.system-mode-1:not(.arch-layout3) #sidebar.sidebar .btn-logout,
+html body:not(.system-mode-2) .btn-logout {
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+  border: 1px solid #fecdd3 !important;
+}
+
+/* Light Mode Welcome Banner, Featured KPIs, Avatar, & Mobile Elements (Zero Dark Navy) */
+html body.system-mode-1 .dash-welcome,
+html body:not(.system-mode-2) .dash-welcome {
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 55%, #dbeafe 100%) !important;
+  border: 1px solid #93c5fd !important;
+  color: #1e3a8a !important;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08) !important;
+}
+html body:not(.system-mode-2) .dash-welcome h1,
+html body:not(.system-mode-2) .dash-welcome h2,
+html body:not(.system-mode-2) .dash-welcome strong {
+  color: #1e3a8a !important;
+}
+html body:not(.system-mode-2) .dash-welcome p,
+html body:not(.system-mode-2) .dash-welcome small {
+  color: #334155 !important;
+}
+html body:not(.system-mode-2) .date-picker-glass {
+  background: #ffffff !important;
+  border: 1px solid #93c5fd !important;
+  color: #1e3a8a !important;
+}
+html body:not(.system-mode-2) .date-picker-glass input {
+  color: #1e3a8a !important;
+}
+
+html body.system-mode-1 .kpi-card.featured,
+html body:not(.system-mode-2) .kpi-card.featured,
+html body.system-mode-1:where(.page-reservations) .res-kpi:first-of-type,
+html body.system-mode-1:where(.page-reservations) .res-container > .res-kpi:nth-child(2),
+html body.theme-light:not([data-black-style]):where(.page-reservations) .res-container > .res-kpi:nth-child(2) {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 60%, #bfdbfe 100%) !important;
+  border: 1.5px solid #60a5fa !important;
+  color: #1e3a8a !important;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.14) !important;
+}
+html body:not(.system-mode-2) .kpi-card.featured small,
+html body:not(.system-mode-2) .kpi-card.featured strong,
+html body.system-mode-1:where(.page-reservations) .res-kpi:first-of-type h3,
+html body.system-mode-1:where(.page-reservations) .res-kpi:first-of-type strong,
+html body.system-mode-1:where(.page-reservations) .res-container > .res-kpi:nth-child(2) h3,
+html body.system-mode-1:where(.page-reservations) .res-container > .res-kpi:nth-child(2) strong {
+  color: #1e3a8a !important;
+  text-shadow: none !important;
+}
+
+html body:not(.system-mode-2) .header .user .avatar,
+html body:not(.system-mode-2) #simUserAvatar.avatar {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #93c5fd !important;
+}
+
+html body:not(.system-mode-2).mobile-phone-edition .mob-wallet-card {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #0284c7 100%) !important;
+  border: 1px solid #93c5fd !important;
+  color: #ffffff !important;
+}
+html body:not(.system-mode-2).mobile-phone-edition .mob-dynamic-island {
+  background: #e0f2fe !important;
+  color: #1e3a8a !important;
+  border: 1px solid #93c5fd !important;
+}
+html body:not(.system-mode-2).mobile-phone-edition .mob-role-pill.active {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+}
+
+/* Light Mode Tables & Buttons */
+html body:not(.system-mode-2) table th,
+html body:not(.system-mode-2) .modern-table th {
+  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%) !important;
+  color: #1e3a8a !important;
+  font-weight: 800 !important;
+  border-bottom: 1.5px solid #93c5fd !important;
+}
+
+/* ============================================================================
+   2. PURE MODERN SLIDING TOGGLE SWITCH (NO TEXT "نهاري / ليلي")
+   ============================================================================ */
+html body .dual-mode-top-switcher,
+html body .system-mode-switcher {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  height: 28px !important;
+  padding: 3px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%) !important;
+  border: 1.5px solid #60a5fa !important;
+  box-shadow: inset 0 2px 4px rgba(30, 58, 138, 0.15), 0 2px 8px rgba(37, 99, 235, 0.15) !important;
+  cursor: pointer !important;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow: hidden !important;
+  user-select: none !important;
+}
+
+html body.system-mode-2 .dual-mode-top-switcher,
+html body.system-mode-2 .system-mode-switcher {
+  background: linear-gradient(135deg, #090d16 0%, #1e293b 100%) !important;
+  border-color: rgba(245, 158, 11, 0.65) !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.3), inset 0 2px 5px rgba(0, 0, 0, 0.7) !important;
+}
+
+html body .dual-mode-top-switcher button span,
+html body .system-mode-switcher button span {
+  display: none !important;
+  font-size: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+html body .dual-mode-top-switcher button,
+html body .system-mode-switcher button {
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  max-height: 22px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 50% !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  background: transparent !important;
+  color: #64748b !important;
+  box-shadow: none !important;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+html body:not(.system-mode-2) #btnSwitchMode1,
+html body:not(.system-mode-2) .sys-mode-btn[data-mode="1"] {
+  background: #ffffff !important;
+  color: #f59e0b !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25), 0 0 8px rgba(245, 158, 11, 0.35) !important;
+  transform: scale(1.05) !important;
+}
+
+html body:not(.system-mode-2) #btnSwitchMode2,
+html body:not(.system-mode-2) .sys-mode-btn[data-mode="2"] {
+  background: transparent !important;
+  color: #1e3a8a !important;
+  opacity: 0.55 !important;
+  box-shadow: none !important;
+}
+
+html body.system-mode-2 #btnSwitchMode2,
+html body.system-mode-2 .sys-mode-btn[data-mode="2"] {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #090d16 !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.65) !important;
+  transform: scale(1.05) !important;
+}
+
+html body.system-mode-2 #btnSwitchMode1,
+html body.system-mode-2 .sys-mode-btn[data-mode="1"] {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  opacity: 0.5 !important;
+  box-shadow: none !important;
+}
+
+/* ============================================================================
+   3. COMPLETE DARK MODE (system-mode-2): ZERO WHITE PATCHES ANYWHERE
+   ============================================================================ */
+html:has(body.system-mode-2) {
+  background: #060911 !important;
+}
+
+html body.system-mode-2 {
+  --bg-body: #090d16 !important;
+  --bg-card: #111827 !important;
+  --bg-surface: #111827 !important;
+  --bg-surface-1: #111827 !important;
+  --bg-surface-2: #1e293b !important;
+  --border: #1e293b !important;
+  --border-strong: #334155 !important;
+  --text-main: #f8fafc !important;
+  --text-heading: #ffffff !important;
+  --text-muted: #94a3b8 !important;
+  background: #090d16 !important;
+  background-color: #090d16 !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2 .app,
+html body.system-mode-2 .main,
+html body.system-mode-2 .content,
+html body.system-mode-2 .view-section,
+html body.system-mode-2 .tab-pane,
+html body.system-mode-2 .spa-page {
+  background: transparent !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2 #sidebar.sidebar,
+html body.system-mode-2 aside.sidebar {
+  background: linear-gradient(180deg, #090d16 0%, #111827 60%, #0f172a 100%) !important;
+  border-left: 1px solid rgba(245, 158, 11, 0.35) !important;
+  box-shadow: -8px 0 28px rgba(0, 0, 0, 0.65) !important;
+}
+
+html body.system-mode-2 #sidebar .sidebar-brand {
+  background: linear-gradient(135deg, #151f32 0%, #1e293b 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+}
+
+html body.system-mode-2 #sidebar nav a {
+  background: rgba(30, 41, 59, 0.65) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(51, 65, 85, 0.8) !important;
+}
+
+html body.system-mode-2 #sidebar nav a .nav-icon-box {
+  background: #0f172a !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+html body.system-mode-2 #sidebar nav a.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #090d16 !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4) !important;
+}
+
+html body.system-mode-2 #sidebar nav a.active .nav-label,
+html body.system-mode-2 #sidebar nav a.active span {
+  color: #090d16 !important;
+  font-weight: 900 !important;
+}
+
+html body.system-mode-2 #sidebar nav a.active .nav-icon-box {
+  background: rgba(9, 13, 22, 0.2) !important;
+  color: #090d16 !important;
+  border-color: rgba(9, 13, 22, 0.3) !important;
+}
+
+html body.system-mode-2 .header,
+html body.system-mode-2 .footer,
+html body.system-mode-2 .panel,
+html body.system-mode-2 .bento-panel,
+html body.system-mode-2 #roleDedicatedDashboardHost > .bento-panel,
+html body.system-mode-2 #roleDedicatedDashboardHost .bento-panel,
+html body.system-mode-2 .res-card,
+html body.system-mode-2 .res-header,
+html body.system-mode-2 .res-toolbar,
+html body.system-mode-2 .res-filters,
+html body.system-mode-2 .bento-header,
+html body.system-mode-2 .bento-header-card,
+html body.system-mode-2 .ops-header,
+html body.system-mode-2 .kpi-card,
+html body.system-mode-2 .res-kpi,
+html body.system-mode-2 .ops-kpi-card,
+html body.system-mode-2 .kpi-mini,
+html body.system-mode-2 .stat-card,
+html body.system-mode-2 .page-heading,
+html body.system-mode-2 .toolbar,
+html body.system-mode-2 .action-grid,
+html body.system-mode-2 .table-wrap,
+html body.system-mode-2 .modal-card,
+html body.system-mode-2 .command-box,
+html body.system-mode-2 .logic-tabs,
+html body.system-mode-2 .summary-box,
+html body.system-mode-2 .photo-split-preview,
+html body.system-mode-2 .detail-row,
+html body.system-mode-2 .timeline-card,
+html body.system-mode-2 .empty-state,
+html body.system-mode-2 .edit-income-banner,
+html body.system-mode-2 .dress-item-row,
+html body.system-mode-2 .clothing-builder,
+html body.system-mode-2 .hotel-perm-grid,
+html body.system-mode-2 .permission-grid,
+html body.system-mode-2 .form-section,
+html body.system-mode-2 .thirty-min-live-strip,
+html body.system-mode-2 .golden-hour-ribbon,
+html body.system-mode-2 .alert-item,
+html body.system-mode-2 .alert-item.danger,
+html body.system-mode-2 .availability-chip,
+html body.system-mode-2 .custom-section {
+  background: #111827 !important;
+  background-image: none !important;
+  border-color: #1f2937 !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2 .dash-welcome,
+html body.system-mode-2 .kpi-card.featured,
+html body.system-mode-2 :where(.page-reservations) .res-kpi:first-of-type,
+html body.system-mode-2 :where(.page-reservations) .res-container > .res-kpi:nth-child(2) {
+  background: linear-gradient(135deg, #111827 0%, #1e293b 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.5) !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2 .header .search,
+html body.system-mode-2 .search,
+html body.system-mode-2 .header .header-clock-pill,
+html body.system-mode-2 .header-clock-pill,
+html body.system-mode-2 #aiTopbarButton,
+html body.system-mode-2 .header .ai-topbar-trigger,
+html body.system-mode-2 #notificationButton,
+html body.system-mode-2 #headerChatQuickBtn,
+html body.system-mode-2 .header .notification-trigger,
+html body.system-mode-2 .header .user,
+html body.system-mode-2 .radar-pulse-badge,
+html body.system-mode-2 .kpi-svg-badge,
+html body.system-mode-2 .date-picker-glass {
+  background: #1e293b !important;
+  background-image: none !important;
+  border: 1px solid #334155 !important;
+  color: #fbbf24 !important;
+}
+
+/* Dark Mode Buttons: Zero White Buttons */
+html body.system-mode-2 .btn,
+html body.system-mode-2 .mini-btn,
+html body.system-mode-2 #btnChatChannelTeam.btn {
+  background: #1e293b !important;
+  background-image: none !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+}
+
+html body.system-mode-2 .btn.primary,
+html body.system-mode-2 .btn.blue,
+html body.system-mode-2 .mini-btn.blue {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+
+html body.system-mode-2 .btn.green,
+html body.system-mode-2 .page-heading .btn.green,
+html body.system-mode-2 .res-toolbar > .btn.green,
+html body.system-mode-2 .mini-btn.green {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+  color: #ffffff !important;
+  border-color: #10b981 !important;
+}
+
+html body.system-mode-2 .btn.amber,
+html body.system-mode-2 .page-heading .btn.amber,
+html body.system-mode-2 #btnAddIncomeNoteTop.btn.amber,
+html body.system-mode-2 .mini-btn.amber {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%) !important;
+  color: #ffffff !important;
+  border-color: #f59e0b !important;
+}
+
+html body.system-mode-2 .btn.purple,
+html body.system-mode-2 .page-heading .btn.purple,
+html body.system-mode-2 .mini-btn.purple {
+  background: linear-gradient(135deg, #5b21b6 0%, #6d28d9 100%) !important;
+  color: #ffffff !important;
+  border-color: #8b5cf6 !important;
+}
+
+html body.system-mode-2 .btn.red,
+html body.system-mode-2 .mini-btn.red {
+  background: linear-gradient(135deg, #be123c 0%, #e11d48 100%) !important;
+  color: #ffffff !important;
+  border-color: #f43f5e !important;
+}
+
+/* Dark Mode Mobile Specifics: Zero White Squircles or Buttons */
+html body.system-mode-2.mobile-phone-edition .mob-app-shell,
+html body.system-mode-2.mobile-phone-edition .mob-header,
+html body.system-mode-2.mobile-phone-edition .mob-role-strip,
+html body.system-mode-2.mobile-phone-edition .mob-squircle-grid,
+html body.system-mode-2.mobile-phone-edition .mob-section-card,
+html body.system-mode-2.mobile-phone-edition .mob-order-card,
+html body.system-mode-2.mobile-phone-edition .mob-bottom-nav {
+  background: #111827 !important;
+  background-image: none !important;
+  border-color: #1f2937 !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2.mobile-phone-edition .mob-squircle,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.blue,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.green,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.amber,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.purple,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.pink,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.indigo,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.teal,
+html body.system-mode-2.mobile-phone-edition .mob-squircle.slate,
+html body.system-mode-2.mobile-phone-edition .mob-w-btn,
+html body.system-mode-2.mobile-phone-edition .mob-w-btn.primary {
+  background: #1e293b !important;
+  background-image: none !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  box-shadow: none !important;
+}
+
+html body.system-mode-2 div[style*="background:#fff"],
+html body.system-mode-2 div[style*="background: #fff"],
+html body.system-mode-2 div[style*="background:#ffffff"],
+html body.system-mode-2 div[style*="background: #ffffff"],
+html body.system-mode-2 div[style*="background:#f8fafc"],
+html body.system-mode-2 div[style*="background: #f8fafc"],
+html body.system-mode-2 div[style*="background:#f1f5f9"],
+html body.system-mode-2 div[style*="background: #f1f5f9"],
+html body.system-mode-2 div[style*="background:#eff6ff"],
+html body.system-mode-2 div[style*="background: #eff6ff"],
+html body.system-mode-2 section[style*="background:#fff"],
+html body.system-mode-2 section[style*="background: #fff"],
+html body.system-mode-2 section[style*="background:#f8fafc"],
+html body.system-mode-2 section[style*="background: #f8fafc"],
+html body.system-mode-2 aside[style*="background:#f8fafc"],
+html body.system-mode-2 aside[style*="background: #f8fafc"],
+html body.system-mode-2 button[style*="background:#eff6ff"] {
+  background: #151f32 !important;
+  background-image: none !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2 input,
+html body.system-mode-2 select,
+html body.system-mode-2 textarea,
+html body.system-mode-2 .input {
+  background: #0b1120 !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2 table,
+html body.system-mode-2 .modern-table {
+  background: #111827 !important;
+  color: #f8fafc !important;
+}
+
+html body.system-mode-2 table thead th,
+html body.system-mode-2 .modern-table thead th {
+  background: #0b1120 !important;
+  background-image: none !important;
+  color: #fbbf24 !important;
+  border-bottom: 1px solid #334155 !important;
+}
+
+html body.system-mode-2 table tbody tr,
+html body.system-mode-2 table tbody td {
+  background: #111827 !important;
+  color: #e2e8f0 !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+
+html body.system-mode-2 table tbody tr:nth-child(even) td {
+  background: #0f172a !important;
+}
+
+html body.system-mode-2 table tbody tr:hover td {
+  background: rgba(245, 158, 11, 0.08) !important;
+}
+
+html body.system-mode-2 h1,
+html body.system-mode-2 h2,
+html body.system-mode-2 h3,
+html body.system-mode-2 h4,
+html body.system-mode-2 strong,
+html body.system-mode-2 b,
+html body.system-mode-2 label {
+  color: #f8fafc !important;
+}
+
+/* Compact Daily Income Notes Bar */
+.compact-notes-bar {
+  padding: 6px 12px !important;
+  margin-bottom: 10px !important;
+  border-radius: 10px !important;
+}
+
+/* Final Polish: Crisp text on Reservations first KPI card in Light Mode, no scrollbar on .res-toolbar, hide #mode1SubArchBtn, Gold active dock/FAB in Mobile Dark Mode */
+html body #mode1SubArchBtn {
+  display: none !important;
+}
+html body .res-toolbar,
+html body :where(.page-reservations) .res-container > .res-toolbar,
+html body #view-reservations .res-toolbar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  overflow: visible !important;
+  gap: 6px !important;
+}
+html body:not(.system-mode-2) .res-kpi h3,
+html body:not(.system-mode-2) .res-kpi strong,
+html body:not(.system-mode-2) .res-kpi small,
+html body:not(.system-mode-2) .res-kpi span:not(.badge),
+html body.system-mode-1:where(.page-reservations) .res-container > .res-kpi:nth-child(2) h3,
+html body.system-mode-1:where(.page-reservations) .res-container > .res-kpi:nth-child(2) strong,
+html body.theme-light:not([data-black-style]):where(.page-reservations) .res-container > .res-kpi:nth-child(2) h3,
+html body.theme-light:not([data-black-style]):where(.page-reservations) .res-container > .res-kpi:nth-child(2) strong {
+  color: #1e3a8a !important;
+  text-shadow: none !important;
+}
+html body:not(.system-mode-2) .res-kpi:first-of-type .kpi-svg-badge,
+html body:not(.system-mode-2) .res-container > .res-kpi:nth-child(2) .kpi-svg-badge {
+  background: #ffffff !important;
+  border: 1px solid #93c5fd !important;
+  color: #2563eb !important;
+}
+html body.system-mode-2.mobile-phone-edition #floatingBottomDock .dock-item-btn.active,
+html body.system-mode-2.mobile-phone-edition .mob-bottom-nav .dock-item-btn.active,
+html body.system-mode-2.mobile-phone-edition .mob-native-fab {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #090d16 !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45) !important;
+}
+</style>
+
+<script id="modernThemeToggleUpgraderJS">
+(function() {
+  const SUN_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+  const MOON_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+
+  function stylePureSlidingToggle() {
+    const b1 = document.getElementById('btnSwitchMode1');
+    const b2 = document.getElementById('btnSwitchMode2');
+    if (b1) {
+      b1.innerHTML = SUN_SVG;
+      b1.removeAttribute('style');
+    }
+    if (b2) {
+      b2.innerHTML = MOON_SVG;
+      b2.removeAttribute('style');
+    }
+    document.querySelectorAll('.sys-mode-btn[data-mode="1"]').forEach(el => { el.innerHTML = SUN_SVG; });
+    document.querySelectorAll('.sys-mode-btn[data-mode="2"]').forEach(el => { el.innerHTML = MOON_SVG; });
+
+    // Make clicking anywhere on the toggle track flip between Mode 1 and Mode 2
+    document.querySelectorAll('.dual-mode-top-switcher, .system-mode-switcher').forEach(sw => {
+      if (sw.dataset.toggleBound === '1') return;
+      sw.dataset.toggleBound = '1';
+      sw.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const isDark = document.body.classList.contains('system-mode-2');
+        const nextMode = isDark ? 1 : 2;
+        if (typeof window.switchMainSystemMode === 'function') {
+          window.switchMainSystemMode(nextMode);
+        } else if (typeof window.switchMobileSystemMode === 'function') {
+          window.switchMobileSystemMode(nextMode);
+        }
+        setTimeout(stylePureSlidingToggle, 20);
+      }, true);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    stylePureSlidingToggle();
+    setTimeout(stylePureSlidingToggle, 200);
+    setTimeout(stylePureSlidingToggle, 600);
+  });
+})();
+</script>
+
+</body>
+</html>

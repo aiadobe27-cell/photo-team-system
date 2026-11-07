@@ -1,0 +1,91 @@
+<!-- =========================================================================
+     📌 ملف القالب (laundry.html): شاشة متابعة المغسلة وتكلفة غسيل الفساتين والجلابيات
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}laundry{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/laundry.css') }}">{% endblock %}
+{% block title %}متابعة المغسلة - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="bento-container">
+    
+    <!-- القسم الأول: العنوان + المؤشرات (مدمجين مع بعض) -->
+    <div class="bento-box bento-header">
+        <div class="title-area">
+            <div class="icon">🧺</div>
+            <div>
+                <h1>متابعة المغسلة</h1>
+                <p>تجميع الحجوزات اليومية والقطع باللون والحجم</p>
+            </div>
+        </div>
+        <div class="kpi-strip">
+            <div class="kpi-mini"><small>الفساتين</small><strong id="lDresses" style="color:#8b5cf6;">0</strong></div>
+            <div class="kpi-mini"><small>الجلابيات</small><strong id="lGalabeyas" style="color:#10b981;">0</strong></div>
+            <div class="kpi-mini"><small>إجمالي القطع</small><strong id="lPieces" style="color:#0284c7;">0</strong></div>
+            <div class="kpi-mini" style="border-color: rgba(245,158,11,0.3);"><small>التكلفة</small><strong id="lCost" style="color:#f59e0b;">0</strong></div>
+        </div>
+    </div>
+
+    <!-- القسم الثاني: لوحة التحكم والأدوات -->
+    <div class="bento-box" style="padding: 10px;">
+        <!-- أدوات الفلترة -->
+        <div class="toolbar-row">
+            <span class="tool-label">الفترة:</span>
+            <input class="input-mini" type="month" id="laundryMonth" style="width: 130px;">
+            <input class="input-mini" type="number" min="1" max="31" id="lDayFrom" value="1" style="width: 60px;">
+            <span class="tool-label">إلى</span>
+            <input class="input-mini" type="number" min="1" max="31" id="lDayTo" value="31" style="width: 60px;">
+            
+            <button class="btn-mini primary" onclick="loadLaundry()">🔄 تحديث</button>
+            <button class="btn-mini outline" onclick="inspectSelectedDate()">📅 فحص</button>
+            
+            <div style="flex-grow: 1;"></div> <!-- مسافة لدفع الأزرار لليسار -->
+            
+            <button class="btn-mini green" onclick="exportDispatchCSV()">📄 تصدير CSV</button>
+            <button class="btn-mini red" onclick="printLaundry()">🖨️ طباعة</button>
+        </div>
+
+        <!-- أدوات الأسعار والإضافة -->
+        <div class="toolbar-row">
+            <span class="tool-label">سعر الغسيل:</span>
+            <span class="tool-label" style="font-weight: normal;">فستان</span>
+            <input class="input-mini" id="dPrice" type="number" step=".01" value="50" style="width: 60px; border-bottom: 2px solid #8b5cf6;">
+            <span class="tool-label" style="font-weight: normal;">جلابية</span>
+            <input class="input-mini" id="gPrice" type="number" step=".01" value="30" style="width: 60px; border-bottom: 2px solid #10b981;">
+            
+            <div style="flex-grow: 1;"></div>
+            
+            <button class="btn-mini green" onclick="openLaundryForm()">➕ غسيل يدوي</button>
+            <button class="btn-mini purple" onclick="openDispatchDetails()">🔍 كشف التفاصيل (مجمع)</button>
+        </div>
+    </div>
+
+    <!-- القسم الثالث: الجدول -->
+    <div class="bento-box" style="padding: 8px;">
+        <div class="compact-table-wrap">
+            <table class="wide-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>التاريخ</th>
+                        <th>الفندق</th>
+                        <th>فساتين</th>
+                        <th>جلابيات</th>
+                        <th>سعر الفستان</th>
+                        <th>سعر الجلابية</th>
+                        <th>الإجمالي</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="laundryBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/laundry.js') }}"></script>
+{% endblock %}

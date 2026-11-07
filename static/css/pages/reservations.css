@@ -1,0 +1,756 @@
+/* ============================================================================
+   📌 ملف التنسيق (reservations.css): تنسيقات وألوان reservations.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/reservations.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-reservations)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+:where(body.page-reservations) .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+:where(body.page-reservations) .status-badge.pending {
+    background: rgba(245,158,11,.18);
+    color: #fbbf24;
+}
+
+:where(body.page-reservations) .status-badge.confirmed {
+    background: rgba(34,197,94,.18);
+    color: #4ade80;
+}
+
+:where(body.page-reservations) .status-badge.cancelled {
+    background: rgba(239,68,68,.18);
+    color: #f87171;
+}
+
+:where(body.page-reservations) .status-badge.delivered {
+    background: rgba(118, 153, 243, 0.18);
+    color: #60a5fa;
+}
+
+:where(body.page-reservations) #bookingForm {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+    text-align: right !important;
+}
+
+@media (max-width: 820px) {
+    :where(body.page-reservations) #bookingForm {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+}
+
+:where(body.page-reservations) #bookingForm .form-section {
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 14px 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    transition: border-color var(--transition-fast) !important;
+}
+
+:where(body.page-reservations) #bookingForm .form-section:hover {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+:where(body.page-reservations) #bookingForm .form-section h3 {
+    margin: 0 !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid var(--border) !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    color: var(--text-main) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    letter-spacing: 0.2px !important;
+}
+
+:where(body.page-reservations) #bookingForm .form-grid.two {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 10px !important;
+}
+
+:where(body.page-reservations) #bookingForm .form-grid.three {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+}
+
+:where(body.page-reservations) #bookingForm .form-grid.four {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+}
+
+:where(body.page-reservations) #bookingForm .form-grid.six {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+}
+
+:where(body.page-reservations) #bookingForm .field {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+}
+
+:where(body.page-reservations) #bookingForm .field label {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: var(--text-muted) !important;
+}
+
+:where(body.page-reservations) #bookingForm .input,
+:where(body.page-reservations) #bookingForm select,
+:where(body.page-reservations) #bookingForm textarea {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--text-main) !important;
+    font-family: inherit !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 6px 10px !important;
+    height: 36px !important;
+    outline: none !important;
+    transition: all var(--transition-fast) !important;
+}
+
+:where(body.page-reservations) #bookingForm textarea {
+    height: 52px !important;
+    resize: none !important;
+    padding: 8px 10px !important;
+}
+
+:where(body.page-reservations) #bookingForm .input:focus,
+:where(body.page-reservations) #bookingForm select:focus,
+:where(body.page-reservations) #bookingForm textarea:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-soft) !important;
+}
+
+:where(body.page-reservations) #bookingForm #bfRoom {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: var(--accent) !important;
+    background: var(--accent-soft) !important;
+    border-color: var(--accent-border) !important;
+}
+
+:where(body.page-reservations) .clothing-builder {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 0.8fr) auto !important;
+    gap: 6px !important;
+    align-items: flex-end !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 8px !important;
+}
+
+:where(body.page-reservations) .clothing-builder .btn {
+    height: 34px !important;
+    padding: 0 12px !important;
+    background: var(--bg-surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-main) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    border-radius: var(--radius-xs) !important;
+    cursor: pointer !important;
+    transition: all var(--transition-fast) !important;
+}
+
+:where(body.page-reservations) .clothing-builder .btn:hover {
+    background: var(--accent) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
+}
+
+:where(body.page-reservations) .clothing-list {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-top: 4px !important;
+    min-height: 24px !important;
+}
+
+:where(body.page-reservations) .clothing-item {
+    background: var(--purple-soft) !important;
+    border: 1px solid rgba(168, 85, 247, 0.25) !important;
+    color: var(--purple) !important;
+    padding: 3px 8px !important;
+    border-radius: var(--radius-xs) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+:where(body.page-reservations) .clothing-item .mini-btn.red {
+    background: transparent !important;
+    border: none !important;
+    color: var(--rose) !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+}
+
+:where(body.page-reservations) .summary-box #bfPaidView {
+    color: var(--emerald) !important;
+}
+
+:where(body.page-reservations) .summary-box #bfRemView.text-red {
+    color: var(--rose) !important;
+}
+
+:where(body.page-reservations) .summary-box #bfRemView.text-green {
+    color: var(--emerald) !important;
+}
+
+:where(body.page-reservations) #bookingForm .modal-actions {
+    grid-column: span 2 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding-top: 14px !important;
+    border-top: 1px solid var(--border) !important;
+    margin-top: 4px !important;
+}
+
+@media (max-width: 820px) {
+    :where(body.page-reservations) #bookingForm .modal-actions {
+        grid-column: span 1 !important;
+    }
+
+}
+
+:where(body.page-reservations) #bookingForm .modal-actions .btn {
+    height: 38px !important;
+    padding: 0 18px !important;
+    border-radius: var(--radius-sm) !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    transition: all var(--transition-fast) !important;
+}
+
+:where(body.page-reservations) #bookingForm .modal-actions .btn:first-child {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text-muted) !important;
+}
+
+:where(body.page-reservations) #bookingForm .modal-actions .btn:first-child:hover {
+    background: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+}
+
+:where(body.page-reservations) #bookingForm .modal-actions .btn.green {
+    background: var(--text-main) !important;
+    color: var(--bg-body) !important;
+    border: none !important;
+    font-weight: 800 !important;
+}
+
+:where(body.page-reservations) #bookingForm .modal-actions .btn.green:hover {
+    opacity: 0.9 !important;
+    transform: translateY(-1px) !important;
+}
+
+:where(body.page-reservations) .res-container {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+:where(body.page-reservations) .res-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+:where(body.page-reservations) .res-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+:where(body.page-reservations) .res-header {
+    grid-column: span 12;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, var(--bg-card) 60%);
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    padding: 25px 30px;
+}
+
+:where(body.page-reservations) .res-header-icon {
+    width: 55px;
+    height: 55px;
+    background: var(--bg-hover);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+:where(body.page-reservations) .res-header-icon img {
+    width: 30px;
+    height: 30px;
+}
+
+:where(body.page-reservations) .res-header-text h1 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+    font-weight: 900;
+}
+
+:where(body.page-reservations) .res-header-text p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+:where(body.page-reservations) .res-kpi {
+    grid-column: span 2;
+    min-height: 110px;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    align-items: center;
+}
+
+:where(body.page-reservations) .res-kpi .kpi-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--bg-hover);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+:where(body.page-reservations) .res-kpi .kpi-icon img {
+    width: 20px;
+    height: 20px;
+}
+
+:where(body.page-reservations) .res-kpi h3 {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+:where(body.page-reservations) .res-kpi strong {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 900;
+    font-family: monospace;
+    color: var(--text-main);
+}
+
+:where(body.page-reservations) .res-toolbar {
+    grid-column: span 12;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 15px 20px;
+    align-items: center;
+    background: var(--bg-surface);
+}
+
+:where(body.page-reservations) .res-filters {
+    grid-column: span 12;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    align-items: end;
+}
+
+:where(body.page-reservations) .res-table-area {
+    grid-column: span 12;
+    padding: 0;
+    overflow: hidden;
+}
+
+:where(body.page-reservations) .res-table-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+:where(body.page-reservations) .res-table-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+:where(body.page-reservations) .photographer-capsule {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+:where(body.page-reservations) .photographer-capsule.assigned {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+:where(body.page-reservations) .photographer-capsule.unassigned {
+    background: rgba(244, 63, 94, 0.15);
+    color: #f43f5e;
+    border-color: rgba(244, 63, 94, 0.25);
+}
+
+:where(body.page-reservations) .pulse-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+:where(body.page-reservations) .pulse-dot.green {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+}
+
+:where(body.page-reservations) .pulse-dot.red {
+    background: #f43f5e;
+    box-shadow: 0 0 8px rgba(244, 63, 94, 0.8);
+    animation: pulseRed 1.5s infinite;
+}
+
+@keyframes pulseRed {
+        0% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7); }
+        70% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0); }
+    }
+
+:where(body.page-reservations) .timeline {
+    position: relative;
+    padding-right: 25px;
+    margin-top: 15px;
+}
+
+:where(body.page-reservations) .timeline::before {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+    border-radius: 2px;
+}
+
+:where(body.page-reservations) .timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+:where(body.page-reservations) .timeline-item::before {
+    content: '';
+    position: absolute;
+    right: -22px;
+    top: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid var(--bg-card);
+    box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+:where(body.page-reservations) .timeline-item.done::before {
+    background: #10b981;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+}
+
+:where(body.page-reservations) .timeline-item.urgent::before {
+    background: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245,158,11,0.2);
+}
+
+:where(body.page-reservations) .timeline-item h4 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+:where(body.page-reservations) .timeline-item p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+:where(body.page-reservations) .timeline-item time {
+    font-size: 10px;
+    color: var(--primary);
+    font-weight: 700;
+    background: var(--bg-hover);
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+body.theme-light:where(.page-reservations) .res-card {
+    border-color: rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+body.theme-light:where(.page-reservations) .res-header-icon,
+body.theme-light:where(.page-reservations) .kpi-icon {
+    background: rgba(37, 99, 235, 0.08);
+    border-radius: 50%;
+}
+
+body.theme-light:where(.page-reservations) .res-header-icon img,
+body.theme-light:where(.page-reservations) .kpi-icon img {
+    filter: brightness(0) saturate(100%) invert(30%) sepia(98%) saturate(1831%) hue-rotate(209deg) brightness(97%) contrast(97%);
+}
+
+body.theme-light:where(.page-reservations) .photographer-capsule.assigned {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0;
+}
+
+body.theme-light:where(.page-reservations) .photographer-capsule.unassigned {
+    background: #fff1f2;
+    color: #e11d48;
+    border-color: #fecdd3;
+}
+
+@media (max-width: 1200px) {
+    :where(body.page-reservations) .res-kpi {
+        grid-column: span 4;
+    }
+
+}
+
+@media (max-width: 768px) {
+    :where(body.page-reservations) .res-kpi {
+        grid-column: span 6;
+    }
+
+    :where(body.page-reservations) .res-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+}
+
+@media (max-width: 480px) {
+    :where(body.page-reservations) .res-kpi {
+        grid-column: span 12;
+    }
+
+}
+//* =========================================================
+   تصميم نافذة تفاصيل الحجز (مفصول تماماً عن الجافاسكريبت)
+   ========================================================= */
+
+/* عنوان النافذة */
+:where(body.page-reservations) .details-modal-title {
+    border-bottom: none;
+    margin-bottom: 15px;
+}
+:where(body.page-reservations) .details-modal-title h2 { font-size: 18px; }
+:where(body.page-reservations) .details-modal-title p { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+/* الحاوية الرئيسية مقسمة يمين ويسار */
+:where(body.page-reservations) .details-wrapper {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr; /* جزء يمين أكبر وجزء يسار للحسابات */
+    gap: 20px;
+    align-items: flex-start;
+}
+
+@media (max-width: 900px) {
+    :where(body.page-reservations) .details-wrapper {
+        grid-template-columns: 1fr; /* يصبح عمود واحد في الشاشات الصغيرة */
+    }
+}
+
+/* إلغاء تنسيقات الأقسام الافتراضية داخل هذه النافذة */
+:where(body.page-reservations) .custom-section {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+:where(body.page-reservations) .custom-section h3 {
+    font-size: 15px;
+    margin-bottom: 12px;
+    color: var(--text-main);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 5px;
+}
+
+/* تخطيط القوائم الداخلية */
+:where(body.page-reservations) .detail-list {
+    display: grid;
+    gap: 10px;
+}
+
+:where(body.page-reservations) .grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+:where(body.page-reservations) .grid-single {
+    grid-template-columns: 1fr;
+}
+
+/* شكل البطاقة (أفقي الكلمة والقيمة بجوار بعض) */
+:where(body.page-reservations) .detail-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-surface);
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+:where(body.page-reservations) .detail-row.full-width {
+    grid-column: 1 / -1;
+}
+
+:where(body.page-reservations) .detail-row small {
+    color: var(--text-muted);
+    font-weight: 800;
+}
+
+:where(body.page-reservations) .detail-row b {
+    color: var(--text-main);
+    font-weight: 900;
+}
+
+:where(body.page-reservations) .detail-row b.big-val {
+    font-size: 16px;
+}
+
+/* الألوان المميزة للكروت */
+:where(body.page-reservations) .detail-row.highlight-blue {
+    border-color: rgba(2, 132, 199, 0.4);
+}
+:where(body.page-reservations) .detail-row.highlight-blue b { color: #0284c7; font-size: 15px; }
+
+:where(body.page-reservations) .detail-row.highlight-green {
+    background: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+:where(body.page-reservations) .detail-row.highlight-green b { color: #10b981; }
+
+:where(body.page-reservations) .detail-row.highlight-red {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+:where(body.page-reservations) .detail-row.highlight-red b { color: #ef4444; }
+
+/* تنسيق قسم الملابس */
+:where(body.page-reservations) .cloth-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+:where(body.page-reservations) .cloth-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(168, 85, 247, 0.08);
+    border: 1px solid rgba(168, 85, 247, 0.2);
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+:where(body.page-reservations) .cloth-card .cloth-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+:where(body.page-reservations) .cloth-card .cloth-index {
+    opacity: 0.5;
+    margin-left: 5px;
+}
+
+:where(body.page-reservations) .cloth-card .cloth-details {
+    font-size: 12px;
+    color: #a855f7;
+    font-weight: 900;
+    background: rgba(168, 85, 247, 0.15);
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+:where(body.page-reservations) .cloth-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    color: var(--text-muted);
+    font-weight: bold;
+}
+/* V80: كاشف التعارض الذكي للمصورين والملابس والغرف */
+:where(body.page-reservations) .conflict-alert-box {
+    grid-column: 1 / -1;
+    background: #fffbeb;
+    border: 1.5px solid #f59e0b;
+    border-right: 5px solid #d97706;
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: #92400e;
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+:where(body.page-reservations) .conflict-alert-box .conflict-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

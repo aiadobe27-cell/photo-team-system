@@ -1,0 +1,186 @@
+<!-- =========================================================================
+     📌 ملف القالب (reservations.html): شاشة إدارة الحجوزات، مواعيد التصوير، العرابين، وتجهيز الفساتين
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}reservations{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/reservations.css') }}">{% endblock %}
+
+{% block title %}
+إدارة الحجوزات - PHOTO TEAM
+{% endblock %}
+
+{% block content %}
+
+<!-- ==========================================
+     CSS معزول ومخصص لشاشة الحجوزات فقط
+=========================================== -->
+<!-- =========================
+     PAGE CONTENT (BENTO GRID)
+========================= -->
+<div class="res-container">
+
+    <!-- 1. Header -->
+    <div class="res-card res-header">
+        <div class="res-header-icon">
+            <img src="/static/assets/icons/neon_glass_calendar_icon.png" alt="Calendar">
+        </div>
+        <div class="res-header-text">
+            <h1>إدارة الحجوزات</h1>
+            <p>تسجيل الحجوزات، مواعيد التصوير، العرابين، وتجهيز الفساتين</p>
+        </div>
+    </div>
+
+    <!-- 2. KPIs -->
+    <div class="res-card res-kpi">
+        <div class="kpi-icon"><img src="/static/assets/icons/neon_glass_calendar_icon.png"></div>
+        <h3>إجمالي الحجوزات</h3>
+        <strong id="rTotal">0</strong>
+    </div>
+
+    <div class="res-card res-kpi">
+        <div class="kpi-icon"><img src="/static/assets/icons/neon_blue_glass_loading_clock.png"></div>
+        <h3>قيد الانتظار</h3>
+        <strong id="rPending">0</strong>
+    </div>
+
+    <div class="res-card res-kpi">
+        <div class="kpi-icon"><img src="/static/assets/icons/glossy_neon_blue_home_icon.png"></div>
+        <h3>حجوزات مؤكدة</h3>
+        <strong id="rConfirmed">0</strong>
+    </div>
+
+    <div class="res-card res-kpi">
+        <div class="kpi-icon"><img src="/static/assets/icons/glossy_neon_wallet_icon.png"></div>
+        <h3>ملغية</h3>
+        <strong id="rCancelled">0</strong>
+    </div>
+
+    <div class="res-card res-kpi">
+        <div class="kpi-icon"><img src="/static/assets/icons/glossy_neon_hotel_team_icon.png"></div>
+        <h3>المصورين المتاحين</h3>
+        <strong id="rPhotogAvail">--</strong>
+    </div>
+
+    <div class="res-card res-kpi">
+        <div class="kpi-icon"><img src="/static/assets/icons/neon_glass_dress_on_hanger.png"></div>
+        <h3>الفساتين المتاحة</h3>
+        <strong id="rDressAvail">--</strong>
+    </div>
+
+    <!-- 3. Action Toolbar -->
+    <div class="res-card res-toolbar">
+        {% if photographer_only %}
+        <span class="badge blue" style="padding:8px 14px;font-size:13px;">📸 وضع المصور: عرض وبحث في شغلك وأوردراتك المصورة فقط</span>
+        <button class="btn primary" onclick="viewSelectedDetails()">📋 عرض تفاصيل الأوردر المحدد</button>
+        {% else %}
+        <button class="btn green" onclick="openBookingForm()">➕ إضافة حجز / تسجيل عربون</button>
+        {% if not sales_only %}
+        <button class="btn primary" onclick="openCheckout()">✅ تسليم الأوردر</button>
+        {% endif %}
+        <button class="btn purple" onclick="printSelectedBookingPosReceipt()">🖨️ طباعة إيصال الحجز</button>
+        <button class="btn" onclick="viewSelectedDetails()">📋 التفاصيل</button>
+        <button class="btn" onclick="editSelected()">✏️ تعديل الحجز / العربون</button>
+        {% if not sales_only %}
+        <button class="btn red" onclick="deleteSelected()">🗑️ حذف</button>
+        {% endif %}
+        <button class="btn" onclick="openPrep()">👗 فساتين اليوم</button>
+        <button class="btn green" onclick="exportPrepDressesCSV()">📥 حفظ فساتين اليوم Excel</button>
+        <button class="btn" onclick="openTimeline()">⏱️ الجدول الزمني</button>
+        <button class="btn green" onclick="exportDailyRunSheet()">📥 حفظ الحجوزات Excel (CSV)</button>
+        <button class="btn primary" onclick="printBookingsReportPDF()">🖨️ طباعة الحجوزات PDF</button>
+        {% endif %}
+    </div>
+
+    <!-- 4. Filters -->
+    <div class="res-card res-filters">
+        <div class="field">
+            <label>الشهر</label>
+            <select class="input" id="rMonth">
+                <option value="">كل الشهور</option>
+                {% for m in range(1,13) %}
+                <option>{{ '%02d'|format(m) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label>اليوم</label>
+            <select class="input" id="rDay">
+                <option value="">كل الأيام</option>
+                {% for d in range(1,32) %}
+                <option>{{ '%02d'|format(d) }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="field">
+            <label>الفندق</label>
+            <select class="input" id="rHotel">
+                <option value="">الكل</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>الفترة</label>
+            <select class="input" id="rGroup">
+                <option value="">الكل</option>
+                <option value="morning">صباحي</option>
+                <option value="evening">مسائي</option>
+                <option value="unassigned">بدون مصور 🔴</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>بحث برقم الغرفة</label>
+            <input class="input" id="rSearch" placeholder="رقم الغرفة...">
+        </div>
+
+        <button class="btn primary" onclick="loadBookings()" style="height: 36px;">🔄 تحديث</button>
+    </div>
+
+    <!-- 5. Data Table -->
+    <div class="res-card res-table-area">
+        <div class="res-table-header">
+            <h2>📅 قائمة الحجوزات</h2>
+        </div>
+        <div class="table-wrap maxh" style="border: none; border-radius: 0 0 20px 20px;">
+            <table class="wide-table compact-table" id="bookingTable">
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>الحالة</th>
+                        <!-- تم مسح عمود المصور المكرر من هنا -->
+                        <th>الفندق</th>
+                        <th>التاريخ</th>
+                        <th>الغرفة</th>
+                        <th>الهاتف</th>
+                        <th>الوقت</th>
+                        <th>الجنسية</th>
+                        <th>السيشن</th>
+                        <th>الملابس</th>
+                        <th>$</th>
+                        <th>€</th>
+                        <th>كاش LE</th>
+                        <th>فيزا LE</th>
+                        <th>الإجمالي</th>
+                        <th>المتبقي</th>
+                        <th>السيلز</th>
+                        <th>المصور / الحالة</th> <!-- تم تغيير الاسم هنا -->
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="rBody">
+                    <!-- يتم الحقن بواسطة الجافاسكريبت -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/reservations.js') }}"></script>
+{% endblock %}

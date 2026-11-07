@@ -1,0 +1,120 @@
+<!-- =========================================================================
+     📌 ملف القالب (dashboard.html): الشاشة الرئيسية ولوحة المتابعة اليومية
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}dashboard{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/dashboard.css') }}">{% endblock %}
+
+{% block title %}
+لوحة التحكم - PHOTO TEAM
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+
+    <!-- كارت إجمالي الحجوزات تم إخفاؤه للحفاظ على الكود البرمجي دون أعطال -->
+    <span id="kTotal" hidden>0</span>
+
+    <!-- ================= 1. الهيدر والأرقام (لا تأخذ حيز رأسي كبير) ================= -->
+    <div class="dash-top-row">
+        <!-- كارت الترحيب -->
+        <div class="dash-welcome">
+            <div class="welcome-text">
+                <h1>أهلاً بك 👋</h1>
+                <p>متابعة الحجوزات والمبيعات اليومية</p>
+            </div>
+            <div class="date-picker-glass">
+                <input id="dashDate" type="date">
+            </div>
+        </div>
+
+        <!-- أرقام الإحصائيات (KPIs) -->
+        <div class="kpi-group">
+            <div class="kpi-card featured">
+                <small>الحجوزات اليوم</small>
+                <strong id="kSalesBookings">0</strong>
+            </div>
+            <div class="kpi-card">
+                <small>الفريق المتاح</small>
+                <strong id="kTeam">0</strong>
+            </div>
+            <div class="kpi-card">
+                <small>المصورين</small>
+                <strong id="kPhotographers">0</strong>
+            </div>
+            <div class="kpi-card">
+                <small>الفساتين المطلوبة</small>
+                <strong id="kDresses">0</strong>
+            </div>
+            <div class="kpi-card">
+                <small>المغسلة</small>
+                <strong id="kLaundry">0</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 2. شبكة البيانات المستقرة (Bento Panels) ================= -->
+    <div class="dash-panels">
+        
+        <!-- توافر الفريق (عرض كامل للصف الأول المتبقي) -->
+        <div class="bento-panel panel-team" {% if photographer_only %}hidden style="display:none !important;"{% endif %}>
+            <div class="panel-header">
+                <div class="icon">👥</div>
+                <h2>حالة وتوافر فريق العمل</h2>
+            </div>
+            <div class="panel-body">
+                <div id="availabilityPreview"></div>
+                <div id="availabilityBoard"></div>
+            </div>
+        </div>
+
+        <!-- الحجوزات القادمة (طويل يغطي الصفين في اليمين) -->
+        <div class="bento-panel panel-upcoming">
+            <div class="panel-header">
+                <div class="icon">📅</div>
+                <h2>الجدول الزمني والحجوزات القادمة</h2>
+            </div>
+            <div class="panel-body table-wrap" style="padding: 0;">
+                <table style="width: 100%; border: none;">
+                    <tbody id="upcomingBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- مبيعات السيلز اليوم (نصف الصف الثاني) -->
+        <div class="bento-panel panel-sales" {% if photographer_only %}hidden style="display:none !important;"{% endif %}>
+            <div class="panel-header">
+                <div class="icon">💰</div>
+                <h2>مؤشرات حجوزات السيلز</h2>
+            </div>
+            <div class="panel-body">
+                <div id="salesSummary"></div>
+            </div>
+        </div>
+
+        <!-- الفساتين المطلوبة (النصف الآخر للصف الثاني) -->
+        <div class="bento-panel panel-dresses" {% if photographer_only %}hidden style="display:none !important;"{% endif %}>
+            <div class="panel-header">
+                <div class="icon">👗</div>
+                <h2>الفساتين وتجهيزات المغسلة</h2>
+            </div>
+            <div class="panel-body table-wrap" style="padding: 0;">
+                <table style="width: 100%; border: none;">
+                    <tbody id="dressTodayBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- الرسم البياني مخفي للحفاظ على سرعة الشاشة ومساحتها (موجود عشان JS) -->
+    <canvas id="salesChart" hidden></canvas>
+    
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/dashboard.js') }}"></script>
+{% endblock %}

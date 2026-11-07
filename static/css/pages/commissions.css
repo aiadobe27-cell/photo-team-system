@@ -1,0 +1,311 @@
+/* ============================================================================
+   📌 ملف التنسيق (commissions.css): تنسيقات وألوان commissions.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/commissions.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-commissions)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+:where(body.page-commissions) {
+    --neon-cyan: #0284c7;
+    --neon-green: #059669;
+    --neon-amber: #ffea00;
+    --eye-care-1: linear-gradient(0deg, rgba(15, 23, 42, 0.035), rgba(15, 23, 42, 0.035));
+    --eye-care-2: linear-gradient(0deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.06));
+}
+
+:where(body.page-commissions) .logic-tabs {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+:where(body.page-commissions) .logic-tabs .logic-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+:where(body.page-commissions) .logic-tabs .logic-tab:hover {
+    background: rgba(15, 23, 42, 0.05);
+    color: var(--text-main);
+}
+
+:where(body.page-commissions) .logic-tabs .logic-tab.active {
+    background: linear-gradient(135deg, #0284c7, #06b6d4);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+:where(body.page-commissions) .commission-split {
+    display: grid;
+    grid-template-columns: 500px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+:where(body.page-commissions) .form-grid {
+    display: grid;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+:where(body.page-commissions) .form-grid.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+:where(body.page-commissions) .form-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+:where(body.page-commissions) .form-grid.four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1250px) {
+    :where(body.page-commissions) .commission-split {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+@media (max-width: 768px) {
+    :where(body.page-commissions) .form-grid.two,
+    :where(body.page-commissions) .form-grid.three,
+    :where(body.page-commissions) .form-grid.four {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+:where(body.page-commissions) .panel {
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+
+:where(body.page-commissions) .panel-head {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+:where(body.page-commissions) .panel-head h2 {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+:where(body.page-commissions) .field label {
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+:where(body.page-commissions) .field input,
+:where(body.page-commissions) .field select {
+    background-color: var(--bg-body);
+    background-image: var(--eye-care-2);
+    border: 1px solid var(--border);
+    padding: 12px 15px;
+    border-radius: 10px;
+    color: var(--text-main);
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+:where(body.page-commissions) .field input:focus,
+:where(body.page-commissions) .field select:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+}
+
+:where(body.page-commissions) .btn.green {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);
+}
+
+:where(body.page-commissions) .btn.green:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3);
+    filter: brightness(1.05);
+}
+
+:where(body.page-commissions) .btn:not(.green):not(.primary):not(.red):not(.amber):not(.purple) {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: 0.3s;
+    color: var(--text-main);
+}
+
+:where(body.page-commissions) .btn:not(.green):not(.primary):not(.red):not(.amber):not(.purple):hover {
+    background-color: var(--bg-hover);
+    border-color: #0284c7;
+}
+
+:where(body.page-commissions) .mini-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+}
+
+:where(body.page-commissions) .mini-btn.blue {
+    background: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+
+:where(body.page-commissions) .mini-btn.blue:hover {
+    background: #2563eb;
+    color: #fff;
+}
+
+:where(body.page-commissions) .mini-btn.green {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+:where(body.page-commissions) .mini-btn.green:hover {
+    background: #10b981;
+    color: #fff;
+}
+
+:where(body.page-commissions) .modern-table,
+:where(body.page-commissions) #closureCurrent table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    text-align: right;
+}
+
+:where(body.page-commissions) .modern-table thead th,
+:where(body.page-commissions) #closureCurrent table thead th {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 800;
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    z-index: 10;
+}
+
+:where(body.page-commissions) .modern-table tbody tr,
+:where(body.page-commissions) #closureCurrent table tbody tr {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-1);
+    transition: 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+:where(body.page-commissions) .modern-table tbody tr:hover,
+:where(body.page-commissions) #closureCurrent table tbody tr:hover {
+    transform: scale(1.01);
+    border-color: var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+:where(body.page-commissions) .modern-table tbody td,
+:where(body.page-commissions) #closureCurrent table tbody td {
+    padding: 10px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+:where(body.page-commissions) .modern-table tbody td:first-child,
+:where(body.page-commissions) #closureCurrent table tbody td:first-child {
+    border-right: 1px solid var(--border);
+    border-radius: 0 10px 10px 0;
+    font-weight: 900;
+}
+
+:where(body.page-commissions) .modern-table tbody td:last-child,
+:where(body.page-commissions) #closureCurrent table tbody td:last-child {
+    border-left: 1px solid var(--border);
+    border-radius: 10px 0 0 10px;
+}
+
+:where(body.page-commissions) .text-green {
+    color: #10b981;
+}
+
+:where(body.page-commissions) .text-amber {
+    color: #f59e0b;
+}
+
+:where(body.page-commissions) .toolbar.multi {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 15px;
+    align-items: end;
+    background-color: var(--bg-body);
+    background-image: var(--eye-care-2);
+    padding: 15px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+:where(body.page-commissions) .toolbar.multi .full-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+}
+
+:where(body.page-commissions) .toolbar.single-line {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    background-color: var(--bg-body);
+    background-image: var(--eye-care-2);
+    padding: 15px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+:where(body.page-commissions) .toolbar.single-line .field {
+    flex: 1;
+    min-width: 150px;
+}

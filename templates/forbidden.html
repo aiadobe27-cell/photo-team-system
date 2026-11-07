@@ -1,0 +1,23 @@
+<!-- =========================================================================
+     📌 ملف القالب (forbidden.html): شاشة تنبيه عدم وجود صلاحية لفتح القسم
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}forbidden{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/forbidden.css') }}">{% endblock %}
+{% block title %}غير مصرح - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<div class="forbidden-wrapper">
+    <div class="forbidden-box">
+        <div class="forbidden-icon-badge">🔐</div>
+        <h1>هذه الشاشة خارج صلاحيات الحساب</h1>
+        <p>صلاحيات العرض والتعديل يتم تحديدها وتخصيصها من خلال إدارة الفريق والفنادق.</p>
+        <a href="/" class="forbidden-btn">العودة إلى Command Center</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/forbidden.js') }}"></script>
+{% endblock %}

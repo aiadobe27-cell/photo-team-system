@@ -1,0 +1,355 @@
+/* ============================================================================
+   📌 ملف التنسيق (reports.css): تنسيقات وألوان reports.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/reports.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-reports)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+@media(max-width:700px) {
+    :where(body.page-reports) .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+@media(max-width:900px) {
+    :where(body.page-reports) .dashboard-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+:where(body.page-reports) {
+    --eye-care-1: linear-gradient(0deg, rgba(15, 23, 42, 0.035), rgba(15, 23, 42, 0.035));
+    --eye-care-2: linear-gradient(0deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.06));
+}
+
+:where(body.page-reports) .bento-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+:where(body.page-reports) .bento-box {
+    background: var(--bg-card);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+:where(body.page-reports) .bento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+:where(body.page-reports) .title-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+:where(body.page-reports) .title-area .icon {
+    width: 40px;
+    height: 40px;
+    background: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+:where(body.page-reports) .title-area h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-reports) .title-area p {
+    margin: 2px 0 0 0;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+:where(body.page-reports) .filters-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+:where(body.page-reports) .toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    width: 100%;
+    justify-content: flex-end;
+}
+
+:where(body.page-reports) .tool-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+:where(body.page-reports) .input-mini,
+:where(body.page-reports) .select-mini {
+    background: var(--bg-body);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-main);
+    height: 32px;
+}
+
+:where(body.page-reports) .input-mini:focus,
+:where(body.page-reports) .select-mini:focus {
+    border-color: #0284c7;
+    outline: none;
+}
+
+:where(body.page-reports) .btn-mini {
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: 0.2s;
+}
+
+:where(body.page-reports) .btn-mini:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+:where(body.page-reports) .btn-mini.primary {
+    background: #0284c7;
+    color: #fff;
+}
+
+:where(body.page-reports) .btn-mini.outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+:where(body.page-reports) .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+}
+
+@media (max-width: 1100px) {
+    :where(body.page-reports) .kpi-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+}
+
+@media (max-width: 600px) {
+    :where(body.page-reports) .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+:where(body.page-reports) .kpi-card {
+    background: var(--bg-surface);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    transition: 0.2s;
+}
+
+:where(body.page-reports) .kpi-card:hover {
+    border-color: #0284c7;
+    transform: translateY(-2px);
+}
+
+:where(body.page-reports) .kpi-card small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    margin-bottom: 2px;
+}
+
+:where(body.page-reports) .kpi-card strong {
+    display: block;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-reports) .dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+}
+
+:where(body.page-reports) .tables-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+@media (max-width: 1000px) {
+    :where(body.page-reports) .dashboard-grid,
+    :where(body.page-reports) .tables-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+:where(body.page-reports) .section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+:where(body.page-reports) .section-title h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-reports) .section-title span {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: bold;
+    background: var(--bg-body);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+:where(body.page-reports) .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 4px;
+    height: 180px;
+    padding-top: 15px;
+    overflow-x: auto;
+}
+
+:where(body.page-reports) .bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    min-width: 30px;
+}
+
+:where(body.page-reports) .bar-item b {
+    font-size: 9px;
+    color: var(--text-main);
+    margin-bottom: 2px;
+    font-weight: 900;
+}
+
+:where(body.page-reports) .bar-item small {
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: bold;
+}
+
+:where(body.page-reports) .bar-item .bar {
+    width: 100%;
+    max-width: 30px;
+    background: linear-gradient(180deg, #0284c7 0%, rgba(2, 132, 199, 0.4) 100%);
+    border-radius: 4px 4px 0 0;
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:where(body.page-reports) .bar-item:hover .bar {
+    filter: brightness(1.2);
+    cursor: pointer;
+}
+
+:where(body.page-reports) .mini-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+:where(body.page-reports) .mini-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+    font-size: 12px;
+    font-weight: bold;
+}
+
+:where(body.page-reports) .mini-list li:last-child {
+    border-bottom: none;
+}
+
+:where(body.page-reports) .mini-list li:nth-child(even) {
+    background: rgba(0,0,0,0.015);
+}
+
+:where(body.page-reports) .mini-list li .name {
+    color: var(--text-main);
+}
+
+:where(body.page-reports) .mini-list li .value {
+    color: #0284c7;
+    font-weight: 900;
+}
+
+:where(body.page-reports) .mini-list li .value.red {
+    color: #ef4444;
+}
+
+:where(body.page-reports) .mini-list li .value.green {
+    color: #10b981;
+}
+
+:where(body.page-reports) ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+:where(body.page-reports) ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}

@@ -1,0 +1,51 @@
+<!-- =========================================================================
+     📌 ملف القالب (chat.html): شاشة المحادثات الداخلية (شات الإدارة والمديرين + شات فريق العمل)
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}chat{% endblock %}
+{% block title %}المحادثات الداخلية - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<section class="page-heading" style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="kpi-svg-badge" style="width:40px;height:40px;font-size:19px;margin:0;">💬</div>
+        <div>
+            <h1 style="margin:0; font-size:18px; font-weight: 900; color: var(--text-heading);">المحادثات الداخلية</h1>
+        </div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        {% if can_managers_chat %}
+        <button type="button" id="tabBtnManagersChat" class="btn primary" onclick="switchChatChannel('managers')">👔 شات الإدارة والمديرين</button>
+        {% endif %}
+        <button type="button" id="tabBtnTeamChat" class="btn {{ '' if can_managers_chat else 'primary' }}" onclick="switchChatChannel('team')">👥 شات فريق العمل</button>
+        <select class="input compact" id="chatHotelFilter" style="width:160px;" onchange="loadChatMessages()">
+            <option value="">جميع الفنادق</option>
+        </select>
+        <button type="button" class="btn" onclick="loadChatMessages()">🔄 تحديث</button>
+    </div>
+</section>
+
+<section class="panel" style="display:flex; flex-direction:column; height: calc(100vh - 175px); min-height: 480px; margin:0; padding:14px !important;">
+    <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--border); margin-bottom:10px;">
+        <div>
+            <strong id="activeChatChannelTitle" style="font-size:15px; color:var(--text-heading);">👥 شات فريق العمل</strong>
+        </div>
+        <span id="activeChatBadge" class="badge blue">متصل</span>
+    </div>
+
+    <div id="chatMessagesBox" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding:10px; background:var(--bg-surface); border:1px solid var(--border); border-radius:12px;"></div>
+
+    <form id="chatSendForm" style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+        <input id="chatInputText" class="input" placeholder="اكتب رسالتك هنا..." autocomplete="off" style="flex:1;" required>
+        <button type="submit" class="btn green" style="min-width:110px;">إرسال ➤</button>
+    </form>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.CAN_MANAGERS_CHAT = {{ 'true' if can_managers_chat else 'false' }};
+</script>
+<script src="{{ url_for('static', filename='js/pages/chat.js') }}"></script>
+{% endblock %}

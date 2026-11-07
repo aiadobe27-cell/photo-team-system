@@ -1,0 +1,298 @@
+/* ============================================================================
+   📌 ملف التنسيق (salaries.css): تنسيقات وألوان salaries.css
+   ============================================================================ */
+
+/* PHOTO TEAM — pages/salaries.css
+   Styles for this page only. Every selector is wrapped in :where(body.page-salaries)
+   so nothing here can leak into another page (and specificity is unchanged). */
+
+:where(body.page-salaries) {
+    --eye-care-1: linear-gradient(0deg, rgba(15, 23, 42, 0.035), rgba(15, 23, 42, 0.035));
+    --eye-care-2: linear-gradient(0deg, rgba(15, 23, 42, 0.06), rgba(15, 23, 42, 0.06));
+}
+
+:where(body.page-salaries) .bento-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+:where(body.page-salaries) .bento-box {
+    background: var(--bg-card);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+:where(body.page-salaries) .bento-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+:where(body.page-salaries) .title-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+:where(body.page-salaries) .title-area .icon {
+    width: 40px;
+    height: 40px;
+    background: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+:where(body.page-salaries) .title-area h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-salaries) .title-area p {
+    margin: 2px 0 0 0;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+:where(body.page-salaries) .kpi-strip {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+:where(body.page-salaries) .kpi-mini {
+    background: var(--bg-surface);
+    background-image: var(--eye-care-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 15px;
+    text-align: center;
+    min-width: 100px;
+    transition: 0.2s;
+}
+
+:where(body.page-salaries) .kpi-mini:hover {
+    border-color: #0284c7;
+    transform: translateY(-2px);
+}
+
+:where(body.page-salaries) .kpi-mini small {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 2px;
+}
+
+:where(body.page-salaries) .kpi-mini strong {
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text-main);
+}
+
+:where(body.page-salaries) .toolbar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--bg-surface);
+    background-image: var(--eye-care-2);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+}
+
+:where(body.page-salaries) .toolbar-row:last-child {
+    margin-bottom: 0;
+}
+
+:where(body.page-salaries) .tool-label {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+:where(body.page-salaries) .input-mini,
+:where(body.page-salaries) .select-mini {
+    background: var(--bg-body);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-main);
+    height: 32px;
+}
+
+:where(body.page-salaries) .input-mini:focus,
+:where(body.page-salaries) .select-mini:focus {
+    border-color: #0284c7;
+    outline: none;
+}
+
+:where(body.page-salaries) .btn-mini {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: 0.2s;
+}
+
+:where(body.page-salaries) .btn-mini:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
+:where(body.page-salaries) .btn-mini.primary {
+    background: #0284c7;
+    color: #fff;
+}
+
+:where(body.page-salaries) .btn-mini.green {
+    background: #10b981;
+    color: #fff;
+}
+
+:where(body.page-salaries) .btn-mini.purple {
+    background: #8b5cf6;
+    color: #fff;
+}
+
+:where(body.page-salaries) .btn-mini.amber {
+    background: #f59e0b;
+    color: #fff;
+}
+
+:where(body.page-salaries) .btn-mini.red {
+    background: #ef4444;
+    color: #fff;
+}
+
+:where(body.page-salaries) .btn-mini.outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+:where(body.page-salaries) .logic-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+:where(body.page-salaries) .logic-tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    background-image: var(--eye-care-1);
+    color: var(--text-muted);
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+:where(body.page-salaries) .logic-tab:hover {
+    background: var(--bg-surface);
+}
+
+:where(body.page-salaries) .logic-tab.active {
+    background: #0284c7;
+    color: #fff;
+    border-color: #0284c7;
+}
+
+:where(body.page-salaries) .tab-pane {
+    display: none;
+}
+
+:where(body.page-salaries) .tab-pane.active {
+    display: block;
+}
+
+:where(body.page-salaries) .compact-table-wrap {
+    height: 400px;
+    overflow-y: auto;
+    border-radius: 8px;
+}
+
+:where(body.page-salaries) .wide-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px;
+    text-align: right;
+}
+
+:where(body.page-salaries) .wide-table thead th {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background-color: var(--bg-card);
+    background-image: var(--eye-care-1);
+    z-index: 10;
+}
+
+:where(body.page-salaries) .wide-table tbody tr {
+    background-color: var(--bg-surface);
+    background-image: var(--eye-care-1);
+    transition: 0.2s;
+}
+
+:where(body.page-salaries) .wide-table tbody tr:hover {
+    border-color: var(--border);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+:where(body.page-salaries) .wide-table tbody td {
+    padding: 6px 8px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+:where(body.page-salaries) .wide-table tbody td:first-child {
+    border-right: 1px solid var(--border);
+    border-radius: 0 6px 6px 0;
+}
+
+:where(body.page-salaries) .wide-table tbody td:last-child {
+    border-left: 1px solid var(--border);
+    border-radius: 6px 0 0 6px;
+}
+
+:where(body.page-salaries) .payroll-status {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    background: rgba(0,0,0,0.05);
+}

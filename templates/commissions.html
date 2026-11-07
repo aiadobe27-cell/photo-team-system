@@ -1,0 +1,185 @@
+<!-- =========================================================================
+     📌 ملف القالب (commissions.html): شاشة حساب عمولات السيلز والمصورين وتسجيل الخصومات والتقفيلات
+     لتعديل شكل أو عناوين هذه الشاشة، عدّل العناصر بالأسفل
+     ========================================================================= -->
+{% extends "base.html" %}
+{% block page %}commissions{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/commissions.css') }}">{% endblock %}
+{% block title %}العمولات والبونص - PHOTO TEAM{% endblock %}
+
+{% block content %}
+<!-- الهيدر -->
+<section class="page-heading" style="margin-bottom: 15px; padding: 15px 25px; background-color: var(--bg-card); background-image: var(--eye-care-1); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="width: 45px; height: 45px; background-color: var(--bg-surface); background-image: var(--eye-care-2); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+            📊
+        </div>
+        <div>
+            <h1 style="margin:0; font-size:22px; font-weight: 900; color: var(--text-main);">لوحة تحكم العمولات والتقفيلات</h1>
+        </div>
+    </div>
+    <div class="heading-actions" style="display: flex; gap: 10px; align-items: center;">
+        <select class="input compact" id="cHotel" style="border-radius: 10px; padding: 10px;"><option value="">الكل</option></select>
+        <button class="btn" style="border-radius: 10px;" onclick="refreshCommissions()">🔄 تحديث</button>
+        <button class="btn" style="border-radius: 10px; color: #0284c7; border-color: rgba(2, 132, 199, 0.3);" onclick="openCommissionSettings()">⚙️ الإعدادات</button>
+        <button class="btn" style="border-radius: 10px; color: #d97706; border-color: rgba(217, 119, 6, 0.3);" onclick="openDeductionForm()">🏷️ تسجيل خصم / سلفة</button>
+    </div>
+</section>
+
+<!-- التبويبات -->
+<div class="logic-tabs" data-tab-group>
+    <button class="logic-tab active" data-tab-target="cSales">💰 عمولات المبيعات (Sales)</button>
+    <button class="logic-tab" data-tab-target="cPhotos">📸 عمولات المصورين</button>
+    <button class="logic-tab" data-tab-target="cBonus">🏆 نظام البونص والتارجت</button>
+    <button class="logic-tab" data-tab-target="cClosures">🔒 التقفيلات والأرشيف الشامل</button>
+</div>
+
+<!-- =========================
+     TAB 1: عمولات السيلز
+========================= -->
+<section id="cSales" class="tab-pane active">
+    <div class="commission-split">
+        <!-- الجانب الأيمن (البحث والملخص) -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <section class="panel" style="margin-bottom: 0;">
+                <div class="panel-head"><h2>🔍 بحث العمولات</h2></div>
+                <div class="toolbar multi">
+                    <div class="field"><label>من</label><input class="input" type="date" id="csStart"></div>
+                    <div class="field"><label>إلى</label><input class="input" type="date" id="csEnd"></div>
+                    <div class="field full-row"><label>اسم السيلز</label><select class="input" id="csEmployee" style="width: 100%;"><option value="">جميع السيلز</option></select></div>
+                    <div class="full-row" style="margin-top: 5px;">
+                        <button class="btn" style="flex: 1; background: #0284c7; color: #fff; border:none;" onclick="loadCommissionRole('sales')">عرض العمولات</button>
+                        <button class="btn" onclick="printCommission('sales')">🖨️ طباعة PDF</button><button class="btn green" onclick="exportCommissionCSV('sales')">📥 تصدير Excel</button>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="panel" style="flex: 1; margin-bottom: 0;">
+                <div class="panel-head"><h2>👥 ملخص السيلز</h2></div>
+                <div class="table-wrap maxh" style="border:none; padding:0; height: 350px; overflow-y: auto;">
+                    <table class="modern-table">
+                        <thead><tr><th>الموظف</th><th>العمولة $</th><th>العمولة LE</th><th>الخصومات LE</th><th>الصافي LE</th><th>إجراءات</th></tr></thead>
+                        <tbody id="salesSummary"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- الجانب الأيسر (التفاصيل اليومية) -->
+        <section class="panel" style="height: 100%; margin-bottom: 0;">
+            <div class="panel-head"><h2>📝 تفاصيل الأوردرات اليومية</h2></div>
+            <div class="table-wrap maxh" style="border:none; padding:0; height: 600px; overflow-y: auto;">
+                <table class="modern-table">
+                    <thead><tr><th>التاريخ</th><th>الفندق</th><th>الغرفة</th><th>السيلز</th><th>الإجمالي</th><th>التكلفة</th><th>الصافي</th><th>النسبة</th><th>العمولة $</th><th>العمولة LE</th></tr></thead>
+                    <tbody id="salesDetails"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</section>
+
+<!-- =========================
+     TAB 2: عمولات المصورين
+========================= -->
+<section id="cPhotos" class="tab-pane">
+    <div class="commission-split">
+        <!-- الجانب الأيمن (البحث والملخص) -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <section class="panel" style="margin-bottom: 0;">
+                <div class="panel-head"><h2>🔍 بحث العمولات</h2></div>
+                <div class="toolbar multi">
+                    <div class="field"><label>من</label><input class="input" type="date" id="cpStart"></div>
+                    <div class="field"><label>إلى</label><input class="input" type="date" id="cpEnd"></div>
+                    <div class="field full-row"><label>اسم المصور</label><select class="input" id="cpEmployee" style="width: 100%;"><option value="">جميع المصورين</option></select></div>
+                    <div class="full-row" style="margin-top: 5px;">
+                        <button class="btn" style="flex: 1; background: #0284c7; color: #fff; border:none;" onclick="loadCommissionRole('photographer')">عرض العمولات</button>
+                        <button class="btn" onclick="printCommission('photographer')">🖨️ طباعة PDF</button><button class="btn green" onclick="exportCommissionCSV('photographer')">📥 تصدير Excel</button>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="panel" style="flex: 1; margin-bottom: 0;">
+                <div class="panel-head"><h2>👥 ملخص المصورين</h2></div>
+                <div class="table-wrap maxh" style="border:none; padding:0; height: 350px; overflow-y: auto;">
+                    <table class="modern-table">
+                        <thead><tr><th>الموظف</th><th>العمولة $</th><th>العمولة LE</th><th>الخصومات LE</th><th>الصافي LE</th><th>إجراءات</th></tr></thead>
+                        <tbody id="photoSummary"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- الجانب الأيسر (التفاصيل اليومية) -->
+        <section class="panel" style="height: 100%; margin-bottom: 0;">
+            <div class="panel-head"><h2>📝 تفاصيل الأوردرات اليومية</h2></div>
+            <div class="table-wrap maxh" style="border:none; padding:0; height: 600px; overflow-y: auto;">
+                <table class="modern-table">
+                    <thead><tr><th>التاريخ</th><th>الفندق</th><th>الغرفة</th><th>المصور</th><th>الإجمالي</th><th>التكلفة</th><th>الصافي</th><th>النسبة</th><th>العمولة $</th><th>العمولة LE</th></tr></thead>
+                    <tbody id="photoDetails"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</section>
+
+<!-- =========================
+     TAB 3: البونص والتارجت
+========================= -->
+<section id="cBonus" class="tab-pane">
+    <section class="panel">
+        <div class="toolbar single-line">
+            <div class="field"><label>اختر الشهر</label><input class="input" type="month" id="bonusMonth"></div>
+            <button class="btn green" style="padding: 12px 25px; height: max-content;" onclick="loadBonus()">🏆 احتساب البونص</button>
+        </div>
+    </section>
+    <section class="panel">
+        <div class="panel-head"><h2>نتائج تحقيق التارجت</h2></div>
+        <div class="table-wrap maxh" style="border:none; padding:0; overflow-y: auto;">
+            <table class="modern-table">
+                <thead><tr><th>الفئة</th><th>الاسم</th><th>المحقق $</th><th>التارجت $</th><th>النسبة</th><th>الحالة</th><th>البونص $</th></tr></thead>
+                <tbody id="bonusBody"></tbody>
+            </table>
+        </div>
+    </section>
+</section>
+
+<!-- =========================
+     TAB 4: التقفيلات
+========================= -->
+<section id="cClosures" class="tab-pane">
+    <section class="panel">
+        <div class="toolbar single-line">
+            <div class="field"><label>من</label><input class="input" type="date" id="clStart"></div>
+            <div class="field"><label>إلى</label><input class="input" type="date" id="clEnd"></div>
+            <div class="field"><label>نوع التقفيلة</label><select class="input" id="clRole"><option value="sales">Sales</option><option value="photographer">Photographers</option></select></div>
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
+                <button class="btn green" style="flex: 1;" onclick="generateClosure()">🚀 عرض التقرير</button>
+                <button class="btn" style="background: #0284c7; color: #fff; border:none;" onclick="archiveClosure()">📦 حفظ وأرشفة</button>
+                <button class="btn" onclick="loadClosureArchive()">📂 الأرشيف</button>
+                <button class="btn" onclick="printClosure()">🖨️ طباعة</button>
+            </div>
+        </div>
+    </section>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <section class="panel" style="margin-bottom: 0;">
+            <div class="panel-head"><h2>تقرير التقفيلة الحالي</h2></div>
+            <div id="closureCurrent" style="height: 400px; overflow-y: auto;"></div>
+        </section>
+        
+        <section class="panel" style="margin-bottom: 0;">
+            <div class="panel-head"><h2>الأرشيف الشامل</h2></div>
+            <div class="table-wrap maxh" style="border:none; padding:0; height: 400px; overflow-y: auto;">
+                <table class="modern-table">
+                    <thead><tr><th>#</th><th>الفندق</th><th>النوع</th><th>الموظف</th><th>الشهر</th><th>الفترة</th><th>$</th><th>LE</th><th>التاريخ</th><th>عرض</th></tr></thead>
+                    <tbody id="closureArchive"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pages/commissions.js') }}"></script>
+{% endblock %}
