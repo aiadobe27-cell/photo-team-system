@@ -56,6 +56,10 @@
                 <span>الدخل اليومي</span>
             </button>
             {% if not photographer_only and not sales_only %}
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/bank-accounts'">
+                <div class="mob-squircle amber">💳</div>
+                <span>البنك والفيزا</span>
+            </button>
             <button type="button" class="mob-app-icon-btn" onclick="location.href='/treasury'">
                 <div class="mob-squircle amber">🏦</div>
                 <span>الخزنة</span>
@@ -101,9 +105,10 @@
         <!-- أرقام الإحصائيات (KPIs) -->
         <div class="kpi-group">
             <div class="kpi-card featured">
-                <small>الحجوزات اليوم</small>
+                <small>{% if photographer_only %}أوردراتي المصورة اليوم{% else %}الحجوزات اليوم{% endif %}</small>
                 <strong id="kSalesBookings">0</strong>
             </div>
+            {% if not photographer_only %}
             <div class="kpi-card">
                 <small>الفريق المتاح</small>
                 <strong id="kTeam">0</strong>
@@ -120,6 +125,12 @@
                 <small>المغسلة</small>
                 <strong id="kLaundry">0</strong>
             </div>
+            {% else %}
+            <span id="kTeam" hidden>0</span>
+            <span id="kPhotographers" hidden>0</span>
+            <span id="kDresses" hidden>0</span>
+            <span id="kLaundry" hidden>0</span>
+            {% endif %}
         </div>
     </div>
 

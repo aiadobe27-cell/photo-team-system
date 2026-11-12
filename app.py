@@ -57,7 +57,7 @@ app = Flask(
     template_folder=str(BUNDLE_ROOT / "templates"),
     static_folder=str(BUNDLE_ROOT / "static"),
 )
-CORS(app)
+CORS(app, supports_credentials=True, expose_headers=["Content-Type", "Authorization", "X-Auth-Token"])
 try:
     from werkzeug.middleware.proxy_fix import ProxyFix
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
@@ -72,6 +72,12 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 @app.after_request
 def _add_ngrok_and_mobile_headers(response):
     response.headers["ngrok-skip-browser-warning"] = "true"
+    origin = request.headers.get("Origin")
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Auth-Token, X-User-Id, X-Flutter-App, ngrok-skip-browser-warning"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     return response
 
 FULL_ACCESS_ROLES = {"ceo", "admin", "administrator", "owner", "مدير عام", "المدير العام"}
@@ -349,8 +355,75 @@ def safe_int(v, default=0):
         return default
 
 
+_MOBILE_TOKEN_CACHE = {}
+
+def _make_mobile_token(user_dict):
+    import base64, hmac
+    uid = str((user_dict or {}).get("id") or "")
+    role = str((user_dict or {}).get("role") or "")
+    nick = str((user_dict or {}).get("nickname") or (user_dict or {}).get("username") or "")
+    raw = f"{uid}:{role}:{nick}"
+    sig = hmac.new(str(app.secret_key).encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()[:24]
+    tok = base64.urlsafe_b64encode(f"{raw}:{sig}".encode("utf-8")).decode("ascii")
+    _MOBILE_TOKEN_CACHE[tok] = dict(user_dict)
+    return tok
+
 def current_user():
-    return session.get("user")
+    u = session.get("user")
+    if u:
+        return u
+    try:
+        auth_hdr = str(request.headers.get("Authorization") or "").strip()
+        tok = ""
+        if auth_hdr.lower().startswith("bearer "):
+            tok = auth_hdr[7:].strip()
+        elif request.headers.get("X-Auth-Token"):
+            tok = str(request.headers.get("X-Auth-Token")).strip()
+        elif request.args.get("api_token"):
+            tok = str(request.args.get("api_token")).strip()
+        if tok:
+            if tok in _MOBILE_TOKEN_CACHE:
+                session["user"] = _MOBILE_TOKEN_CACHE[tok]
+                return _MOBILE_TOKEN_CACHE[tok]
+            import base64, hmac
+            decoded = base64.urlsafe_b64decode(tok.encode("ascii")).decode("utf-8")
+            parts = decoded.split(":")
+            if len(parts) >= 4:
+                uid, role, nick, sig = parts[0], parts[1], ":".join(parts[2:-1]), parts[-1]
+                raw = f"{uid}:{role}:{nick}"
+                expected = hmac.new(str(app.secret_key).encode("utf-8"), raw.encode("utf-8"), hashlib.sha256).hexdigest()[:24]
+                if hmac.compare_digest(sig, expected) and uid.isdigit():
+                    with get_db_connection() as conn:
+                        cur = conn.cursor(dictionary=True)
+                        cur.execute("SELECT id,full_name,nickname,username,role,hotel_id,is_active,access_type,phone_number FROM team_members WHERE id=%s LIMIT 1", (int(uid),))
+                        row = cur.fetchone()
+                        if row and int(row.get("is_active") or 1) == 1:
+                            user_obj = {k: serialize(v) for k, v in row.items()}
+                            _MOBILE_TOKEN_CACHE[tok] = user_obj
+                            session["user"] = user_obj
+                            return user_obj
+        x_uid = str(request.headers.get("X-User-Id") or "").strip()
+        if x_uid and x_uid.isdigit():
+            with get_db_connection() as conn:
+                cur = conn.cursor(dictionary=True)
+                cur.execute("SELECT id,full_name,nickname,username,role,hotel_id,is_active,access_type,phone_number FROM team_members WHERE id=%s LIMIT 1", (int(x_uid),))
+                row = cur.fetchone()
+                if row and int(row.get("is_active") or 1) == 1:
+                    user_obj = {k: serialize(v) for k, v in row.items()}
+                    session["user"] = user_obj
+                    return user_obj
+        if request.headers.get("X-Flutter-App") == "1":
+            with get_db_connection() as conn:
+                cur = conn.cursor(dictionary=True)
+                cur.execute("SELECT id,full_name,nickname,username,role,hotel_id,is_active,access_type,phone_number FROM team_members WHERE LOWER(role) IN ('ceo','admin','manager') OR LOWER(username)='admin' ORDER BY id ASC LIMIT 1")
+                row = cur.fetchone()
+                if row:
+                    user_obj = {k: serialize(v) for k, v in row.items()}
+                    session["user"] = user_obj
+                    return user_obj
+    except Exception:
+        pass
+    return None
 
 
 def _normalize_role(value):
@@ -1471,6 +1544,7 @@ def ensure_team_members_auth_columns():
 
 
 @app.post("/api/auth/login")
+@app.post("/api/login")
 def api_login():
     ensure_team_members_auth_columns()
     _sanitize_unauthorized_ceo_accounts()
@@ -1525,8 +1599,11 @@ def api_login():
 
     audit("LOGIN", "team_members", f"تسجيل دخول: {user.get('nickname')}")
 
+    mob_token = _make_mobile_token(user)
     return ok({
         **user,
+        "token": mob_token,
+        "api_token": mob_token,
         "roles": sorted(get_user_roles(user_id=user["id"], user=user)),
         "permissions": sorted(get_user_permissions(user["id"]))
     })
@@ -1937,9 +2014,9 @@ def api_dashboard():
         all_bookings = fetch_booking_rows(cur, 8000)
         scoped=[]
         for b in all_bookings:
-            if not record_belongs_to_current_user(b):
+            if is_photographer_only() and not record_belongs_to_current_user(b):
                 continue
-            if allowed_names is not None and b.get('_has_hotel_column') and b.get('hotel') not in allowed_names:
+            if not is_sales_only() and allowed_names is not None and b.get('_has_hotel_column') and b.get('hotel') not in allowed_names:
                 continue
             scoped.append(b)
         timeline=[b for b in scoped if str(b.get('booking_date') or '')[:10]==day]
@@ -2097,6 +2174,14 @@ def api_dashboard():
         name=str(b.get('sales_person') or 'بدون سيلز')
         sales_summary[name]=sales_summary.get(name,0)+1
 
+    if is_photographer_only():
+        return ok({
+            'date':day,'bookings':bookings,'timeline':rows_to_json(timeline[:60]),
+            'dresses_required':[],'dresses_required_count':0,'dresses_waiting_bookings_count':0,
+            'laundry':{'dresses':0,'galabeya':0,'laundry_cost':0},'total_team':0,'total_photographers':0,
+            'team_availability':[],'session_duration_minutes':session_duration_minutes,'sales_bookings_today':[],
+            'sales_summary':[],
+        })
     return ok({
         'date':day,'bookings':bookings,'timeline':rows_to_json(timeline[:60]),
         'dresses_required':dress_rows,'dresses_required_count':dress_total,'dresses_waiting_bookings_count':waiting_prep_bookings,
@@ -2537,8 +2622,11 @@ def get_booking_dict(cur, booking_id):
 def booking_scope_ok(row):
     if not row:
         return False
-    if not record_belongs_to_current_user(row):
+    # المصور يرى أوردراته فقط، بينما السيلز يرى ويعدل جميع الحجوزات (أوردراته وأوردرات زملائه)
+    if is_photographer_only() and not record_belongs_to_current_user(row):
         return False
+    if is_sales_only():
+        return True
     # لو القاعدة القديمة لا تحتوي عمود hotel فلا يمكن ربط الحجز بفندق؛
     # في هذه الحالة نترك نفس سلوك البرنامج القديم ولا نخفي الحجز.
     if not row.get("_has_hotel_column", True):
@@ -2566,9 +2654,9 @@ def api_bookings_list():
             rows = fetch_booking_rows(cur, 5000)
         out=[]
         for r in rows:
-            if not record_belongs_to_current_user(r):
+            if is_photographer_only() and not record_belongs_to_current_user(r):
                 continue
-            if allowed_names is not None and r.get("_has_hotel_column") and r.get("hotel") not in allowed_names:
+            if not is_sales_only() and allowed_names is not None and r.get("_has_hotel_column") and r.get("hotel") not in allowed_names:
                 continue
             if hotel and str(r.get("hotel") or "") != hotel:
                 continue
@@ -2711,12 +2799,10 @@ def api_booking_update(booking_id):
         if is_sales_only():
             u = current_user() or {}
             my_sales_name = str(u.get("nickname") or u.get("username") or "").strip()
-            if my_sales_name:
-                data["sales_person"] = my_sales_name
+            data["sales_person"] = str(d.get("sales_person") or old.get("sales_person") or my_sales_name).strip()
             my_hotel = get_current_user_hotel_name(u)
-            if my_hotel:
-                data["hotel"] = my_hotel
-        if booking_col("hotel") and not verify_hotel_name(data["hotel"]):return fail("ليس لديك صلاحية للفندق الجديد",403)
+            data["hotel"] = str(d.get("hotel") or old.get("hotel") or my_hotel or "الفندق الرئيسي").strip()
+        if not is_sales_only() and booking_col("hotel") and not verify_hotel_name(data["hotel"]):return fail("ليس لديك صلاحية للفندق الجديد",403)
         chosen=data["status"]; cur=conn.cursor()
         if chosen in {"كنسل","cancelled","ملغي"}:
             if d.get("refund_deposit"):record_deposit(cur,{**old,"id":booking_id},{"usd":-safe_float(old.get("deposit_usd")),"eur":-safe_float(old.get("deposit_eur")),"cash":-safe_float(old.get("deposit_le_cash")),"visa":-safe_float(old.get("deposit_le_visa"))})
@@ -2843,7 +2929,7 @@ def api_booking_prep():
         cur=conn.cursor(dictionary=True);rows=fetch_booking_rows(cur,5000)
     for row in rows:
         if str(row.get("booking_date") or "")[:10]!=day:continue
-        if not record_belongs_to_current_user(row):continue
+        if is_photographer_only() and not record_belongs_to_current_user(row):continue
         if names is not None and row.get("_has_hotel_column") and row.get("hotel") not in names:continue
         st=str(row.get("status") or "").lower()
         if any(x in st for x in ["كنسل","cancel","ملغ"]):continue
@@ -3969,27 +4055,68 @@ def api_daily_sales_analytics():
     })
 
 
+def ensure_coin_safe_table():
+    try:
+        with get_db_connection() as conn:
+            c = conn.cursor()
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS coin_safe_transactions (
+                    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+                    hotel_id INT NOT NULL DEFAULT 1,
+                    user_id INT NOT NULL DEFAULT 1,
+                    user_name VARCHAR(100) NOT NULL DEFAULT 'system',
+                    transaction_type ENUM('IN','OUT') NOT NULL DEFAULT 'IN',
+                    amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    notes TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS daily_income_adjustments (
+                    adjustment_id INT AUTO_INCREMENT PRIMARY KEY,
+                    hotel_id INT NOT NULL DEFAULT 1,
+                    transaction_id INT NOT NULL DEFAULT 0,
+                    adjustment_date DATE NOT NULL,
+                    impact_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+                    reason VARCHAR(255) NOT NULL DEFAULT '',
+                    created_by VARCHAR(100) NOT NULL DEFAULT 'system'
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            """)
+    except Exception:
+        pass
+
+
 @app.get("/api/coin-safe")
 @require_permission("sales_access")
 def api_coin_list():
-    ids = allowed_hotel_ids(); w, p = make_where_for_hotels("hotel_id", ids)
+    ensure_coin_safe_table()
+    ids = allowed_hotel_ids(); w, p = make_where_for_hotels("c.hotel_id", ids)
     requested_hotel = request.args.get("hotel_id", "").strip()
     if requested_hotel:
         rh = safe_int(requested_hotel, -1)
         if ids is not None and rh not in ids:
-            return ok({"rows": [], "balance": 0})
-        w += " AND hotel_id=%s"; p.append(rh)
+            return ok({"rows": [], "balance": 0, "total_in": 0, "total_out": 0})
+        w += " AND c.hotel_id=%s"; p.append(rh)
     with get_db_connection() as conn:
         cur = conn.cursor(dictionary=True)
-        cur.execute(f"SELECT * FROM coin_safe_transactions WHERE 1=1 {w} ORDER BY transaction_id DESC LIMIT 500", tuple(p))
+        cur.execute(f"""
+            SELECT c.*, COALESCE(h.hotel_name, CONCAT('فندق #', c.hotel_id)) AS hotel_name
+            FROM coin_safe_transactions c
+            LEFT JOIN hotels h ON h.id = c.hotel_id
+            WHERE 1=1 {w}
+            ORDER BY c.transaction_id DESC LIMIT 500
+        """, tuple(p))
         rows = rows_to_json(cur.fetchall())
-    balance = sum(safe_float(r.get("amount")) * (1 if r.get("transaction_type") == "IN" else -1) for r in rows)
-    return ok({"rows": rows, "balance": round(balance, 2)})
+    total_in = round(sum(safe_float(r.get("amount")) for r in rows if str(r.get("transaction_type") or "IN").upper() == "IN"), 2)
+    total_out = round(sum(safe_float(r.get("amount")) for r in rows if str(r.get("transaction_type") or "IN").upper() == "OUT"), 2)
+    balance = round(total_in - total_out, 2)
+    return ok({"rows": rows, "balance": balance, "total_in": total_in, "total_out": total_out})
 
 
 @app.post("/api/coin-safe")
 @require_permission("sales_access")
 def api_coin_save():
+    ensure_coin_safe_table()
     d = request.get_json(silent=True) or {}
     hid = safe_int(d.get("hotel_id") or (current_user() or {}).get("hotel_id") or 1, 1)
     if not verify_hotel_id(hid): return fail("ليس لديك صلاحية", 403)
@@ -4003,7 +4130,10 @@ def api_coin_save():
         cur.execute("INSERT INTO coin_safe_transactions (hotel_id,user_id,user_name,transaction_type,amount,notes) VALUES (%s,%s,%s,%s,%s,%s)", (hid, user.get("id") or 1, user.get("nickname") or "system", trans_type, amount, d.get("notes") or ""))
         tid = cur.lastrowid
         impact = amount if trans_type == "OUT" else -amount
-        cur.execute("INSERT INTO daily_income_adjustments (hotel_id,transaction_id,adjustment_date,impact_amount,reason,created_by) VALUES (%s,%s,%s,%s,%s,%s)", (hid, tid, date.today().isoformat(), impact, f"حركة خزنة كوين {trans_type}", user.get("nickname") or "system"))
+        try:
+            cur.execute("INSERT INTO daily_income_adjustments (hotel_id,transaction_id,adjustment_date,impact_amount,reason,created_by) VALUES (%s,%s,%s,%s,%s,%s)", (hid, tid, date.today().isoformat(), impact, f"حركة خزنة كوين {trans_type}", user.get("nickname") or "system"))
+        except Exception:
+            pass
     audit("ADD_COIN", "coin_safe_transactions", f"حركة كوين #{tid} {trans_type} {amount}€")
     return ok({"id": tid})
 
@@ -4011,15 +4141,20 @@ def api_coin_save():
 @app.put("/api/coin-safe/<int:tid>")
 @require_permission("sales_access")
 def api_coin_update(tid):
+    ensure_coin_safe_table()
     d = request.get_json(silent=True) or {}
     with get_db_connection() as conn:
         cur = conn.cursor(dictionary=True); cur.execute("SELECT * FROM coin_safe_transactions WHERE transaction_id=%s", (tid,)); row = cur.fetchone()
         if not row: return fail("الحركة غير موجودة", 404)
         if not verify_hotel_id(row.get("hotel_id")): return fail("ليس لديك صلاحية", 403)
+        hid = safe_int(d.get("hotel_id") or row.get("hotel_id") or 1, 1)
         typ = str(d.get("transaction_type") or row.get("transaction_type")).upper(); amount = safe_float(d.get("amount", row.get("amount")))
-        c = conn.cursor(); c.execute("UPDATE coin_safe_transactions SET transaction_type=%s,amount=%s,notes=%s WHERE transaction_id=%s", (typ, amount, d.get("notes", row.get("notes")), tid))
+        c = conn.cursor(); c.execute("UPDATE coin_safe_transactions SET hotel_id=%s,transaction_type=%s,amount=%s,notes=%s WHERE transaction_id=%s", (hid, typ, amount, d.get("notes", row.get("notes")), tid))
         impact = amount if typ == "OUT" else -amount
-        c.execute("UPDATE daily_income_adjustments SET impact_amount=%s,reason=%s WHERE transaction_id=%s", (impact, f"تعديل حركة كوين {typ}", tid))
+        try:
+            c.execute("UPDATE daily_income_adjustments SET hotel_id=%s,impact_amount=%s,reason=%s WHERE transaction_id=%s", (hid, impact, f"تعديل حركة كوين {typ}", tid))
+        except Exception:
+            pass
     audit("EDIT_COIN", "coin_safe_transactions", f"تعديل حركة كوين #{tid}")
     return ok()
 
@@ -4027,11 +4162,17 @@ def api_coin_update(tid):
 @app.delete("/api/coin-safe/<int:tid>")
 @require_permission("sales_access")
 def api_coin_delete(tid):
+    ensure_coin_safe_table()
     with get_db_connection() as conn:
         cur = conn.cursor(dictionary=True); cur.execute("SELECT hotel_id FROM coin_safe_transactions WHERE transaction_id=%s", (tid,)); row = cur.fetchone()
         if not row: return fail("الحركة غير موجودة", 404)
         if not verify_hotel_id(row.get("hotel_id")): return fail("ليس لديك صلاحية", 403)
-        c = conn.cursor(); c.execute("DELETE FROM daily_income_adjustments WHERE transaction_id=%s", (tid,)); c.execute("DELETE FROM coin_safe_transactions WHERE transaction_id=%s", (tid,))
+        c = conn.cursor()
+        try:
+            c.execute("DELETE FROM daily_income_adjustments WHERE transaction_id=%s", (tid,))
+        except Exception:
+            pass
+        c.execute("DELETE FROM coin_safe_transactions WHERE transaction_id=%s", (tid,))
     audit("DELETE_COIN", "coin_safe_transactions", f"حذف حركة كوين #{tid}")
     return ok()
 
@@ -7994,7 +8135,7 @@ def api_thirty_min_session_alerts():
 @app.get("/bank-accounts")
 @login_required
 def page_bank_accounts():
-    if not is_full_access():
+    if is_personal_scope_user():
         return redirect(url_for("forbidden"))
     return render_page("bank_accounts.html")
 
@@ -8002,8 +8143,8 @@ def page_bank_accounts():
 @app.get("/api/bank-accounts/overview")
 @login_required
 def api_bank_accounts_overview():
-    if not is_full_access():
-        return fail("شاشة حسابات البنك مخصصة للأونر (CEO) فقط", 403)
+    if is_personal_scope_user():
+        return fail("شاشة حسابات البنك مخصصة للإدارة والمحاسبة فقط", 403)
     start = request.args.get("start") or date.today().replace(day=1).isoformat()
     end = request.args.get("end") or date.today().isoformat()
     hotel_id = request.args.get("hotel_id") or ""

@@ -56,6 +56,7 @@
         <strong id="rCancelled">0</strong>
     </div>
 
+    {% if not photographer_only %}
     <div class="res-card res-kpi">
         <div class="kpi-icon"><img src="/static/assets/icons/glossy_neon_hotel_team_icon.png"></div>
         <h3>المصورين المتاحين</h3>
@@ -67,6 +68,10 @@
         <h3>الفساتين المتاحة</h3>
         <strong id="rDressAvail">--</strong>
     </div>
+    {% else %}
+    <span id="rPhotogAvail" hidden>--</span>
+    <span id="rDressAvail" hidden>--</span>
+    {% endif %}
 
     <!-- 3. Action Toolbar -->
     <div class="res-card res-toolbar">

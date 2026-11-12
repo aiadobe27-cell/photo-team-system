@@ -20,6 +20,19 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/core/context-menu.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/core/command-dock.css') }}">
     {% block styles %}{% endblock %}
+
+<style id="ptCompactRefinementCSS">
+  aside.sidebar, #sidebar.sidebar { width: 220px !important; padding: 10px 8px !important; }
+  #sidebar nav a { padding: 7px 10px !important; font-size: 12.5px !important; min-height: 34px !important; margin-bottom: 3px !important; border-radius: 8px !important; }
+  #sidebar .nav-group-label { font-size: 10.5px !important; margin: 8px 4px 4px !important; padding: 2px 6px !important; }
+  .btn, button.btn { height: 34px !important; padding: 0 12px !important; font-size: 12px !important; border-radius: 8px !important; }
+  .mini-btn { padding: 3px 7px !important; font-size: 11px !important; }
+  .input, select.input, input.input { height: 34px !important; font-size: 12.5px !important; padding: 4px 10px !important; border-radius: 8px !important; }
+  .kpi-card, .res-kpi { padding: 10px 12px !important; border-radius: 12px !important; }
+  .kpi-card strong, .res-kpi strong { font-size: 18px !important; }
+  .kpi-card small, .res-kpi h3 { font-size: 11px !important; }
+  table th, table td { padding: 6px 8px !important; font-size: 12px !important; }
+</style>
 </head>
 
 <body class="theme-light system-mode-1 page-{% block page %}{% endblock %} {{ 'mobile-phone-edition' if is_mobile_device else '' }}">
@@ -80,6 +93,10 @@
                 <span class="nav-icon-box">🏦</span>
                 <span class="nav-label">الخزنة والمصاريف</span>
             </a>
+            <a href="/bank-accounts" class="{{ 'active' if request.path.startswith('/bank-accounts') else '' }}">
+                <span class="nav-icon-box">💳</span>
+                <span class="nav-label">حسابات البنك والفيزا</span>
+            </a>
             <a href="/commissions" class="{{ 'active' if request.path.startswith('/commissions') else '' }}">
                 <span class="nav-icon-box">%</span>
                 <span class="nav-label">العمولات والتقفيلات</span>
@@ -123,12 +140,10 @@
                 <span class="nav-icon-box">🏦</span>
                 <span class="nav-label">الخزنة والمصاريف</span>
             </a>
-            {% if full_access %}
-            <a href="/bank-accounts" class="{{ 'active' if request.path.startswith('/bank-accounts') else '' }}" style="border:1px dashed rgba(245,158,11,0.45);">
+            <a href="/bank-accounts" class="{{ 'active' if request.path.startswith('/bank-accounts') else '' }}">
                 <span class="nav-icon-box">💳</span>
-                <span class="nav-label">حسابات البنك والدخل الشامل</span>
+                <span class="nav-label">حسابات البنك والفيزا</span>
             </a>
-            {% endif %}
             <a href="/commissions" class="{{ 'active' if request.path.startswith('/commissions') else '' }}">
                 <span class="nav-icon-box">%</span>
                 <span class="nav-label">العمولات والخصومات</span>
@@ -398,6 +413,7 @@ window.MANAGER_ONLY={{ 'true' if manager_only else 'false' }};
     <a href="/reservations" class="pt-dock-btn {{ 'active' if request.path.startswith('/reservations') else '' }}"><span>📅</span><small>الحجوزات</small></a>
     <a href="/control-room" class="pt-dock-btn {{ 'active' if request.path.startswith('/control-room') else '' }}"><span>⚡</span><small>العمليات</small></a>
     <a href="/daily-sales" class="pt-dock-btn {{ 'active' if request.path.startswith('/daily-sales') else '' }}"><span>💰</span><small>الدخل اليومي</small></a>
+    <a href="/bank-accounts" class="pt-dock-btn {{ 'active' if request.path.startswith('/bank-accounts') else '' }}"><span>🏦</span><small>البنك والفيزا</small></a>
     <a href="/commissions" class="pt-dock-btn {{ 'active' if request.path.startswith('/commissions') else '' }}"><span>🏆</span><small>العمولات</small></a>
     <a href="/salaries" class="pt-dock-btn {{ 'active' if request.path.startswith('/salaries') else '' }}"><span>💳</span><small>المرتبات</small></a>
     <a href="/reports" class="pt-dock-btn {{ 'active' if request.path.startswith('/reports') else '' }}"><span>📈</span><small>التقارير</small></a>

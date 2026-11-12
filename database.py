@@ -18,16 +18,16 @@ except Exception:
 
 
 # يمكن تغيير بيانات الاتصال بدون تعديل الكود عن طريق Environment Variables.
+# إعدادات الاتصال بقاعدة البيانات على Railway
 DB_CONFIG = {
-    "host": os.getenv("PHOTOTEAM_DB_HOST", "localhost"),
-    "port": int(os.getenv("PHOTOTEAM_DB_PORT", "3306")),
+    "host": os.getenv("PHOTOTEAM_DB_HOST", "viaduct.proxy.rlwy.net"),
+    "port": int(os.getenv("PHOTOTEAM_DB_PORT", "46491")),
     "database": os.getenv("PHOTOTEAM_DB_NAME", "phototeam"),
-    "user": os.getenv("PHOTOTEAM_DB_USER", "phototeam"),
-    "password": os.getenv("PHOTOTEAM_DB_PASSWORD", "1234"),
+    "user": os.getenv("PHOTOTEAM_DB_USER", "root"),
+    "password": os.getenv("PHOTOTEAM_DB_PASSWORD", "CWIdrupWpzYCDaRsPNsFndLbvhpQVKXt"),
     "charset": "utf8mb4",
     "use_unicode": True,
 }
-
 
 def _server_config():
     cfg = dict(DB_CONFIG)
