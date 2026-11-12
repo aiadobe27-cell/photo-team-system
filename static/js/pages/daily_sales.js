@@ -3,7 +3,7 @@
 // ============================================================================
 
 let dsHotels=[],dsTeam={},eligible=[],salesRows=[],depositRows=[],coinRows=[],selectedEligible=null;
-async function initDaily(){initLogicTabs();dsHotels=await apiSafe('/api/hotels',[],'تحميل الفنادق');dsTeam=await apiSafe('/api/team/options',{sales:[],photographers:[],all:[]},'تحميل الفريق');const hs='<option value="">الكل</option>'+dsHotels.map(h=>`<option value="${h.id}">${esc(h.hotel_name)}</option>`).join('');$('dsHotel').innerHTML=hs;$('coinHotel').innerHTML=dsHotels.map(h=>`<option value="${h.id}">${esc(h.hotel_name)}</option>`).join('');$('saleSales').innerHTML=(dsTeam.sales||[]).map(x=>`<option>${esc(x.nickname)}</option>`).join('');$('photoNamesList').innerHTML=(dsTeam.photographers||[]).map(x=>`<option value="${esc(x.nickname)}"></option>`).join('');$('dsSalesFilter').innerHTML='<option value="">الكل</option>'+(dsTeam.sales||[]).map(x=>`<option>${esc(x.nickname)}</option>`).join('');$('dsPhotoFilter').innerHTML='<option value="">الكل</option>'+(dsTeam.photographers||[]).map(x=>`<option>${esc(x.nickname)}</option>`).join('');$('dsEntryDate').value=todayISO();$('dsStart').value=firstDayMonth();$('dsEnd').value=todayISO();$('anMonth').value=monthISO();$('dsHotel').addEventListener('change',()=>{loadEligible();loadSalesSearch();loadAnalytics();loadCoin()});$('dsDataType').addEventListener('change',loadSalesSearch);['dsStart','dsEnd','dsSalesFilter','dsPhotoFilter','dsHotel'].forEach(x=>$(x).addEventListener('change',loadSalesSearch));$$('.sale-calc').forEach(x=>x.addEventListener('input',calcSale));$('salePhotog').addEventListener('input',calcSale);$('saleForm').addEventListener('submit',saveSale);$('coinForm').addEventListener('submit',saveCoin);document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement?.closest('#saleForm')){e.preventDefault();$('saleForm').requestSubmit()}});await Promise.all([loadEligible(),loadSalesSearch(),loadAnalytics(),loadCoin()])}
+async function initDaily(){initLogicTabs();dsHotels=await apiSafe('/api/hotels',[],'تحميل الفنادق');dsTeam=await apiSafe('/api/team/options',{sales:[],photographers:[],all:[]},'تحميل الفريق');const hs='<option value="">الكل</option>'+dsHotels.map(h=>`<option value="${h.id}">${esc(h.hotel_name)}</option>`).join('');$('dsHotel').innerHTML=hs;$('coinHotel').innerHTML=dsHotels.map(h=>`<option value="${h.id}">${esc(h.hotel_name)}</option>`).join('');$('saleSales').innerHTML='<option value="">-- اختر اسم السيلز --</option>'+(dsTeam.sales||[]).map(x=>`<option value="${esc(x.nickname)}">${esc(x.nickname)}</option>`).join('');if($('salePhotogSelect'))$('salePhotogSelect').innerHTML='<option value="">-- اختر اسم المصور --</option>'+(dsTeam.photographers||[]).map(x=>`<option value="${esc(x.nickname)}">${esc(x.nickname)}</option>`).join('');$('photoNamesList').innerHTML=(dsTeam.photographers||[]).map(x=>`<option value="${esc(x.nickname)}"></option>`).join('');$('dsSalesFilter').innerHTML='<option value="">الكل</option>'+(dsTeam.sales||[]).map(x=>`<option>${esc(x.nickname)}</option>`).join('');$('dsPhotoFilter').innerHTML='<option value="">الكل</option>'+(dsTeam.photographers||[]).map(x=>`<option>${esc(x.nickname)}</option>`).join('');$('dsEntryDate').value=todayISO();$('dsStart').value=firstDayMonth();$('dsEnd').value=todayISO();$('anMonth').value=monthISO();$('dsHotel').addEventListener('change',()=>{loadEligible();loadSalesSearch();loadAnalytics();loadCoin()});$('dsDataType').addEventListener('change',loadSalesSearch);['dsStart','dsEnd','dsSalesFilter','dsPhotoFilter','dsHotel'].forEach(x=>$(x).addEventListener('change',loadSalesSearch));$$('.sale-calc').forEach(x=>x.addEventListener('input',calcSale));$('salePhotog').addEventListener('input',calcSale);$('saleForm').addEventListener('submit',saveSale);$('coinForm').addEventListener('submit',saveCoin);document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.activeElement?.closest('#saleForm')){e.preventDefault();$('saleForm').requestSubmit()}});await Promise.all([loadEligible(),loadSalesSearch(),loadAnalytics(),loadCoin()])}
 async function refreshDailyAll(){await Promise.all([loadEligible(),loadSalesSearch(),loadAnalytics(),loadCoin()]);toast('تم تحديث بيانات الفندق')}
 function setSaleFormMode(isEdit, saleRecord=null, bookingRecord=null){
   const banner=$('saleEditBanner'),badge=$('saleModeBadge'),btn=$('saleSubmitBtn'),title=$('saleFormTitle');
@@ -32,6 +32,8 @@ function populateSaleFormFromRecord(inc, b=null){
   }
   $('saleSales').value=inc.sales_person||b?.sales_person||'';
   $('salePhotog').value=String(inc.photographer||b?.photographer||'').trim();
+  if($('salePhotogSelect'))$('salePhotogSelect').value=splitPhotographerNames($('salePhotog').value)[0]||'';
+  if($('saleQuickRoomInput'))$('saleQuickRoomInput').value=b?.room_number||inc.room_number||'';
   $('saleDeposit').value=num(inc.deposit_applied).toFixed(2);
   $('saleUsd').value=num(inc.income_usd);
   $('saleEur').value=num(inc.income_eur);
@@ -86,6 +88,8 @@ function selectEligible(id,row){
     $('saleIncomeDate').value=$('dsEntryDate')?.value||todayISO();
     $('saleSales').value=b.sales_person||'';
     $('salePhotog').value=String(b.photographer||'').trim();
+    if($('salePhotogSelect'))$('salePhotogSelect').value=splitPhotographerNames($('salePhotog').value)[0]||'';
+    if($('saleQuickRoomInput'))$('saleQuickRoomInput').value=b.room_number||'';
     const dep=b.deposit_history||{};
     const rate=50;
     const depEq=num(dep.usd)+num(dep.eur)+(num(dep.cash)+num(dep.visa))/rate;
@@ -109,7 +113,10 @@ function clearSaleForm(){
   });
   $('saleDeposit').value=0;
   $('saleRate').value=50;
+  if($('saleSales'))$('saleSales').value='';
   $('salePhotog').value='';
+  if($('salePhotogSelect'))$('salePhotogSelect').value='';
+  if($('saleQuickRoomInput'))$('saleQuickRoomInput').value='';
   if($('saleAdjustReason'))$('saleAdjustReason').value='';
   selectedEligible=null;
   setSaleFormMode(false);
@@ -118,22 +125,39 @@ function clearSaleForm(){
   loadEligible();
 }
 
+function onSalePhotogSelectChange(val){
+  if(!val)return;
+  const cur=splitPhotographerNames($('salePhotog')?.value||'');
+  if(!cur.length){
+    $('salePhotog').value=val;
+  }else if(!cur.some(x=>x.toLowerCase()===val.toLowerCase())){
+    if(cur.length===1) $('salePhotog').value=val;
+    else $('salePhotog').value=[...cur,val].slice(0,3).join(', ');
+  }
+  calcSale();
+}
+window.onSalePhotogSelectChange = onSalePhotogSelectChange;
+
 async function saveSale(e){
   e.preventDefault();
   const saleId=num($('saleId')?.value);
   const bookingId=num($('saleBookingId')?.value);
-  if(!bookingId && !saleId)return toast('اختر الأوردر أولاً من القائمة الجانبية أو جدول المبيعات','bad');
-  const photoNames=splitPhotographerNames($('salePhotog').value);
-  if(!photoNames.length)return toast('حدد المصور أو المصورين المشاركين في الأوردر','bad');
+  const salesVal=($('saleSales')?.value||'').trim();
+  if(!salesVal)return toast('يرجى اختيار اسم السيلز أولاً','bad');
+  const rawPhotog=($('salePhotog')?.value||$('salePhotogSelect')?.value||'').trim();
+  const photoNames=splitPhotographerNames(rawPhotog);
+  if(!photoNames.length)return toast('يرجى اختيار اسم المصور أولاً','bad');
   $('salePhotog').value=photoNames.join(', ');
   const entryDate=$('saleIncomeDate')?.value||$('dsEntryDate')?.value||todayISO();
+  const roomStr=($('saleQuickRoomInput')?.value||$('saleRoomNumber')?.value||'').trim()||'دخل سريع';
+  const hotelVal=$('saleHotelId')?.value||$('dsHotel')?.value||(dsHotels[0]?.id)||1;
   const body={
     sale_id:saleId||undefined,
     booking_id:bookingId||undefined,
-    room_number:$('saleRoomNumber')?.value||undefined,
-    hotel_id:$('saleHotelId')?.value||undefined,
+    room_number:roomStr,
+    hotel_id:hotelVal,
     income_date:entryDate,
-    sales_person:$('saleSales').value,
+    sales_person:salesVal,
     photographer:photoNames.join(', '),
     deposit_applied:num($('saleDeposit').value),
     income_usd:num($('saleUsd').value),
@@ -146,6 +170,8 @@ async function saveSale(e){
     cost_album:num($('costAlbum').value),
     adjustment_reason:($('saleAdjustReason')?.value||'').trim()
   };
+  const checkGross=body.deposit_applied+body.income_usd+body.income_eur+((body.income_le_k+body.income_le_m)/(body.le_to_usd||50));
+  if(checkGross<=0)return toast('يرجى إدخال المبلغ بأحد أنواعه (دولار $، يورو €، كاش مصري LE، أو مكتب LE)','bad');
   const gross=body.deposit_applied+body.income_usd+body.income_eur+((body.income_le_k+body.income_le_m)/(body.le_to_usd||50)),cost=body.cost_dress+body.cost_usb+body.cost_album,net=gross-cost;
   const actionLabel=saleId?'حفظ التعديلات على سجل الدخل':'حفظ بيانات الدخل الجديد';
   if(!confirmAction(`هل أنت متأكد من ${actionLabel}؟\nالتاريخ: ${entryDate}\n\nإجمالي الدخل: ${money(gross)} $\nإجمالي التكاليف: ${money(cost)} $\nالصافي: ${money(net)} $\n\nالمصورين: ${photoNames.join('، ')}\nحصة الصافي لكل مصور: ${money(net/photoNames.length)} $`))return;

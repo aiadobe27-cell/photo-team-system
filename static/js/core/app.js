@@ -675,16 +675,222 @@ function formatAiMarkdown(text = '') {
   return safe.replace(/\n/g, '<br>');
 }
 
-function appendAiMessage(role, text, actions = []) {
+function buildAiInlineQuickIncomeWidgetHTML(w = {}) {
+  const wid = 'aiQi_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+  const salesList = Array.isArray(w.sales) ? w.sales : [];
+  const photoList = Array.isArray(w.photographers) ? w.photographers : [];
+  const hotelsList = Array.isArray(w.hotels) ? w.hotels : [];
+  const preSales = String(w.preselected_sales || '');
+  const prePhotog = String(w.preselected_photographer || '');
+  const prePhotog2 = String(w.preselected_photographer_2 || '');
+  const preRoom = String(w.preselected_room || '');
+  const preUsd = Number(w.preselected_usd || 0);
+  const preEur = Number(w.preselected_eur || 0);
+  const preCash = Number(w.preselected_cash || 0);
+  const preOffice = Number(w.preselected_office || 0);
+  const preDep = Number(w.preselected_deposit || 0);
+
+  const salesOpts = `<option value="">-- اختر اسم السيلز --</option>` + salesList.map(s => {
+    const name = typeof s === 'object' ? (s.nickname || s.full_name || '') : String(s);
+    return `<option value="${esc(name)}" ${name === preSales ? 'selected' : ''}>${esc(name)}</option>`;
+  }).join('');
+
+  const photoOpts1 = `<option value="">-- اختر اسم المصور --</option>` + photoList.map(p => {
+    const name = typeof p === 'object' ? (p.nickname || p.full_name || '') : String(p);
+    return `<option value="${esc(name)}" ${name === prePhotog ? 'selected' : ''}>${esc(name)}</option>`;
+  }).join('');
+
+  const photoOpts2 = `<option value="">-- بدون مصور ثاني (اختياري) --</option>` + photoList.map(p => {
+    const name = typeof p === 'object' ? (p.nickname || p.full_name || '') : String(p);
+    return `<option value="${esc(name)}" ${name === prePhotog2 ? 'selected' : ''}>${esc(name)}</option>`;
+  }).join('');
+
+  const hotelOpts = hotelsList.length
+    ? hotelsList.map(h => `<option value="${esc(h.id || 1)}">${esc(h.hotel_name || h)}</option>`).join('')
+    : `<option value="1">الفندق الرئيسي</option>`;
+
+  return `
+    <div class="ai-inline-qi-card" id="${wid}" data-ai-qi-card="1" style="margin-top:10px;padding:12px;border-radius:12px;background:var(--bg-surface-2, #f8fafc);border:1.5px solid var(--primary, #2563eb);display:flex;flex-direction:column;gap:8px;direction:rtl;">
+      <div style="font-weight:900;font-size:12.5px;color:var(--primary, #2563eb);display:flex;justify-content:space-between;align-items:center;">
+        <span>⚡ تسجيل دخل جديد في الدخل اليومي (من نطاق عملنا)</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <div>
+          <label style="font-size:11px;font-weight:800;display:block;margin-bottom:2px;">اختر اسم السيلز *</label>
+          <select class="input ai-qi-sales" style="min-height:32px;height:32px;padding:2px 6px;font-size:12px;width:100%;">${salesOpts}</select>
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:800;display:block;margin-bottom:2px;">اختر اسم المصور *</label>
+          <select class="input ai-qi-photog1" style="min-height:32px;height:32px;padding:2px 6px;font-size:12px;width:100%;">${photoOpts1}</select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+        <div>
+          <label style="font-size:10.5px;font-weight:800;display:block;margin-bottom:2px;">مصور ثاني (اختياري)</label>
+          <select class="input ai-qi-photog2" style="min-height:30px;height:30px;padding:2px 6px;font-size:11.5px;width:100%;">${photoOpts2}</select>
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:800;display:block;margin-bottom:2px;">الفندق</label>
+          <select class="input ai-qi-hotel" style="min-height:30px;height:30px;padding:2px 6px;font-size:11.5px;width:100%;">${hotelOpts}</select>
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:800;display:block;margin-bottom:2px;">الغرفة (اختياري)</label>
+          <input type="text" class="input ai-qi-room" value="${esc(preRoom)}" placeholder="أو دخل سريع" style="min-height:30px;height:30px;padding:2px 6px;font-size:11.5px;width:100%;">
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:900;color:var(--text-heading);margin-top:2px;">💵 المبلغ بأنواعه وعملاته:</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+        <div>
+          <label style="font-size:10.5px;font-weight:800;display:block;margin-bottom:2px;">دخل دولار ($ USD)</label>
+          <input type="number" step="0.01" class="input ai-qi-usd" value="${preUsd}" oninput="recalcAiInlineQuickIncome('${wid}')" style="min-height:30px;height:30px;padding:2px 6px;font-size:12px;width:100%;">
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:800;display:block;margin-bottom:2px;">دخل يورو (€ EUR)</label>
+          <input type="number" step="0.01" class="input ai-qi-eur" value="${preEur}" oninput="recalcAiInlineQuickIncome('${wid}')" style="min-height:30px;height:30px;padding:2px 6px;font-size:12px;width:100%;">
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:800;display:block;margin-bottom:2px;">دخل كاش مصري (LE)</label>
+          <input type="number" step="0.01" class="input ai-qi-cash" value="${preCash}" oninput="recalcAiInlineQuickIncome('${wid}')" style="min-height:30px;height:30px;padding:2px 6px;font-size:12px;width:100%;">
+        </div>
+        <div>
+          <label style="font-size:10.5px;font-weight:800;display:block;margin-bottom:2px;">دخل مكتب / فيزا (LE)</label>
+          <input type="number" step="0.01" class="input ai-qi-office" value="${preOffice}" oninput="recalcAiInlineQuickIncome('${wid}')" style="min-height:30px;height:30px;padding:2px 6px;font-size:12px;width:100%;">
+        </div>
+      </div>
+      <input type="hidden" class="ai-qi-dep" value="${preDep}">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:8px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);font-size:12px;">
+        <span>الصافي المعادل بالدولار:</span>
+        <strong class="ai-qi-net-preview" style="color:#059669;font-size:14px;">$0.00</strong>
+      </div>
+      <button type="button" class="btn green" style="width:100%;min-height:34px;font-weight:900;font-size:12.5px;" onclick="submitAiInlineQuickIncome('${wid}')">💾 حفظ في الدخل اليومي الآن</button>
+    </div>
+  `;
+}
+
+function recalcAiInlineQuickIncome(wid) {
+  const card = document.getElementById(wid);
+  if (!card) return;
+  const usd = num(card.querySelector('.ai-qi-usd')?.value);
+  const eur = num(card.querySelector('.ai-qi-eur')?.value);
+  const cash = num(card.querySelector('.ai-qi-cash')?.value);
+  const office = num(card.querySelector('.ai-qi-office')?.value);
+  const dep = num(card.querySelector('.ai-qi-dep')?.value);
+  const net = dep + usd + eur + ((cash + office) / 50);
+  const prev = card.querySelector('.ai-qi-net-preview');
+  if (prev) prev.textContent = '$' + money(net);
+}
+window.recalcAiInlineQuickIncome = recalcAiInlineQuickIncome;
+
+async function hydrateAiInlineTeamListsIfEmpty(wid) {
+  const card = document.getElementById(wid);
+  if (!card) return;
+  const sSel = card.querySelector('.ai-qi-sales');
+  const p1Sel = card.querySelector('.ai-qi-photog1');
+  const p2Sel = card.querySelector('.ai-qi-photog2');
+  const hSel = card.querySelector('.ai-qi-hotel');
+  if (sSel && sSel.options.length <= 1) {
+    try {
+      const [tOpts, hOpts] = await Promise.all([
+        apiSafe('/api/team/options', { sales: [], photographers: [] }),
+        apiSafe('/api/hotels', [])
+      ]);
+      if (sSel && (tOpts.sales || []).length) {
+        sSel.innerHTML = `<option value="">-- اختر اسم السيلز --</option>` + (tOpts.sales || []).map(x => `<option value="${esc(x.nickname)}">${esc(x.nickname)}</option>`).join('');
+      }
+      if (p1Sel && (tOpts.photographers || []).length) {
+        p1Sel.innerHTML = `<option value="">-- اختر اسم المصور --</option>` + (tOpts.photographers || []).map(x => `<option value="${esc(x.nickname)}">${esc(x.nickname)}</option>`).join('');
+      }
+      if (p2Sel && (tOpts.photographers || []).length) {
+        p2Sel.innerHTML = `<option value="">-- بدون مصور ثاني (اختياري) --</option>` + (tOpts.photographers || []).map(x => `<option value="${esc(x.nickname)}">${esc(x.nickname)}</option>`).join('');
+      }
+      if (hSel && (hOpts || []).length) {
+        hSel.innerHTML = hOpts.map(h => `<option value="${esc(h.id)}">${esc(h.hotel_name)}</option>`).join('');
+      }
+    } catch (e) {}
+  }
+  recalcAiInlineQuickIncome(wid);
+}
+
+async function submitAiInlineQuickIncome(wid) {
+  const card = document.getElementById(wid);
+  if (!card) return;
+  const sales = (card.querySelector('.ai-qi-sales')?.value || '').trim();
+  const photog1 = (card.querySelector('.ai-qi-photog1')?.value || '').trim();
+  const photog2 = (card.querySelector('.ai-qi-photog2')?.value || '').trim();
+  const hotelId = num(card.querySelector('.ai-qi-hotel')?.value) || 1;
+  const room = (card.querySelector('.ai-qi-room')?.value || '').trim() || 'دخل سريع';
+  const usd = num(card.querySelector('.ai-qi-usd')?.value);
+  const eur = num(card.querySelector('.ai-qi-eur')?.value);
+  const cash = num(card.querySelector('.ai-qi-cash')?.value);
+  const office = num(card.querySelector('.ai-qi-office')?.value);
+  const dep = num(card.querySelector('.ai-qi-dep')?.value);
+
+  if (!sales) return toast('⚠️ يرجى اختيار اسم السيلز من القائمة أولاً', 'bad');
+  if (!photog1) return toast('⚠️ يرجى اختيار اسم المصور من القائمة أولاً', 'bad');
+  const gross = dep + usd + eur + ((cash + office) / 50);
+  if (gross <= 0) return toast('⚠️ يرجى إدخال المبلغ بأحد أنواعه (دولار $، يورو €، كاش LE، أو مكتب LE)', 'bad');
+
+  const photogs = [photog1];
+  if (photog2 && photog2.toLowerCase() !== photog1.toLowerCase()) photogs.push(photog2);
+  const photogStr = photogs.join(', ');
+
+  try {
+    const r = await apiJSON('/api/daily-sales', 'POST', {
+      hotel_id: hotelId,
+      room_number: room,
+      income_date: (document.getElementById('dsEntryDate')?.value) || todayISO(),
+      sales_person: sales,
+      photographer: photogStr,
+      deposit_applied: dep,
+      income_usd: usd,
+      income_eur: eur,
+      income_le_k: cash,
+      income_le_m: office,
+      le_to_usd: 50,
+      cost_dress: 0,
+      cost_usb: 0,
+      cost_album: 0
+    });
+    toast(`✅ تم حفظ الدخل في الدخل اليومي بنجاح (الصافي: $${money(r.daily_total)})`);
+    appendAiMessage(
+      'assistant',
+      `✅ **تم تسجيل وحفظ الدخل في الدخل اليومي بنجاح!**
+` +
+      `• **اسم السيلز:** \`${sales}\` | **اسم المصور:** \`${photogStr}\`
+` +
+      `• **الغرفة / البيان:** \`${room}\`
+` +
+      `• **المبلغ المحفوظ:** دولار **$${money(usd)}** | يورو **€${money(eur)}** | كاش **${money(cash)} LE** | مكتب **${money(office)} LE**
+` +
+      `• **صافي الدخل اليومي:** **$${money(r.daily_total)}**`,
+      [{ label: '💰 فتح الدخل اليومي', href: '/daily-sales' }]
+    );
+    if (typeof loadEligible === 'function') loadEligible();
+    if (typeof loadSalesSearch === 'function') loadSalesSearch();
+    if (typeof loadAnalytics === 'function') loadAnalytics();
+  } catch (err) {
+    toast(err.message || 'تعذر حفظ الدخل', 'bad');
+  }
+}
+window.submitAiInlineQuickIncome = submitAiInlineQuickIncome;
+
+function appendAiMessage(role, text, actions = [], widget = null) {
   const list = $('aiMessagesList');
   if (!list) return;
   const div = document.createElement('div');
   div.className = `ai-msg-bubble ${role}`;
   let html = `<div>${formatAiMarkdown(text)}</div>`;
+  if (widget && widget.type === 'quick_income_form') {
+    html += buildAiInlineQuickIncomeWidgetHTML(widget);
+  }
   if (Array.isArray(actions) && actions.length) {
     html += `<div class="ai-msg-actions">` + actions.map((a) => {
-      if (a.href) {
-        return `<a class="ai-action-pill" href="${esc(a.href)}">${esc(a.label)}</a>`;
+      const linkUrl = a.href || a.url;
+      if (a.onclick) {
+        return `<button type="button" class="ai-action-pill" onclick="${esc(a.onclick)}">${esc(a.label)}</button>`;
+      }
+      if (linkUrl) {
+        return `<a class="ai-action-pill" href="${esc(linkUrl)}">${esc(a.label)}</a>`;
       }
       if (a.prompt) {
         return `<button type="button" class="ai-action-pill" data-aiprompt="${esc(a.prompt)}" onclick="sendAiQuickPrompt(this.dataset.aiprompt)">${esc(a.label)}</button>`;
@@ -695,6 +901,10 @@ function appendAiMessage(role, text, actions = []) {
   div.innerHTML = html;
   list.appendChild(div);
   list.scrollTop = list.scrollHeight;
+  const card = div.querySelector('[data-ai-qi-card="1"]');
+  if (card && card.id) {
+    hydrateAiInlineTeamListsIfEmpty(card.id);
+  }
 }
 
 function initAiCopilotUI() {
@@ -794,7 +1004,7 @@ async function submitAiQuery(q) {
       api_key: extKey,
       provider: 'auto'
     });
-    appendAiMessage('assistant', res.reply || 'تم تحليل البيانات بنجاح.', res.actions || []);
+    appendAiMessage('assistant', res.reply || 'تم تحليل البيانات بنجاح.', res.actions || [], res.widget || null);
   } catch (err) {
     appendAiMessage('assistant', `⚠️ تعذر الاتصال بالخادم حالياً: ${err.message}`);
   } finally {
@@ -1317,7 +1527,7 @@ function toggleBackendAiVoiceMic() {
         rec.onresult = function(ev) {
             let t = '';
             for (let i = 0; i < ev.results.length; i++) t += ev.results[i][0].transcript;
-            if (inp) inp.value = t.trim();
+            if (inp) inp.value = window.convertSpokenArabicNumbersToDigits ? window.convertSpokenArabicNumbersToDigits(t) : t.trim();
         };
         rec.onerror = function() {
             window._BACKEND_IS_LISTENING = false;
@@ -1525,3 +1735,418 @@ window.addEventListener('offline', () => {
   toast('📴 انقطعت الشبكة — تم تفعيل الحفظ المؤقت تلقائياً (Offline Queue)', 'amber');
 });
 setTimeout(updateOfflineQueueUI, 200);
+
+
+// ============================================================================
+// 🎙️ V109: محرك تحويل الأرقام المنطوقة بالعربي والعامية المصرية إلى أرقام حسابية (123)
+// ============================================================================
+(function() {
+  const SINGLE_DIGITS = {
+    "صفر": 0, "زيرو": 0, "zero": 0,
+    "واحد": 1, "واحده": 1, "واحدة": 1, "ون": 1, "one": 1,
+    "اتنين": 2, "إتنين": 2, "اثنين": 2, "اثنان": 2, "إثنين": 2, "إثنان": 2, "تو": 2, "two": 2,
+    "تلاته": 3, "تلاتة": 3, "ثلاثه": 3, "ثلاثة": 3, "تلات": 3, "ثلاث": 3, "ثري": 3, "three": 3,
+    "اربعه": 4, "اربعة": 4, "أربعه": 4, "أربعة": 4, "اربع": 4, "أربع": 4, "فور": 4, "four": 4,
+    "خمسه": 5, "خمسة": 5, "خمس": 5, "فايف": 5, "five": 5,
+    "سته": 6, "ستة": 6, "ست": 6, "سكس": 6, "six": 6,
+    "سبعه": 7, "سبعة": 7, "سبع": 7, "سفن": 7, "seven": 7,
+    "تمانيه": 8, "تمانية": 8, "ثمانيه": 8, "ثمانية": 8, "تمن": 8, "ثمان": 8, "ثماني": 8, "ايت": 8, "eight": 8,
+    "تسعه": 9, "تسعة": 9, "تسع": 9, "ناين": 9, "nine": 9
+  };
+  const TEENS = {
+    "عشره": 10, "عشرة": 10, "عشر": 10, "تن": 10, "ten": 10,
+    "حداشر": 11, "احداشر": 11, "إحداشر": 11, "أحداشر": 11,
+    "اتناشر": 12, "إتناشر": 12, "اثناشر": 12, "إثناشر": 12,
+    "تلتاشر": 13, "تلاتاشر": 13, "ثلاثتاشر": 13,
+    "اربعتاشر": 14, "أربعتاشر": 14,
+    "خمستاشر": 15, "ستاشر": 16, "سبعتاشر": 17,
+    "تمنتاشر": 18, "ثمانتاشر": 18, "تمانتاشر": 18,
+    "تسعتاشر": 19
+  };
+  const TENS = {
+    "عشرين": 20, "عشرون": 20, "تلاتين": 30, "ثلاثين": 30, "ثلاثون": 30,
+    "اربعين": 40, "أربعين": 40, "اربعون": 40, "أربعون": 40,
+    "خمسين": 50, "خمسون": 50, "ستين": 60, "ستون": 60,
+    "سبعين": 70, "سبعون": 70, "تمانين": 80, "ثمانين": 80, "ثمانون": 80,
+    "تسعين": 90, "تسعون": 90
+  };
+  const HUNDREDS = {
+    "ميه": 100, "مية": 100, "مائة": 100, "مائه": 100, "مئة": 100, "مئه": 100,
+    "ميتين": 200, "مائتين": 200, "مائتان": 200, "مئتين": 200, "مئتان": 200,
+    "تلتميه": 300, "تلتمية": 300, "ثلاثمائة": 300, "ثلاثمئة": 300, "تلاتميه": 300, "تلاتمية": 300,
+    "اربعميه": 400, "اربعمية": 400, "أربعميه": 400, "أربعمية": 400, "اربعمائة": 400, "أربعمائة": 400, "اربعمئة": 400,
+    "خمسميه": 500, "خمسمية": 500, "خمسمائة": 500, "خمسمئة": 500,
+    "ستميه": 600, "ستمية": 600, "ستمائة": 600, "ستمئة": 600,
+    "سبعميه": 700, "سبعمية": 700, "سبعمائة": 700, "سبعمئة": 700,
+    "تمنميه": 800, "تمنمية": 800, "ثمانمائة": 800, "ثمانمئة": 800, "تمانميه": 800, "تمانمية": 800,
+    "تسعميه": 900, "تسعمية": 900, "تسعمائة": 900, "تسعمئة": 900
+  };
+  const THOUSANDS = {
+    "الف": 1000, "ألف": 1000, "الفين": 2000, "ألفين": 2000, "ألفان": 2000, "الفان": 2000
+  };
+
+  window.convertSpokenArabicNumbersToDigits = function(rawText) {
+    if (rawText === null || rawText === undefined) return "";
+    let s = String(rawText)
+      .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+      .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+
+    s = s.replace(/الوردر|لوردر|الأوردر|الاوردر|أوردر/g, "اوردر")
+         .replace(/أحجز|إحجز/g, "احجز")
+         .replace(/غرفه/g, "غرفة")
+         .replace(/الغرفه/g, "الغرفة");
+
+    s = s.replace(/(?:أحد|احد|إحدى|احدى)\s+عشر(?:ة|ه)?/g, "حداشر")
+         .replace(/(?:اثنا|إثنا|اثني|إثني|اتنين)\s+عشر(?:ة|ه)?/g, "اتناشر")
+         .replace(/(?:ثلاثة|ثلاث|تلاته|تلاتة|تلات)\s+عشر(?:ة|ه)?/g, "تلتاشر")
+         .replace(/(?:أربعة|اربعة|أربع|اربع|اربعه)\s+عشر(?:ة|ه)?/g, "اربعتاشر")
+         .replace(/(?:خمسة|خمس|خمسه)\s+عشر(?:ة|ه)?/g, "خمستاشر")
+         .replace(/(?:ستة|ست|سته)\s+عشر(?:ة|ه)?/g, "ستاشر")
+         .replace(/(?:سبعة|سبع|سبعه)\s+عشر(?:ة|ه)?/g, "سبعتاشر")
+         .replace(/(?:ثمانية|ثماني|تمانية|تمانيه|ثمان)\s+عشر(?:ة|ه)?/g, "تمنتاشر")
+         .replace(/(?:تسعة|تسع|تسعه)\s+عشر(?:ة|ه)?/g, "تسعتاشر")
+         .replace(/(?:ثلاثة|ثلاث|تلاته|تلاتة|تلات)\s+(?:آلاف|الاف|ألاف)/g, "3000")
+         .replace(/(?:أربعة|اربعة|أربع|اربع|اربعه)\s+(?:آلاف|الاف|ألاف)/g, "4000")
+         .replace(/(?:خمسة|خمس|خمسه)\s+(?:آلاف|الاف|ألاف)/g, "5000");
+
+    function classifyToken(tok) {
+      const clean = tok.replace(/[،,.;:!?]/g, "");
+      let hasLeadingWaw = false;
+      let base = clean;
+      if (clean === "و") return { type: "waw", raw: tok };
+      if (clean.startsWith("و") && clean.length > 1) {
+        const sub = clean.slice(1);
+        if (SINGLE_DIGITS[sub] !== undefined || TEENS[sub] !== undefined || TENS[sub] !== undefined || HUNDREDS[sub] !== undefined || THOUSANDS[sub] !== undefined) {
+          hasLeadingWaw = true;
+          base = sub;
+        }
+      }
+      if (SINGLE_DIGITS[base] !== undefined) return { type: "digit", val: SINGLE_DIGITS[base], waw: hasLeadingWaw, raw: tok };
+      if (TEENS[base] !== undefined) return { type: "teen", val: TEENS[base], waw: hasLeadingWaw, raw: tok };
+      if (TENS[base] !== undefined) return { type: "ten", val: TENS[base], waw: hasLeadingWaw, raw: tok };
+      if (HUNDREDS[base] !== undefined) return { type: "hundred", val: HUNDREDS[base], waw: hasLeadingWaw, raw: tok };
+      if (THOUSANDS[base] !== undefined) return { type: "thousand", val: THOUSANDS[base], waw: hasLeadingWaw, raw: tok };
+      if (/^\d+$/.test(base)) return { type: "num_literal", val: base, waw: hasLeadingWaw, raw: tok };
+      return { type: "word", raw: tok };
+    }
+
+    const rawTokens = s.trim().split(/\s+/).filter(Boolean);
+    if (!rawTokens.length) return "";
+    const classified = rawTokens.map(classifyToken);
+    const out = [];
+    let i = 0;
+
+    while (i < classified.length) {
+      const cur = classified[i];
+      if (cur.type === "word" || cur.type === "waw") {
+        out.push(cur.raw);
+        i++;
+        continue;
+      }
+      const seq = [cur];
+      let j = i + 1;
+      while (j < classified.length) {
+        if (classified[j].type === "waw" && j + 1 < classified.length && ["digit", "teen", "ten", "hundred", "thousand", "num_literal"].includes(classified[j + 1].type)) {
+          seq.push(Object.assign({}, classified[j + 1], { waw: true }));
+          j += 2;
+        } else if (["digit", "teen", "ten", "hundred", "thousand", "num_literal"].includes(classified[j].type)) {
+          seq.push(classified[j]);
+          j++;
+        } else {
+          break;
+        }
+      }
+
+      if (seq.every(x => x.type === "digit" || x.type === "num_literal")) {
+        out.push(seq.map(x => String(x.val)).join(""));
+        i = j;
+        continue;
+      }
+      if (seq.length === 2 && !seq[1].waw) {
+        if ((seq[0].type === "digit" && seq[1].type === "teen") || (seq[0].type === "teen" && seq[1].type === "digit")) {
+          out.push(String(seq[0].val) + String(seq[1].val));
+          i = j;
+          continue;
+        }
+        if (seq[0].type === "ten" && seq[1].type === "digit") {
+          out.push(String(seq[0].val / 10) + "0" + String(seq[1].val));
+          i = j;
+          continue;
+        }
+      }
+
+      let total = 0;
+      let k = 0;
+      while (k < seq.length) {
+        const item = seq[k];
+        if (item.type === "digit" && k + 1 < seq.length && seq[k + 1].type === "thousand" && !seq[k + 1].waw) {
+          total += item.val * 1000; k += 2;
+        } else if (item.type === "digit" && k + 1 < seq.length && seq[k + 1].type === "hundred" && !seq[k + 1].waw) {
+          total += item.val * 100; k += 2;
+        } else if (item.type === "thousand" || item.type === "hundred" || item.type === "teen") {
+          total += item.val; k++;
+        } else if (item.type === "digit" && k + 1 < seq.length && seq[k + 1].type === "ten") {
+          total += item.val + seq[k + 1].val; k += 2;
+        } else if (item.type === "ten" || item.type === "digit") {
+          total += item.val; k++;
+        } else if (item.type === "num_literal") {
+          total += Number(item.val); k++;
+        } else {
+          k++;
+        }
+      }
+      out.push(String(total));
+      i = j;
+    }
+    return out.join(" ").replace(/\s+/g, " ").trim();
+  };
+
+  const _origSubmitAi = window.submitAiQuery;
+  if (typeof _origSubmitAi === "function") {
+    window.submitAiQuery = async function(q) {
+      const converted = window.convertSpokenArabicNumbersToDigits(q);
+      return _origSubmitAi(converted);
+    };
+  }
+
+  let debounceTimer = null;
+  document.addEventListener("input", function(ev) {
+    const el = ev.target;
+    if (!el || el.tagName !== "INPUT") return;
+    const id = (el.id || "").toLowerCase();
+    const ph = (el.placeholder || "").toLowerCase();
+    if (id === "aichatinput" || id.includes("room") || ph.includes("غرفة") || ph.includes("غرفه")) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function() {
+        const val = el.value;
+        if (!val) return;
+        const converted = window.convertSpokenArabicNumbersToDigits(val);
+        if (converted !== val) {
+          el.value = converted + (/\s$/.test(val) ? " " : "");
+        }
+      }, 280);
+    }
+  });
+})();
+
+
+// ============================================================================
+// ⚡➕ نافذة وزرار "إضافة دخل سريع" (Quick Income Modal — يحفظ مباشرة في الدخل اليومي)
+// ============================================================================
+let _CACHED_QI_TEAM = null;
+let _CACHED_QI_HOTELS = null;
+
+async function openQuickIncomeModal(prefill = {}) {
+  try {
+    const [teamResp, hotelsResp] = await Promise.all([
+      apiSafe('/api/team/options', _CACHED_QI_TEAM || { sales: [], photographers: [], all: [] }),
+      apiSafe('/api/hotels', _CACHED_QI_HOTELS || [])
+    ]);
+    _CACHED_QI_TEAM = teamResp || { sales: [], photographers: [], all: [] };
+    _CACHED_QI_HOTELS = Array.isArray(hotelsResp) ? hotelsResp : [];
+  } catch (e) {
+    _CACHED_QI_TEAM = _CACHED_QI_TEAM || { sales: [], photographers: [], all: [] };
+    _CACHED_QI_HOTELS = _CACHED_QI_HOTELS || [];
+  }
+
+  const salesList = _CACHED_QI_TEAM.sales || [];
+  const photoList = _CACHED_QI_TEAM.photographers || [];
+  const hotelsList = _CACHED_QI_HOTELS || [];
+
+  const curHotelId = prefill.hotel_id || document.getElementById('dsHotel')?.value || (hotelsList[0]?.id) || 1;
+  const curDate = prefill.date || document.getElementById('dsEntryDate')?.value || todayISO();
+  const curRoom = prefill.room || '';
+
+  const salesOptionsHtml = `<option value="">-- اختر اسم السيلز --</option>` +
+    salesList.map(s => `<option value="${esc(s.nickname)}" ${prefill.sales_person === s.nickname ? 'selected' : ''}>${esc(s.nickname)}</option>`).join('');
+
+  const photoOptions1Html = `<option value="">-- اختر اسم المصور --</option>` +
+    photoList.map(p => `<option value="${esc(p.nickname)}" ${prefill.photographer === p.nickname ? 'selected' : ''}>${esc(p.nickname)}</option>`).join('');
+
+  const photoOptions2Html = `<option value="">-- بدون مصور ثاني (اختياري) --</option>` +
+    photoList.map(p => `<option value="${esc(p.nickname)}">${esc(p.nickname)}</option>`).join('');
+
+  const hotelOptionsHtml = hotelsList.length
+    ? hotelsList.map(h => `<option value="${esc(h.id)}" ${Number(curHotelId) === Number(h.id) ? 'selected' : ''}>${esc(h.hotel_name)}</option>`).join('')
+    : `<option value="1">الفندق الرئيسي</option>`;
+
+  showModal(`
+    <div class="modal-title" style="flex-direction:row !important;justify-content:space-between !important;align-items:center !important;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2>⚡➕ إضافة دخل سريع في الدخل اليومي</h2>
+        <p>اختر اسم السيلز واسم المصور من فريق العمل وأدخل المبلغ بأنواعه وعملاته ليُحفظ مباشرة في جدول الدخل اليومي</p>
+      </div>
+      <button type="button" class="btn" onclick="closeModal()">إغلاق</button>
+    </div>
+
+    <form id="quickIncomeModalForm" style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-grid three">
+        <div class="field">
+          <label style="font-weight:900;color:var(--primary);">💼 اختر اسم السيلز *</label>
+          <select class="input" id="qiModalSales" required style="font-weight:800;">
+            ${salesOptionsHtml}
+          </select>
+        </div>
+        <div class="field">
+          <label style="font-weight:900;color:var(--primary);">📸 اختر اسم المصور *</label>
+          <select class="input" id="qiModalPhotog1" required onchange="calcQuickIncomeModalPreview()" style="font-weight:800;">
+            ${photoOptions1Html}
+          </select>
+        </div>
+        <div class="field">
+          <label>📸 مصور مشارك ثاني (اختياري)</label>
+          <select class="input" id="qiModalPhotog2" onchange="calcQuickIncomeModalPreview()">
+            ${photoOptions2Html}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid three">
+        <div class="field">
+          <label>🏨 الفندق *</label>
+          <select class="input" id="qiModalHotel" required>
+            ${hotelOptionsHtml}
+          </select>
+        </div>
+        <div class="field">
+          <label>📅 تاريخ الدخل *</label>
+          <input class="input" type="date" id="qiModalDate" value="${esc(curDate)}" required>
+        </div>
+        <div class="field">
+          <label>🚪 رقم الغرفة / البيان (اختياري)</label>
+          <input class="input" type="text" id="qiModalRoom" value="${esc(curRoom)}" placeholder="رقم الغرفة أو اتركه ليتسجل (دخل سريع)">
+        </div>
+      </div>
+
+      <div style="padding:12px 14px;border-radius:14px;background:var(--bg-surface-2);border:1.5px solid var(--border-strong);">
+        <div style="font-weight:900;font-size:13.5px;margin-bottom:10px;color:var(--text-heading);">💰 المبلغ بأنواعه وعملاته:</div>
+        <div class="form-grid four" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;">
+          <div class="field">
+            <label>💵 دخل دولار ($ USD)</label>
+            <input class="input" type="number" step="0.01" id="qiModalUsd" value="${num(prefill.usd || 0)}" oninput="calcQuickIncomeModalPreview()">
+          </div>
+          <div class="field">
+            <label>💶 دخل يورو (€ EUR)</label>
+            <input class="input" type="number" step="0.01" id="qiModalEur" value="${num(prefill.eur || 0)}" oninput="calcQuickIncomeModalPreview()">
+          </div>
+          <div class="field">
+            <label>💷 دخل كاش مصري (L.E كاش)</label>
+            <input class="input" type="number" step="0.01" id="qiModalCash" value="${num(prefill.cash || 0)}" oninput="calcQuickIncomeModalPreview()">
+          </div>
+          <div class="field">
+            <label>💳 دخل مكتب / فيزا (L.E مكتب)</label>
+            <input class="input" type="number" step="0.01" id="qiModalOffice" value="${num(prefill.office || 0)}" oninput="calcQuickIncomeModalPreview()">
+          </div>
+        </div>
+        <div class="form-grid two" style="margin-top:10px;">
+          <div class="field">
+            <label>عربون مسدد مسبقاً ($) (اختياري)</label>
+            <input class="input" type="number" step="0.01" id="qiModalDeposit" value="${num(prefill.deposit || 0)}" oninput="calcQuickIncomeModalPreview()">
+          </div>
+          <div class="field">
+            <label>سعر الصرف (Rate LE/$)</label>
+            <input class="input" type="number" step="0.01" id="qiModalRate" value="50" oninput="calcQuickIncomeModalPreview()">
+          </div>
+        </div>
+      </div>
+
+      <details style="padding:8px 12px;border-radius:10px;border:1px dashed var(--border-strong);">
+        <summary style="cursor:pointer;font-weight:800;font-size:12.5px;color:var(--text-muted);">➕ إضافة تكاليف على الأوردر (فستان / فلاشة USB / ألبوم — اختياري)</summary>
+        <div class="form-grid three" style="margin-top:10px;">
+          <div class="field"><label>تكلفة فستان ($)</label><input class="input" type="number" step="0.01" id="qiModalCostDress" value="0" oninput="calcQuickIncomeModalPreview()"></div>
+          <div class="field"><label>تكلفة فلاشة USB ($)</label><input class="input" type="number" step="0.01" id="qiModalCostUsb" value="0" oninput="calcQuickIncomeModalPreview()"></div>
+          <div class="field"><label>تكلفة ألبوم ($)</label><input class="input" type="number" step="0.01" id="qiModalCostAlbum" value="0" oninput="calcQuickIncomeModalPreview()"></div>
+        </div>
+      </details>
+
+      <div class="money-summary" style="margin:0;">
+        <div class="summary-box"><small>مقابل الجنيه بالدولار</small><strong id="qiModalLeEquiv" style="color:var(--primary);">0.00 $</strong></div>
+        <div class="summary-box"><small>إجمالي الدخل (Gross)</small><strong id="qiModalGross">0.00 $</strong></div>
+        <div class="summary-box"><small>الصافي النهائي للدخل اليومي</small><strong id="qiModalNet" style="color:#10b981;font-size:18px;">0.00 $</strong></div>
+      </div>
+
+      <div class="modal-actions" style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+        <button type="button" class="btn" onclick="closeModal()">إلغاء</button>
+        <button type="submit" class="btn green" style="font-weight:900;padding:10px 24px;font-size:14px;">💾 حفظ في الدخل اليومي الآن</button>
+      </div>
+    </form>
+  `, 'modal-lg');
+
+  calcQuickIncomeModalPreview();
+
+  document.getElementById('quickIncomeModalForm')?.addEventListener('submit', async function(ev) {
+    ev.preventDefault();
+    const sales = (document.getElementById('qiModalSales')?.value || '').trim();
+    const photog1 = (document.getElementById('qiModalPhotog1')?.value || '').trim();
+    const photog2 = (document.getElementById('qiModalPhotog2')?.value || '').trim();
+    const hotelId = num(document.getElementById('qiModalHotel')?.value) || 1;
+    const entryDate = document.getElementById('qiModalDate')?.value || todayISO();
+    const room = (document.getElementById('qiModalRoom')?.value || '').trim() || 'دخل سريع';
+
+    const usd = num(document.getElementById('qiModalUsd')?.value);
+    const eur = num(document.getElementById('qiModalEur')?.value);
+    const cash = num(document.getElementById('qiModalCash')?.value);
+    const office = num(document.getElementById('qiModalOffice')?.value);
+    const dep = num(document.getElementById('qiModalDeposit')?.value);
+    const rate = num(document.getElementById('qiModalRate')?.value) || 50;
+    const costDress = num(document.getElementById('qiModalCostDress')?.value);
+    const costUsb = num(document.getElementById('qiModalCostUsb')?.value);
+    const costAlbum = num(document.getElementById('qiModalCostAlbum')?.value);
+
+    if (!sales) return toast('⚠️ يرجى اختيار اسم السيلز أولاً', 'bad');
+    if (!photog1) return toast('⚠️ يرجى اختيار اسم المصور أولاً', 'bad');
+
+    const gross = dep + usd + eur + ((cash + office) / rate);
+    if (gross <= 0) return toast('⚠️ يرجى إدخال المبلغ بأحد أنواعه (دولار، يورو، كاش مصري، أو مكتب)', 'bad');
+
+    const photogs = [photog1];
+    if (photog2 && photog2.toLowerCase() !== photog1.toLowerCase()) photogs.push(photog2);
+    const photogStr = photogs.join(', ');
+
+    try {
+      const res = await apiJSON('/api/daily-sales', 'POST', {
+        hotel_id: hotelId,
+        room_number: room,
+        income_date: entryDate,
+        sales_person: sales,
+        photographer: photogStr,
+        deposit_applied: dep,
+        income_usd: usd,
+        income_eur: eur,
+        income_le_k: cash,
+        income_le_m: office,
+        le_to_usd: rate,
+        cost_dress: costDress,
+        cost_usb: costUsb,
+        cost_album: costAlbum
+      });
+      closeModal();
+      toast(`✅ تم حفظ الدخل السريع في الدخل اليومي بنجاح! (السيلز: ${sales} • المصور: ${photogStr} • الصافي: $${money(res.daily_total)})`);
+      if (typeof loadEligible === 'function') loadEligible();
+      if (typeof loadSalesSearch === 'function') loadSalesSearch();
+      if (typeof loadAnalytics === 'function') loadAnalytics();
+    } catch (err) {
+      toast(err.message || 'تعذر حفظ الدخل السريع', 'bad');
+    }
+  });
+}
+window.openQuickIncomeModal = openQuickIncomeModal;
+
+function calcQuickIncomeModalPreview() {
+  const usd = num(document.getElementById('qiModalUsd')?.value);
+  const eur = num(document.getElementById('qiModalEur')?.value);
+  const cash = num(document.getElementById('qiModalCash')?.value);
+  const office = num(document.getElementById('qiModalOffice')?.value);
+  const dep = num(document.getElementById('qiModalDeposit')?.value);
+  const rate = num(document.getElementById('qiModalRate')?.value) || 50;
+  const cost = num(document.getElementById('qiModalCostDress')?.value) + num(document.getElementById('qiModalCostUsb')?.value) + num(document.getElementById('qiModalCostAlbum')?.value);
+
+  const leEq = (cash + office) / rate;
+  const gross = dep + usd + eur + leEq;
+  const net = gross - cost;
+
+  if (document.getElementById('qiModalLeEquiv')) document.getElementById('qiModalLeEquiv').textContent = money(leEq) + ' $';
+  if (document.getElementById('qiModalGross')) document.getElementById('qiModalGross').textContent = money(gross) + ' $';
+  if (document.getElementById('qiModalNet')) document.getElementById('qiModalNet').textContent = money(net) + ' $';
+}
+window.calcQuickIncomeModalPreview = calcQuickIncomeModalPreview;

@@ -22,7 +22,7 @@
     {% block styles %}{% endblock %}
 </head>
 
-<body class="theme-light  system-mode-1 page-{% block page %}{% endblock %}">
+<body class="theme-light system-mode-1 page-{% block page %}{% endblock %} {{ 'mobile-phone-edition' if is_mobile_device else '' }}">
 
 
 <div class="app">
@@ -314,13 +314,13 @@
     <div id="aiMessagesList" class="ai-messages-list"></div>
 
     <div id="aiExecQuickChipsBar" style="display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;background:var(--bg-surface-2);border-bottom:1px solid var(--border);">
-        <span style="width:100%;font-size:10.5px;font-weight:900;color:var(--primary);">⚡ أوامر تنفيذية سريعة (صوت 🎤 أو كتابة):</span>
-        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('احجز اوردر يوم 2026-11-05 الساعة 16:00 رقم الغرفة 412 معاه فستان أحمر ملكي وفستان أبيض ودافع عربون 20 دولار')">➕ حجز أوردر كامل</button>
-        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('نزل خصم على احمد 200 جنيه بسبب تأخير')">💸 خصم على موظف</button>
-        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('عدل دخل اوردر غرفة 214 خليه 220 دولار')">✏️ تعديل دخل</button>
-        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('ضيف دخل اوردر غرفة 305 بمبلغ 180 دولار')">💰 إضافة دخل</button>
-        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('غير ميعاد اوردر غرفة 214 ليوم 2026-11-06 الساعة 17:00')">⏰ تغيير ميعاد</button>
-        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="fillAiVoiceText('قفل عهدة السيلز اليومية بالكامل')">💼 تقفيل عهدة السيلز</button>
+        <span style="width:100%;font-size:10.5px;font-weight:900;color:var(--primary);">⚡ أوامر تنفيذية سريعة من نطاق عملنا (صوت 🎤 أو كتابة):</span>
+        <button type="button" class="btn green" style="height:26px;min-height:26px;padding:0 9px;font-size:10.5px;border-radius:999px;font-weight:900;" onclick="sendAiQuickPrompt('سجل دخل جديد')">💰 سجل دخل جديد</button>
+        <button type="button" class="btn primary" style="height:26px;min-height:26px;padding:0 9px;font-size:10.5px;border-radius:999px;font-weight:900;" onclick="openQuickIncomeModal()">⚡➕ إضافة دخل سريع</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="sendAiQuickPrompt('سجل حجز جديد')">📅 حجز أوردر جديد</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="sendAiQuickPrompt('سجل خصم على موظف')">💸 خصم على موظف</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="sendAiQuickPrompt('عايز دخل اليوم تحت بعض')">📊 دخل اليوم</button>
+        <button type="button" class="btn" style="height:26px;min-height:26px;padding:0 8px;font-size:10.5px;border-radius:999px;" onclick="sendAiQuickPrompt('عايز اوردرات اليوم تحت بعض')">📸 أوردرات اليوم</button>
     </div>
     <div id="aiVoiceStatusBanner" hidden style="padding:8px 12px;background:#fef2f2;border-top:1px solid #fecaca;color:#b91c1c;font-size:11.5px;font-weight:800;"></div>
     <form id="aiChatForm" class="ai-input-bar" onsubmit="handleAiChatSubmit(event)">
@@ -1678,6 +1678,615 @@ html body.system-mode-2.mobile-phone-edition .mob-native-fab {
     stylePureSlidingToggle();
     setTimeout(stylePureSlidingToggle, 200);
     setTimeout(stylePureSlidingToggle, 600);
+  });
+})();
+</script>
+
+
+<!-- ==========================================================================
+     📱💻 AUTO DEVICE DETECTION: PHONE BROWSER (مود الفون) vs DESKTOP (سطح المكتب)
+     ========================================================================== -->
+<style id="autoMobilePhoneAndDesktopModeCSS">
+/* افتراضياً على سطح المكتب: إخفاء عناصر الموبايل الخاصة */
+body:not(.mobile-phone-edition) #mobileNativeAppHero,
+body:not(.mobile-phone-edition) #mobileNativeFab,
+body:not(.mobile-phone-edition):not(.arch-layout3) .pt-floating-bottom-dock,
+body:not(.mobile-phone-edition) .mobile-menu-btn,
+body:not(.mobile-phone-edition) #mobileDrawerBackdrop {
+  display: none !important;
+}
+
+/* ==========================================================================
+   📱 عند الفتح من متصفح الفون (body.mobile-phone-edition): تفعيل مود الفون الكامل
+   ========================================================================== */
+html body.mobile-phone-edition {
+  background: var(--bg-body) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}
+html body.mobile-phone-edition .app {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  min-height: 100vh !important;
+  position: relative !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* إخفاء القائمة الجانبية الثابتة على الفون وتحويلها لقائمة سحب (Drawer) عند الضغط على ☰ */
+html body.mobile-phone-edition #sidebar:not(.open) {
+  display: none !important;
+}
+html body.mobile-phone-edition #sidebar.open {
+  display: flex !important;
+  position: fixed !important;
+  top: 8px !important;
+  right: 8px !important;
+  bottom: 74px !important;
+  width: 270px !important;
+  max-width: 82vw !important;
+  height: auto !important;
+  border-radius: 20px !important;
+  z-index: 99999 !important;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.45) !important;
+  overflow-y: auto !important;
+}
+#mobileDrawerBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(3px);
+  z-index: 99990;
+  display: none;
+}
+html body.mobile-phone-edition #mobileDrawerBackdrop.active {
+  display: block !important;
+}
+
+/* إلغاء الهامش الأيمن الخاص بسطح المكتب في مود الفون */
+html body.mobile-phone-edition.system-mode-1 .main,
+html body.mobile-phone-edition.system-mode-2 .main,
+html body.mobile-phone-edition .main {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  margin-right: 0 !important;
+  margin-left: 0 !important;
+  padding: 8px 10px 88px 10px !important;
+  box-sizing: border-box !important;
+}
+
+/* شريط علوي مدمج وأنيق لمود الفون */
+html body.mobile-phone-edition .header {
+  position: sticky !important;
+  top: 4px !important;
+  z-index: 8500 !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  padding: 0 8px !important;
+  border-radius: 14px !important;
+  margin-bottom: 8px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+html body.mobile-phone-edition .mobile-menu-btn {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: 10px !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  font-size: 17px !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
+html body.mobile-phone-edition.system-mode-2 .mobile-menu-btn {
+  background: linear-gradient(135deg, #d97706, #f59e0b) !important;
+  color: #090d16 !important;
+}
+html body.mobile-phone-edition .header .search {
+  flex: 1 1 80px !important;
+  min-width: 70px !important;
+  height: 34px !important;
+  padding: 0 8px !important;
+  border-radius: 10px !important;
+}
+html body.mobile-phone-edition .header .search input {
+  font-size: 12px !important;
+  width: 100% !important;
+}
+html body.mobile-phone-edition .header .actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex-shrink: 0 !important;
+}
+html body.mobile-phone-edition .header-clock-pill,
+html body.mobile-phone-edition #mode1SubArchBtn,
+html body.mobile-phone-edition #aiTopbarButton span:last-child,
+html body.mobile-phone-edition .header .user > div:first-child,
+html body.mobile-phone-edition #headerLogoutBtn {
+  display: none !important;
+}
+html body.mobile-phone-edition #aiTopbarButton,
+html body.mobile-phone-edition .notification-trigger {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  border-radius: 9px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+}
+html body.mobile-phone-edition .header .user .avatar {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 9px !important;
+  font-size: 13px !important;
+}
+
+/* شريط الساعات أفقي قابل للسحب باللمس على الفون */
+html body.mobile-phone-edition .pt-hourly-timeline-bar {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  gap: 6px !important;
+  padding: 6px 8px !important;
+  margin-bottom: 8px !important;
+  scrollbar-width: none !important;
+}
+html body.mobile-phone-edition .pt-hourly-timeline-bar::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* كارت المحفظة وشبكة أيقونات التطبيق في مود الفون */
+html body.mobile-phone-edition #mobileNativeAppHero {
+  display: block !important;
+  margin-bottom: 12px !important;
+}
+.mob-wallet-card {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%) !important;
+  border-radius: 20px !important;
+  padding: 14px 15px !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 26px rgba(29, 78, 216, 0.25) !important;
+  margin-bottom: 10px !important;
+}
+html body.system-mode-2 .mob-wallet-card {
+  background: linear-gradient(135deg, #090d16 0%, #1e293b 60%, #78350f 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+.mob-wallet-top {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  margin-bottom: 12px !important;
+}
+.mob-wallet-label {
+  display: inline-block !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  padding: 2px 9px !important;
+  border-radius: 999px !important;
+  margin-bottom: 4px !important;
+  color: #ffffff !important;
+}
+.mob-wallet-balance {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+}
+.mob-wallet-balance small {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  opacity: 0.88 !important;
+  color: #e0f2fe !important;
+}
+.mob-wallet-sub {
+  font-size: 11px !important;
+  opacity: 0.92 !important;
+  margin-top: 3px !important;
+  color: #f1f5f9 !important;
+}
+.mob-wallet-logo {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 13px !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+  cursor: pointer !important;
+}
+.mob-wallet-actions {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 6px !important;
+}
+.mob-w-btn {
+  height: 32px !important;
+  border-radius: 10px !important;
+  border: none !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
+}
+.mob-w-btn.primary {
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+}
+.mob-w-btn.glass {
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+.mob-app-grid-title {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 4px 6px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+}
+.mob-squircle-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 8px !important;
+  background: var(--bg-card) !important;
+  padding: 12px 10px !important;
+  border-radius: 18px !important;
+  border: 1px solid var(--border) !important;
+}
+.mob-app-icon-btn {
+  background: transparent !important;
+  border: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  padding: 2px !important;
+}
+.mob-app-icon-btn span {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+.mob-squircle {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+}
+.mob-squircle.blue { background: linear-gradient(135deg, #eff6ff, #dbeafe) !important; color: #1d4ed8 !important; }
+.mob-squircle.green { background: linear-gradient(135deg, #ecfdf5, #d1fae5) !important; color: #059669 !important; }
+.mob-squircle.amber { background: linear-gradient(135deg, #fffbeb, #fef3c7) !important; color: #d97706 !important; }
+.mob-squircle.purple { background: linear-gradient(135deg, #f5f3ff, #ede9fe) !important; color: #7c3aed !important; }
+.mob-squircle.pink { background: linear-gradient(135deg, #fdf2f8, #fce7f3) !important; color: #db2777 !important; }
+.mob-squircle.indigo { background: linear-gradient(135deg, #eef2ff, #e0e7ff) !important; color: #4f46e5 !important; }
+.mob-squircle.teal { background: linear-gradient(135deg, #f0fdfa, #ccfbf1) !important; color: #0d9488 !important; }
+.mob-squircle.slate { background: linear-gradient(135deg, #f8fafc, #e2e8f0) !important; color: #334155 !important; }
+
+/* شريط التنقل السفلي العائم لتطبيق الموبايل (.pt-floating-bottom-dock) */
+html body.mobile-phone-edition .pt-floating-bottom-dock {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  position: fixed !important;
+  bottom: 8px !important;
+  left: 8px !important;
+  right: 8px !important;
+  height: 60px !important;
+  z-index: 9500 !important;
+  overflow-x: auto !important;
+  padding: 6px 8px !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1.5px solid rgba(37, 99, 235, 0.24) !important;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18) !important;
+  scrollbar-width: none !important;
+}
+html body.mobile-phone-edition .pt-floating-bottom-dock::-webkit-scrollbar {
+  display: none !important;
+}
+html body.mobile-phone-edition.system-mode-2 .pt-floating-bottom-dock {
+  background: rgba(15, 23, 42, 0.97) !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+html body.mobile-phone-edition .pt-dock-btn {
+  flex: 1 0 56px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  height: 46px !important;
+  padding: 2px 4px !important;
+  border-radius: 12px !important;
+  text-decoration: none !important;
+  border: none !important;
+  background: transparent !important;
+  color: #475569 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+html body.mobile-phone-edition.system-mode-2 .pt-dock-btn {
+  color: #94a3b8 !important;
+}
+html body.mobile-phone-edition .pt-dock-btn.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+}
+html body.mobile-phone-edition.system-mode-2 .pt-dock-btn.active {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #090d16 !important;
+}
+
+/* تنسيق الكروت والفورمات والمودالات في مود الفون */
+html body.mobile-phone-edition .dash-welcome {
+  display: none !important;
+}
+html body.mobile-phone-edition .kpi-group,
+html body.mobile-phone-edition .kpi-grid,
+html body.mobile-phone-edition .kpi-strip {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+html body.mobile-phone-edition .dash-panels,
+html body.mobile-phone-edition .split-grid,
+html body.mobile-phone-edition .split-2 {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+html body.mobile-phone-edition .bento-header,
+html body.mobile-phone-edition .page-heading,
+html body.mobile-phone-edition .bento-header-card {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  padding: 12px !important;
+}
+html body.mobile-phone-edition .form-grid.two,
+html body.mobile-phone-edition .form-grid.three,
+html body.mobile-phone-edition .form-grid.four {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+html body.mobile-phone-edition .modal-card {
+  width: 96vw !important;
+  max-width: 480px !important;
+  padding: 14px !important;
+  margin: 8px auto !important;
+  border-radius: 16px !important;
+}
+</style>
+
+<div id="mobileDrawerBackdrop" onclick="document.getElementById('sidebar')?.classList.remove('open');this.classList.remove('active');"></div>
+
+<script id="autoMobilePhoneAndDesktopModeJS">
+(function() {
+  function isPhoneBrowserDevice() {
+    var ua = String(navigator.userAgent || '');
+    var isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+    var isNarrowScreen = window.innerWidth <= 900;
+    var isTouchTabletOrPhone = (navigator.maxTouchPoints > 1 && window.innerWidth <= 1024);
+    var forceMobileParam = location.search.indexOf('mobile=1') !== -1;
+    var forceDesktopParam = location.search.indexOf('desktop=1') !== -1;
+    if (forceDesktopParam) return false;
+    if (forceMobileParam) return true;
+    return isMobileUA || isNarrowScreen || isTouchTabletOrPhone;
+  }
+
+  function applyAutoDeviceMode() {
+    if (!document.body) return;
+    var shouldBeMobile = isPhoneBrowserDevice();
+    if (shouldBeMobile) {
+      document.body.classList.add('mobile-phone-edition');
+    } else {
+      document.body.classList.remove('mobile-phone-edition');
+      var sb = document.getElementById('sidebar');
+      if (sb) sb.classList.remove('open');
+      var bd = document.getElementById('mobileDrawerBackdrop');
+      if (bd) bd.classList.remove('active');
+    }
+    // Sync bookings count into mobile hero card if on dashboard
+    var kBook = document.getElementById('kSalesBookings');
+    var mBook = document.getElementById('mobWalletBookingsVal');
+    if (kBook && mBook) {
+      mBook.textContent = kBook.textContent || '0';
+    }
+  }
+
+  window.applyAutoDeviceMode = applyAutoDeviceMode;
+  applyAutoDeviceMode();
+  window.addEventListener('resize', applyAutoDeviceMode);
+
+  document.addEventListener('DOMContentLoaded', function() {
+    applyAutoDeviceMode();
+    setTimeout(applyAutoDeviceMode, 300);
+    setTimeout(applyAutoDeviceMode, 1000);
+
+    var menuBtn = document.getElementById('mobileMenuBtn');
+    var sb = document.getElementById('sidebar');
+    var bd = document.getElementById('mobileDrawerBackdrop');
+    if (menuBtn && sb) {
+      menuBtn.addEventListener('click', function(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var isOpen = sb.classList.toggle('open');
+        if (bd) bd.classList.toggle('active', isOpen);
+      });
+    }
+  });
+})();
+</script>
+
+
+<!-- ==========================================================================
+     ⚡⌨️ V108: معالج تقفيل اليوم الذكي في خطوة واحدة + اختصارات الكيبورد السريعة (F2-F10)
+     ========================================================================== -->
+<script id="v108FlaskEodAndShortcutsJS">
+(function() {
+  window.openFlaskSmartEodWizard = function() {
+    const dStr = todayISO();
+    showModal(`
+      <div class="modal-title">
+        <h2>⚡ معالج تقفيل اليوم الذكي في خطوة واحدة (1-Click End-of-Day Wizard)</h2>
+        <p>يرحّل فساتين اليوم للمغسلة، يعتمد العرابين، يقفل حسابات اليوم، ويحفظ نسخة احتياطية بضغطة واحدة</p>
+      </div>
+      <div class="form-grid two" style="margin-bottom:12px;">
+        <div class="field"><label>تاريخ اليوم المراد تقفيله</label><input type="date" class="input" id="flEodDate" value="${dStr}"></div>
+        <div class="field"><label>نطاق التقفيل</label><input class="input" id="flEodScope" value="${esc(window.USER_HOTEL_NAME || 'جميع الفنادق')}" readonly></div>
+      </div>
+      <div class="bento-box" style="margin-bottom:14px;background:var(--bg-surface-2);">
+        <div style="display:flex;flex-direction:column;gap:8px;font-weight:800;font-size:13px;">
+          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="flEodLaundry" checked> <span>🧺 ترحيل فساتين وجلابيات حجوزات اليوم إلى المغسلة تلقائياً</span></label>
+          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="flEodLock" checked> <span>🔒 قفل واعتماد حسابات اليوم (منع التعديل بعد المراجعة)</span></label>
+          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="flEodBackup" checked> <span>💾 حفظ نسخة احتياطية كاملة (Save As)</span></label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" onclick="closeModal()">إلغاء</button>
+        <button type="button" class="btn green" onclick="executeFlaskSmartEod()">🚀 تنفيذ تقفيل اليوم الكامل الآن</button>
+      </div>
+    `, 'modal-lg');
+  };
+
+  window.executeFlaskSmartEod = async function() {
+    const dStr = document.getElementById('flEodDate')?.value || todayISO();
+    const doLaundry = Boolean(document.getElementById('flEodLaundry')?.checked);
+    const doLock = Boolean(document.getElementById('flEodLock')?.checked);
+    const doBackup = Boolean(document.getElementById('flEodBackup')?.checked);
+    try {
+      await apiJSON('/api/end-of-day/execute', 'POST', {
+        date: dStr,
+        hotel_name: window.USER_HOTEL_NAME || 'جميع الفنادق',
+        transfer_laundry: doLaundry,
+        lock_day: doLock
+      });
+      closeModal();
+      toast(`✅ تم تقفيل اليوم (${dStr}) وترحيل المغسلة وقفل الحسابات بنجاح!`);
+      if (doBackup) {
+        await fetch('/api/backup/save-dialog', { method: 'POST' }).catch(() => {});
+      }
+      setTimeout(() => location.reload(), 900);
+    } catch (e) {
+      toast(e.message || 'تعذر تنفيذ التقفيل', 'bad');
+    }
+  };
+
+  window.openFlaskKeyboardShortcutsModal = function() {
+    showModal(`
+      <div class="modal-title">
+        <h2>⌨️ اختصارات الكيبورد السريعة للكمبيوتر (Pro Keyboard Shortcuts)</h2>
+        <p>اضغط على مفتاح الاختصار من الكيبورد في أي شاشة لتنفيذ الأمر فوراً</p>
+      </div>
+      <div class="form-grid two" style="margin-bottom:14px;">
+        <div class="bento-box" style="margin:0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="location.href='/reservations'">
+          <div><b>➕ شاشة الحجوزات وإضافة حجز</b></div><span class="badge blue">F2</span>
+        </div>
+        <div class="bento-box" style="margin:0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="location.href='/daily-sales'">
+          <div><b>💵 شاشة الدخل اليومي والتقفيل</b></div><span class="badge green">F4</span>
+        </div>
+        <div class="bento-box" style="margin:0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="location.href='/salaries'">
+          <div><b>💳 المرتبات وشيت البنك الأهلي</b></div><span class="badge blue">F6</span>
+        </div>
+        <div class="bento-box" style="margin:0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeModal();openFlaskSmartEodWizard()">
+          <div><b>⚡ معالج تقفيل اليوم الذكي</b></div><span class="badge amber">F7</span>
+        </div>
+        ${window.FULL_ACCESS ? `
+        <div class="bento-box" style="margin:0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="location.href='/bank-accounts'">
+          <div><b>🏦 حسابات البنك وصافي ربح الأونر</b></div><span class="badge purple">F8</span>
+        </div>` : ''}
+        <div class="bento-box" style="margin:0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="closeModal();fetch('/api/backup/save-dialog',{method:'POST'})">
+          <div><b>💾 حفظ نسخة احتياطية فورية (Save As)</b></div><span class="badge green">F9</span>
+        </div>
+      </div>
+      <div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">إغلاق</button></div>
+    `, 'modal-lg');
+  };
+
+  document.addEventListener('keydown', function(ev) {
+    if (ev.key === 'F2') { ev.preventDefault(); location.href = '/reservations'; }
+    else if (ev.key === 'F4') { ev.preventDefault(); location.href = '/daily-sales'; }
+    else if (ev.key === 'F6') { ev.preventDefault(); location.href = '/salaries'; }
+    else if (ev.key === 'F7') { ev.preventDefault(); window.openFlaskSmartEodWizard(); }
+    else if (ev.key === 'F8') {
+      ev.preventDefault();
+      if (window.FULL_ACCESS) location.href = '/bank-accounts';
+      else toast('🔒 شاشة حسابات البنك مخصصة للأونر فقط', 'bad');
+    }
+    else if (ev.key === 'F9') {
+      ev.preventDefault();
+      fetch('/api/backup/save-dialog', { method: 'POST' }).then(r => r.json()).then(d => {
+        if (d && d.saved) toast('✅ تم حفظ النسخة الاحتياطية في: ' + d.path);
+      }).catch(() => { location.href = '/api/backup/export'; });
+    }
+    else if (ev.key === 'F10') {
+      ev.preventDefault();
+      window.openFlaskKeyboardShortcutsModal();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const actions = document.querySelector('.header .actions');
+    if (actions && !document.getElementById('flEodTopBtn')) {
+      if (!window.PHOTOGRAPHER_ONLY && !window.SALES_ONLY && !document.getElementById('flQuickIncomeTopBtn')) {
+        const btnQi = document.createElement('button');
+        btnQi.type = 'button';
+        btnQi.id = 'flQuickIncomeTopBtn';
+        btnQi.className = 'btn green';
+        btnQi.style.cssText = 'min-height:34px;padding:0 11px;border-radius:10px;font-size:12px;font-weight:900;';
+        btnQi.innerHTML = '⚡➕ إضافة دخل سريع';
+        btnQi.onclick = function() { if (typeof window.openQuickIncomeModal === 'function') window.openQuickIncomeModal(); };
+        actions.insertBefore(btnQi, actions.firstChild);
+      }
+      const btnEod = document.createElement('button');
+      btnEod.type = 'button';
+      btnEod.id = 'flEodTopBtn';
+      btnEod.className = 'btn amber';
+      btnEod.style.cssText = 'min-height:34px;padding:0 10px;border-radius:10px;font-size:12px;font-weight:800;';
+      btnEod.innerHTML = '⚡ تقفيل اليوم (F7)';
+      btnEod.onclick = window.openFlaskSmartEodWizard;
+      actions.insertBefore(btnEod, actions.firstChild);
+
+      const btnKb = document.createElement('button');
+      btnKb.type = 'button';
+      btnKb.id = 'flKbTopBtn';
+      btnKb.className = 'btn primary';
+      btnKb.style.cssText = 'min-height:34px;padding:0 10px;border-radius:10px;font-size:12px;font-weight:800;';
+      btnKb.innerHTML = '⌨️ F2-F10';
+      btnKb.onclick = window.openFlaskKeyboardShortcutsModal;
+      actions.insertBefore(btnKb, actions.firstChild);
+    }
   });
 })();
 </script>

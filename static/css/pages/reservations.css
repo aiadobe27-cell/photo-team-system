@@ -754,3 +754,252 @@ body.theme-light:where(.page-reservations) .photographer-capsule.unassigned {
     align-items: center;
     gap: 8px;
 }
+
+
+/* ============================================================================
+   📱✨ V111: تنسيق نافذة حجز أوردر جديد العصري (Modern App-Style Booking Sheet)
+   ============================================================================ */
+:where(body.page-reservations) .pt-bk-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  direction: rtl;
+  text-align: right;
+  font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+:where(body.page-reservations) .pt-bk-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #0d6e5b 0%, #0f766e 100%);
+  color: #ffffff;
+  padding: 13px 18px;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(13, 110, 91, 0.24);
+}
+:where(body.page-reservations) .pt-bk-header h2 {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 900;
+  color: #ffffff !important;
+}
+:where(body.page-reservations) .pt-bk-header-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.14);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s ease;
+}
+:where(body.page-reservations) .pt-bk-header-btn:hover {
+  background: rgba(255,255,255,0.26);
+}
+:where(body.page-reservations) .pt-bk-sec-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13.5px;
+  font-weight: 900;
+  color: var(--text-heading);
+  margin: 2px 0 8px 0;
+}
+:where(body.page-reservations) .pt-bk-grid-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px 16px !important;
+}
+@media (max-width: 640px) {
+  :where(body.page-reservations) .pt-bk-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+:where(body.page-reservations) .pt-bk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1.5px solid var(--border-strong, #cbd5e1);
+  padding-bottom: 4px;
+  transition: border-color 0.2s ease;
+}
+:where(body.page-reservations) .pt-bk-field:focus-within {
+  border-bottom-color: #0d6e5b;
+}
+:where(body.page-reservations) .pt-bk-field label {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: var(--text-muted) !important;
+  margin: 0 !important;
+}
+:where(body.page-reservations) .pt-bk-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+:where(body.page-reservations) .pt-bk-input-row .pt-bk-icon {
+  font-size: 15px;
+  opacity: 0.78;
+  flex-shrink: 0;
+}
+:where(body.page-reservations) #bookingForm .pt-bk-field .input,
+:where(body.page-reservations) #bookingForm .pt-bk-field select {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 2px 2px !important;
+  height: 30px !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  color: var(--text-main) !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+}
+:where(body.page-reservations) #bookingForm .pt-bk-field #bfRoom {
+  background: transparent !important;
+  color: #0d6e5b !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+body.system-mode-2:where(.page-reservations) #bookingForm .pt-bk-field #bfRoom {
+  color: #34d399 !important;
+}
+:where(body.page-reservations) .pt-bk-dresses-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 8px 2px;
+}
+:where(body.page-reservations) .pt-bk-add-dress-card {
+  min-width: 105px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1.5px dashed #0d6e5b;
+  background: rgba(13, 110, 91, 0.06);
+  color: #0d6e5b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 11.5px;
+  flex-shrink: 0;
+}
+body.system-mode-2:where(.page-reservations) .pt-bk-add-dress-card {
+  color: #34d399;
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
+}
+:where(body.page-reservations) .pt-bk-dress-card {
+  min-width: 122px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-surface-2);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+  position: relative;
+  flex-shrink: 0;
+}
+:where(body.page-reservations) .pt-bk-dress-card .pt-bk-dc-remove {
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(239, 68, 68, 0.14);
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+:where(body.page-reservations) .pt-bk-pay-split {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  :where(body.page-reservations) .pt-bk-pay-split {
+    grid-template-columns: 1fr;
+  }
+}
+:where(body.page-reservations) .pt-bk-rem-box {
+  background: var(--bg-surface-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+}
+:where(body.page-reservations) .pt-bk-rate-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-strong);
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 8px;
+}
+:where(body.page-reservations) .pt-bk-summary-card {
+  background: var(--bg-surface-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+:where(body.page-reservations) .pt-bk-sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  font-weight: 800;
+}
+:where(body.page-reservations) .pt-bk-sum-row.total-rem {
+  border-top: 1px dashed var(--border-strong);
+  padding-top: 6px;
+  margin-top: 2px;
+  font-size: 14.5px;
+  font-weight: 900;
+}
+:where(body.page-reservations) .pt-bk-primary-cta {
+  width: 100%;
+  height: 44px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #0d6e5b 0%, #065f46 100%) !important;
+  color: #ffffff !important;
+  font-size: 14.5px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  box-shadow: 0 6px 16px rgba(13, 110, 91, 0.28) !important;
+  cursor: pointer;
+}
+:where(body.page-reservations) #bookingForm {
+  display: block !important;
+}

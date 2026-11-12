@@ -16,6 +16,75 @@
     <!-- كارت إجمالي الحجوزات تم إخفاؤه للحفاظ على الكود البرمجي دون أعطال -->
     <span id="kTotal" hidden>0</span>
 
+    <!-- 📱 واجهة تطبيق الموبايل الذكية (تظهر تلقائياً عند الفتح من متصفح الفون وتختفي على سطح المكتب) -->
+    <div id="mobileNativeAppHero" class="mob-native-hero-wrap">
+        <div class="mob-wallet-card">
+            <div class="mob-wallet-top">
+                <div>
+                    <span class="mob-wallet-label" id="mobWalletRoleBadge">🏦 ملخص التشغيل اليومي • {{ user.nickname or user.full_name or 'PHOTO TEAM' }}</span>
+                    <div class="mob-wallet-balance"><span id="mobWalletBookingsVal">0</span> <small>حجز نشط اليوم</small></div>
+                    <div class="mob-wallet-sub">الفندق: <strong>{{ user_hotel_name or 'جميع الفنادق' }}</strong> • الصلاحية: <strong>{{ user.role or 'CEO' }}</strong></div>
+                </div>
+                <div class="mob-wallet-logo" onclick="location.href='/reservations'" title="الحجوزات">📸</div>
+            </div>
+            <div class="mob-wallet-actions">
+                <button type="button" class="mob-w-btn primary" onclick="location.href='/reservations'">➕ حجز جديد</button>
+                <button type="button" class="mob-w-btn glass" onclick="location.href='/daily-sales'">💰 الدخل</button>
+                {% if not photographer_only and not sales_only %}
+                <button type="button" class="mob-w-btn glass" onclick="location.href='/treasury'">🏦 الخزنة</button>
+                {% else %}
+                <button type="button" class="mob-w-btn glass" onclick="location.href='/'">📊 ملخصي</button>
+                {% endif %}
+                <button type="button" class="mob-w-btn glass" onclick="location.href='/chat'">💬 الشات</button>
+            </div>
+        </div>
+
+        <div class="mob-app-grid-title">
+            <span>📌 أقسام النظام السريعة (مود الفون)</span>
+            <div>
+                <small onclick="toggleAiCopilot(true)" style="color:#7c3aed;cursor:pointer;font-weight:900;">🤖 المساعد الذكي 🎤</small> •
+                <small onclick="document.getElementById('sidebar')?.classList.toggle('open')" style="color:#2563eb;cursor:pointer;font-weight:800;">القوائم ☰</small>
+            </div>
+        </div>
+        <div class="mob-squircle-grid">
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/reservations'">
+                <div class="mob-squircle blue">📅</div>
+                <span>الحجوزات</span>
+            </button>
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/daily-sales'">
+                <div class="mob-squircle green">💰</div>
+                <span>الدخل اليومي</span>
+            </button>
+            {% if not photographer_only and not sales_only %}
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/treasury'">
+                <div class="mob-squircle amber">🏦</div>
+                <span>الخزنة</span>
+            </button>
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/commissions'">
+                <div class="mob-squircle teal">%</div>
+                <span>العمولات</span>
+            </button>
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/salaries'">
+                <div class="mob-squircle indigo">💳</div>
+                <span>المرتبات</span>
+            </button>
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/reports'">
+                <div class="mob-squircle slate">▥</div>
+                <span>التقارير</span>
+            </button>
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/assets'">
+                <div class="mob-squircle pink">👗</div>
+                <span>الفساتين</span>
+            </button>
+            {% endif %}
+            <button type="button" class="mob-app-icon-btn" onclick="location.href='/chat'">
+                <div class="mob-squircle purple">💬</div>
+                <span>المحادثات</span>
+            </button>
+        </div>
+    </div>
+
+
     <!-- ================= 1. الهيدر والأرقام (لا تأخذ حيز رأسي كبير) ================= -->
     <div class="dash-top-row">
         <!-- كارت الترحيب -->

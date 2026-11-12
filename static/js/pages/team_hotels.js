@@ -104,7 +104,7 @@ function renderTeam() {
         <button class="mini-btn blue" title="نقل الموظف لفندق آخر (مع حفظ شغله السابق)" onclick="openTransferHotelModal(${r.id})">🔄 نقل فندق</button><button class="mini-btn amber" onclick="openTeamForm(${r.id})">✏️</button>
         <button class="mini-btn green" onclick="sendCredentialsWhatsapp(${r.id})">💬</button>
         <button class="mini-btn purple" onclick="forceLogoutUser(${r.id})">🔒</button>
-        <button class="mini-btn ${r.is_active ? 'red' : 'green'}" onclick="toggleTeamStatus(${r.id})">${r.is_active ? '⛔' : '✅'}</button>
+        <button class="mini-btn ${r.is_active ? 'red' : 'green'}" onclick="toggleTeamStatus(${r.id})">${r.is_active ? '⛔' : '✅'}</button>${window.IS_CEO_USER ? `<button class="mini-btn red" title="حذف الحساب نهائياً" onclick="deleteTeamMemberPermanent(${r.id})">🗑️</button>` : ''}
       </div></td>
     </tr>`).join('') || '<tr><td colspan="11" class="empty-state">لا يوجد موظفون</td></tr>';
 }
@@ -173,13 +173,22 @@ function fillHotelParent() {
 }
 
 function permissionHTML() {
-  return Object.entries(PERMS).map(([k, v]) => `<label class="permission-item"><input type="checkbox" class="perm-cb" value="${k}" ${tempPermissions.has(k) ? 'checked' : ''}><span>${esc(v)}</span></label>`).join('');
+  const allowedEntries = Object.entries(PERMS).filter(([k]) => {
+    if (window.IS_CEO_USER) return true;
+    return !['finances_access', 'team_access'].includes(k);
+  });
+  return allowedEntries.map(([k, v]) => `<label class="permission-item"><input type="checkbox" class="perm-cb" value="${k}" ${tempPermissions.has(k) ? 'checked' : ''}><span>${esc(v)}</span></label>`).join('');
 }
 
 function roleChecksHTML(r) {
   const selected = new Set(memberRoles(r));
   if (!selected.size && !r) selected.add('Photographer');
-  return Object.entries(ROLES).map(([k, v]) => `<label class="permission-item role-item"><input type="checkbox" class="role-cb" value="${k}" ${selected.has(k) ? 'checked' : ''}><span>${esc(v)}</span></label>`).join('');
+  const allowedRoles = Object.entries(ROLES).filter(([k]) => {
+    if (window.IS_CEO_USER) return true;
+    // مدير الفندق مسموح له فقط بإضافة أو تعديل (مصور أو سيلز) ويُمنع تماماً من اختيار أونر أو مدير أو محاسب
+    return ['Photographer', 'Sales'].includes(k);
+  });
+  return allowedRoles.map(([k, v]) => `<label class="permission-item role-item"><input type="checkbox" class="role-cb" value="${k}" ${selected.has(k) ? 'checked' : ''}><span>${esc(v)}</span></label>`).join('');
 }
 
 function hotelChecksHTML(r) {
@@ -392,3 +401,18 @@ function openTransferHotelModal(uid) {
 }
 window.openTransferHotelModal = openTransferHotelModal;
 
+
+
+async function deleteTeamMemberPermanent(id) {
+  const r = teamCache.find(x => Number(x.id) === Number(id));
+  if (!confirmAction(`⚠️ هل أنت متأكد من حذف الحساب (${r?.nickname || id}) نهائياً من قاعدة البيانات؟`)) return;
+  try {
+    const res = await api(`/api/team/${id}`, { method: 'DELETE' });
+    toast(res.message || 'تم حذف الحساب نهائياً');
+    closeModal();
+    await loadTeamHotels();
+  } catch (e) {
+    toast(e.message, 'bad');
+  }
+}
+window.deleteTeamMemberPermanent = deleteTeamMemberPermanent;

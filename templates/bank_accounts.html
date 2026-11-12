@@ -98,6 +98,37 @@
         </div>
     </div>
 
+    
+    <!-- 👑 حاسبة صافي ربح الأونر النهائي من كل فندق -->
+    <div class="bento-box" style="border:2px solid rgba(16,185,129,0.45);">
+        <div class="toolbar-row" style="margin-bottom:10px;">
+            <div>
+                <h2 style="margin:0;font-size:15px;font-weight:900;">👑 حاسبة صافي ربح الأونر النهائي من كل فندق (Owner Net Profit & ROI)</h2>
+                <p style="margin:2px 0 0;font-size:11.5px;color:var(--text-muted);">يخصم تلقائياً من إجمالي دخل كل فندق: (عمولات الفريق + تكلفة الفلاشات والألبومات + غسيل الفساتين + مصروفات الخزنة + عمولة الفيزا)</p>
+            </div>
+            <span class="badge green" id="bkOwnerGrandNetBadge" style="font-size:12.5px;padding:5px 12px;">💎 صافي ربح الأونر النهائي: $0.00</span>
+        </div>
+        <div class="compact-table-wrap">
+            <table class="wide-table">
+                <thead>
+                    <tr>
+                        <th>الفندق</th>
+                        <th>إجمالي الدخل الموحد ($)</th>
+                        <th>(-) عمولات الفريق ($)</th>
+                        <th>(-) تكلفة خامات الأوردرات ($)</th>
+                        <th>(-) تكلفة المغسلة ($)</th>
+                        <th>(-) مصروفات الخزنة ($)</th>
+                        <th>(-) عمولة فيزا البنك ($)</th>
+                        <th>👑 صافي ربح الأونر ($)</th>
+                        <th>👑 صافي ربح الأونر بالمصري (LE)</th>
+                        <th>هامش الربح الصافي %</th>
+                    </tr>
+                </thead>
+                <tbody id="bkOwnerNetProfitBody"></tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- جدول مطابقة عمليات الفيزا وتفاصيل جميع أنواع الدخل -->
     <div class="bento-box">
         <div class="toolbar-row" style="margin-bottom:10px;">

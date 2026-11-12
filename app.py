@@ -1334,8 +1334,11 @@ def bootstrap_and_validate_session():
         try:
             with get_db_connection() as conn:
                 cur = conn.cursor(dictionary=True)
-                cur.execute("SELECT is_active,session_active FROM team_members WHERE id=%s", (user.get("id"),))
+                cur.execute("SELECT role,is_active,session_active,hotel_id FROM team_members WHERE id=%s", (user.get("id"),))
                 state = cur.fetchone()
+            if state and state.get("role") and user.get("role") != state.get("role"):
+                user["role"] = state.get("role")
+                session["user"] = user
             if not state or not state.get("is_active") or not state.get("session_active", 1):
                 session.clear()
                 if request.path.startswith("/api/"):
@@ -1388,6 +1391,10 @@ def inject_app_context():
         "sales_only": is_sales_only(user),
         "accountant_only": is_accountant_only(user),
         "manager_only": is_manager_role(user),
+        "is_mobile_device": any(
+            k in str(request.headers.get("User-Agent") or "").lower()
+            for k in ("android", "iphone", "ipad", "ipod", "mobile", "iemobile", "opera mini", "blackberry", "webos")
+        ) or (request.args.get("mobile") == "1"),
     }
 
 
@@ -1466,6 +1473,7 @@ def ensure_team_members_auth_columns():
 @app.post("/api/auth/login")
 def api_login():
     ensure_team_members_auth_columns()
+    _sanitize_unauthorized_ceo_accounts()
     d = request.get_json(silent=True) or request.form or {}
     username = str(d.get("username", "")).strip()
     password = str(d.get("password", "")).strip()
@@ -1536,8 +1544,8 @@ def api_auth_register():
     national_id = str(d.get("national_id") or "").strip()
     password = str(d.get("password") or "").strip()
     role = str(d.get("role") or "Photographer").strip()
-    if role not in {"Photographer", "Sales", "Accountant", "Manager"}:
-        role = "Photographer"
+    if role not in {"Photographer", "Sales"}:
+        return fail("🔒 التسجيل متاح لوظيفة (مصور أو سيلز) فقط؛ الحسابات الإدارية ينشئها الأونر فقط", 403)
 
     if not full_name or len(full_name) < 2:
         return fail("يرجى إدخال الاسم بالكامل")
@@ -1667,7 +1675,7 @@ def api_auth_reset_password():
         with get_db_connection() as conn:
             cur = conn.cursor(dictionary=True)
             cur.execute(
-                "SELECT id, username, nickname, full_name, phone_number, national_id FROM team_members WHERE LOWER(username)=LOWER(%s) OR LOWER(nickname)=LOWER(%s) OR LOWER(full_name)=LOWER(%s)",
+                "SELECT id, username, nickname, full_name, role, phone_number, national_id FROM team_members WHERE LOWER(username)=LOWER(%s) OR LOWER(nickname)=LOWER(%s) OR LOWER(full_name)=LOWER(%s)",
                 (username, username, username)
             )
             candidates = cur.fetchall() or []
@@ -1676,16 +1684,16 @@ def api_auth_reset_password():
 
             matched_user = None
             for u in candidates:
+                u_roles = {_normalize_role(r) for r in get_user_roles(user_id=u.get("id"), user=u)} | {_normalize_role(u.get("role"))}
+                if u_roles & FULL_ACCESS_ROLES:
+                    return fail("🔒 لا يُسمح بتغيير كلمة مرور الأونر (CEO) من الشاشة الخارجية؛ يتم التغيير من داخل حساب الأونر فقط", 403)
                 db_phone = re.sub(r"\D", "", str(u.get("phone_number") or ""))
                 db_nid = re.sub(r"\D", "", str(u.get("national_id") or ""))
-                # إذا كان الحساب القديم في قاعدة البيانات ليس له رقم بطاقة أو هاتف مسجل بعد، نقبل التحديث ونحفظهما له
-                phone_ok = (not db_phone) or (bool(clean_phone) and (db_phone == clean_phone or db_phone.endswith(clean_phone[-8:]) or clean_phone.endswith(db_phone[-8:])))
-                nid_ok = (not db_nid) or (bool(clean_nid) and (db_nid == clean_nid or db_nid.endswith(clean_nid[-6:])))
-                if phone_ok and nid_ok:
-                    matched_user = u
-                    break
-                # أو إذا تطابق أحدهما بشكل كامل (تسهيلاً على الموظف لو نسي أحد الرقمين)
-                if (db_phone and clean_phone and db_phone == clean_phone) or (db_nid and clean_nid and db_nid == clean_nid):
+                if not db_phone and not db_nid:
+                    return fail("🔒 هذا الحساب ليس له رقم هاتف أو رقم قومي مسجل للتحقق؛ يرجى مراجعة الإدارة لتغيير كلمة المرور", 403)
+                phone_ok = bool(db_phone and clean_phone and (db_phone == clean_phone or db_phone.endswith(clean_phone[-8:])))
+                nid_ok = bool(db_nid and clean_nid and (db_nid == clean_nid or db_nid.endswith(clean_nid[-6:])))
+                if (db_phone and db_nid and phone_ok and nid_ok) or (db_phone and not db_nid and phone_ok) or (db_nid and not db_phone and nid_ok):
                     matched_user = u
                     break
 
@@ -3779,8 +3787,11 @@ def api_daily_sales_save():
         elif room:
             rows=fetch_booking_rows(cur,5000);row=next((r for r in rows if str(r.get("room_number") or "")==room),None)
 
+        req_sales = str(d.get("sales_person") or "").strip()
+        req_photog = str(d.get("photographer") or "").strip()
         if not row and not existing_sale:
-            return fail("الحجز غير موجود",404)
+            if not req_sales or not req_photog:
+                return fail("يرجى اختيار اسم السيلز واسم المصور من نطاق العمل لتسجيل الدخل", 400)
         if row and not booking_scope_ok(row):
             return fail("ليس لديك صلاحية",403)
         if existing_sale and not verify_hotel_id(existing_sale.get("hotel_id")):
@@ -3802,7 +3813,9 @@ def api_daily_sales_save():
         raw_photog=d.get("photographer") or (row.get("photographer") if row else (existing_sale.get("photographer") if existing_sale else ""))
         posted_photographers=split_names(raw_photog)[:3]
         photographer_value=", ".join(posted_photographers) if posted_photographers else str(raw_photog or "")
-        room_val=(row.get("room_number") if row else None) or d.get("room_number") or (existing_sale.get("room_number") if existing_sale else "")
+        room_val=(row.get("room_number") if row else None) or str(d.get("room_number") or "").strip() or (existing_sale.get("room_number") if existing_sale else "") or "دخل سريع"
+        if not row and not existing_sale and gross <= 0:
+            return fail("يرجى إدخال المبلغ بأحد أنواعه (دولار، يورو، كاش مصري، أو مكتب)", 400)
         values={
             "hotel_id":hid,
             "booking_id":(row.get("id") if row else (existing_sale.get("booking_id") if existing_sale else None)),
@@ -3857,7 +3870,7 @@ def api_daily_sales_save():
             c.execute("INSERT INTO daily_income ("+",".join(f"`{x}`" for x in names)+") VALUES ("+",".join(["%s"]*len(names))+")",[use[x] for x in names])
             sid=c.lastrowid
             is_update=False
-        if room_val:
+        if room_val and room_val != "دخل سريع" and row:
             set_booking_status(c,room_number=room_val,status="Delivered")
 
     target_bid=(row.get("id") if row else (existing_sale.get("booking_id") if existing_sale else None))
@@ -4933,18 +4946,73 @@ def api_team_sync_nbe_roster():
     return ok({"total": total, "message": "تم الإبقاء على الموظفين القدامى فقط بنجاح"})
 
 
+def _sanitize_unauthorized_ceo_accounts():
+    """إلغاء صلاحية الأونر عن أي حساب تم إنشاؤه بواسطة مدير فندق (له hotel_id محدد وليس الأونر الأساسي)."""
+    try:
+        with get_db_connection() as conn:
+            cur = conn.cursor(dictionary=True)
+            cur.execute("SELECT id, username, nickname, role, hotel_id FROM team_members ORDER BY id ASC")
+            all_members = cur.fetchall() or []
+            # الأونر الأصلي هو أول حساب CEO في النظام أو الحساب الذي اسم مستخدمه admin وليس مقيداً بفندق فرعي
+            real_ceo_ids = set()
+            for m in all_members:
+                if str(m.get("username") or "").strip().lower() == "admin":
+                    real_ceo_ids.add(int(m["id"]))
+            if not real_ceo_ids:
+                for m in all_members:
+                    if _normalize_role(m.get("role")) in FULL_ACCESS_ROLES:
+                        real_ceo_ids.add(int(m["id"]))
+                        break
+
+            c = conn.cursor()
+            cur.execute("SELECT id FROM roles WHERE role_key='CEO' LIMIT 1")
+            ceo_role_row = cur.fetchone()
+            ceo_role_id = ceo_role_row["id"] if ceo_role_row else None
+
+            for m in all_members:
+                mid = int(m["id"])
+                if mid in real_ceo_ids:
+                    continue
+                # أي حساب آخر غير الأونر الأصلي اكتسب دور CEO (سواء بفندق أو بدون فندق) يتم سحب صلاحية CEO منه فوراً وإبطال جلسته
+                m_roles = {_normalize_role(r) for r in get_user_roles(user_id=mid, user=m)} | {_normalize_role(m.get("role"))}
+                if bool(m_roles & (FULL_ACCESS_ROLES | {"ceo"})):
+                    c.execute("UPDATE team_members SET role='Photographer', session_active=0 WHERE id=%s", (mid,))
+                    if ceo_role_id:
+                        c.execute("DELETE FROM employee_roles WHERE user_id=%s AND role_id=%s", (mid, ceo_role_id))
+                    c.execute("DELETE FROM employee_permissions WHERE user_id=%s AND permission_key IN ('finances_access', 'team_access')", (mid,))
+    except Exception:
+        pass
+
+
+def _is_privileged_member(member_row):
+    """يتحقق مما إذا كان الحساب يخص أونر أو مدير أو محاسب أو مراجع."""
+    if not member_row:
+        return False
+    uid = member_row.get("id")
+    roles = {_normalize_role(r) for r in get_user_roles(user_id=uid, user=member_row)} | {_normalize_role(member_row.get("role"))}
+    return bool(roles & (FULL_ACCESS_ROLES | {"ceo", "manager", "hotel_manager", "accountant", "reviewer"}))
+
+
 @app.get("/api/team")
 @require_permission("team_access")
 def api_team():
     ensure_nbe_team_members_seeded()
-    salary_all=request.args.get("salary_all")=="1" and has_permission("finances_access")
-    ids=None if salary_all or is_full_access() else allowed_hotel_ids()
+    _sanitize_unauthorized_ceo_accounts()
+    salary_all = request.args.get("salary_all") == "1" and has_permission("finances_access")
+    full_acc = is_full_access()
+    ids = None if (salary_all or full_acc) else allowed_hotel_ids()
+    cur_uid = safe_int((current_user() or {}).get("id"), -1)
+
     with get_db_connection() as conn:
-        cur=conn.cursor(dictionary=True);cur.execute("SELECT * FROM team_members ORDER BY id DESC");raw=cur.fetchall()
-        hotel_map={}
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM team_members ORDER BY id DESC")
+        raw = cur.fetchall()
+        hotel_map = {}
         try:
-            cur.execute("SELECT id,hotel_name FROM hotels");hotel_map={r.get("id"):r.get("hotel_name") for r in cur.fetchall()}
-        except Exception:pass
+            cur.execute("SELECT id,hotel_name FROM hotels")
+            hotel_map = {r.get("id"): r.get("hotel_name") for r in cur.fetchall()}
+        except Exception:
+            pass
         mgr_hotels_by_uid = {}
         if table_exists("user_hotel_permissions"):
             try:
@@ -4960,13 +5028,35 @@ def api_team():
                         })
             except Exception:
                 pass
-        rows=[]
+        rows = []
         for r in raw:
-            hid=r.get("hotel_id")
-            if ids is not None and hid not in (None,"") and safe_int(hid,-1) not in ids:continue
-            out={k:serialize(v) for k,v in r.items()};out.setdefault("base_salary",0);out.setdefault("commission_rate",0);out.setdefault("is_active",1);out.setdefault("access_type","وصول كامل (Desktop + Mobile)");out.setdefault("phone_number","");out.setdefault("national_id","");out.setdefault("visa_card_number","");out.setdefault("branch_code","");out.setdefault("nbe_type","ON US بطاقات");out.setdefault("sheet_nickname","");out.setdefault("session_active",1);out["hotel_name"]=hotel_map.get(hid) or "-";out["permissions"]=[];out["manager_hotels"]=mgr_hotels_by_uid.get(safe_int(r.get("id")), []);out["roles"]=sorted(get_user_roles(user_id=r.get("id"), user=r))
+            rid = safe_int(r.get("id"), -1)
+            hid = r.get("hotel_id")
+            # حماية صارمة: غير الأونر لا يرى حسابات الأونر أو المحاسب أو المديرين الآخرين أو موظفي الفنادق الأخرى
+            if not full_acc and not salary_all:
+                if rid != cur_uid:
+                    if _is_privileged_member(r):
+                        continue
+                    if hid in (None, "") or (ids is not None and safe_int(hid, -1) not in ids):
+                        continue
+            out = {k: serialize(v) for k, v in r.items()}
+            out.setdefault("base_salary", 0)
+            out.setdefault("commission_rate", 0)
+            out.setdefault("is_active", 1)
+            out.setdefault("access_type", "وصول كامل (Desktop + Mobile)")
+            out.setdefault("phone_number", "")
+            out.setdefault("national_id", "")
+            out.setdefault("visa_card_number", "")
+            out.setdefault("branch_code", "")
+            out.setdefault("nbe_type", "ON US بطاقات")
+            out.setdefault("sheet_nickname", "")
+            out.setdefault("session_active", 1)
+            out["hotel_name"] = hotel_map.get(hid) or "-"
+            out["permissions"] = []
+            out["manager_hotels"] = mgr_hotels_by_uid.get(rid, [])
+            out["roles"] = sorted(get_user_roles(user_id=rid, user=r))
             try:
-                out["permissions"] = sorted(get_user_permissions(r.get("id")))
+                out["permissions"] = sorted(get_user_permissions(rid))
             except Exception:
                 out["permissions"] = []
             rows.append(out)
@@ -4976,63 +5066,158 @@ def api_team():
 @app.post("/api/team")
 @require_permission("team_access")
 def api_team_add():
-    d=request.get_json(silent=True) or {}
-    if not has_full_access():
+    d = request.get_json(silent=True) or {}
+    full_acc = has_full_access()
+    allowed_non_ceo_roles = {"Photographer", "Sales"}
+
+    requested_roles = [str(x).strip() for x in (d.get("roles") or []) if str(x).strip() in ROLE_CATALOG]
+    primary_role = str(d.get("role") or (requested_roles[0] if requested_roles else "")).strip()
+
+    if not full_acc:
+        # منع مدير الفندق قطعياً من إنشاء حساب أونر أو مدير أو محاسب أو مراجع
+        all_req_roles = set(requested_roles) | ({primary_role} if primary_role else set())
+        if not all_req_roles or not all_req_roles.issubset(allowed_non_ceo_roles):
+            return fail("🔒 غير مسموح لمدير الفندق بإنشاء حساب أونر (CEO) أو مدير أو محاسب — مسموح فقط بإضافة (مصور أو سيلز)!", 403)
         target_hid = safe_int(d.get("hotel_id"), 0)
         allowed_hids = allowed_hotel_ids()
         if allowed_hids is not None and (not target_hid or target_hid not in allowed_hids):
-            return fail("يمكنك إضافة الموظفين في الفنادق الخاصة بك فقط", 403)
-    roles=[str(x) for x in (d.get("roles") or []) if str(x) in ROLE_CATALOG]
-    if not d.get("role") and roles:d["role"]=roles[0]
-    if not d.get("full_name") or not d.get("nickname") or not d.get("role") or not d.get("username") or not d.get("password"):return fail("الاسم واللقب ودور واحد على الأقل واسم المستخدم وكلمة المرور مطلوبة")
+            return fail("يمكنك إضافة الموظفين في الفنادق المخصصة لك فقط", 403)
+        d["roles"] = [r for r in requested_roles if r in allowed_non_ceo_roles] or [primary_role]
+        d["role"] = d["roles"][0]
+        d["manager_hotels"] = []
+        allowed_mgr_perms = {"bookings_access", "sales_access", "assets_access", "laundry_access"}
+        d["permissions"] = [p for p in (d.get("permissions") or []) if p in allowed_mgr_perms]
+    else:
+        if not d.get("role") and requested_roles:
+            d["role"] = requested_roles[0]
+
+    if not d.get("full_name") or not d.get("nickname") or not d.get("role") or not d.get("username") or not d.get("password"):
+        return fail("الاسم واللقب ودور واحد على الأقل واسم المستخدم وكلمة المرور مطلوبة")
+
     with get_db_connection() as conn:
-        cur=conn.cursor();cur.execute("INSERT INTO team_members (full_name,nickname,phone_number,role,access_type,hotel_id,commission_rate,base_salary,national_id,visa_card_number,username,password_hash,is_active,session_active) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,1,1)",(d.get("full_name"),d.get("nickname"),d.get("phone_number"),d.get("role"),d.get("access_type") or "وصول كامل (Desktop + Mobile)",d.get("hotel_id") or None,safe_float(d.get("commission_rate")),safe_float(d.get("base_salary")),d.get("national_id"),d.get("visa_card_number"),d.get("username"),hash_password(str(d.get("password")))));uid=cur.lastrowid
-        save_user_permissions(cur,uid,d)
-    return ok({"id":uid})
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO team_members (full_name,nickname,phone_number,role,access_type,hotel_id,commission_rate,base_salary,national_id,visa_card_number,username,password_hash,is_active,session_active) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,1,1)",
+            (
+                d.get("full_name"),
+                d.get("nickname"),
+                d.get("phone_number"),
+                d.get("role"),
+                d.get("access_type") or "وصول كامل (Desktop + Mobile)",
+                d.get("hotel_id") or None,
+                safe_float(d.get("commission_rate")),
+                safe_float(d.get("base_salary")) if full_acc else 0.0,
+                d.get("national_id"),
+                d.get("visa_card_number"),
+                d.get("username"),
+                hash_password(str(d.get("password"))),
+            ),
+        )
+        uid = cur.lastrowid
+        save_user_permissions(cur, uid, d)
+    return ok({"id": uid})
 
 
-def save_user_permissions(cur,uid,d):
+def save_user_permissions(cur, uid, d):
     ensure_multi_role_tables()
-    cur.execute("DELETE FROM user_hotel_permissions WHERE user_id=%s",(uid,));manager_hotels=d.get("manager_hotels") or []
-    for item in manager_hotels:
-        hid=safe_int(item.get("hotel_id") if isinstance(item,dict) else item)
-        if hid:cur.execute("INSERT INTO user_hotel_permissions (user_id,hotel_id,can_view,can_edit) VALUES (%s,%s,%s,%s)",(uid,hid,1,int(item.get("can_edit",1)) if isinstance(item,dict) else 1))
+    full_acc = has_full_access()
+    allowed_non_ceo_roles = {"Photographer", "Sales"}
+    allowed_non_ceo_perms = {"bookings_access", "sales_access", "assets_access", "laundry_access"}
 
-    # Explicit permissions: always store a marker so an intentionally empty
-    # checkbox selection does not fall back to legacy role defaults.
-    cur.execute("DELETE FROM employee_permissions WHERE user_id=%s",(uid,))
-    cur.execute("INSERT INTO employee_permissions (user_id,permission_key) VALUES (%s,%s)",(uid,PERMISSION_CONFIG_MARKER))
+    cur.execute("DELETE FROM user_hotel_permissions WHERE user_id=%s", (uid,))
+    manager_hotels = (d.get("manager_hotels") or []) if full_acc else []
+    for item in manager_hotels:
+        hid = safe_int(item.get("hotel_id") if isinstance(item, dict) else item)
+        if hid:
+            cur.execute(
+                "INSERT INTO user_hotel_permissions (user_id,hotel_id,can_view,can_edit) VALUES (%s,%s,%s,%s)",
+                (uid, hid, 1, int(item.get("can_edit", 1)) if isinstance(item, dict) else 1),
+            )
+
+    cur.execute("DELETE FROM employee_permissions WHERE user_id=%s", (uid,))
+    cur.execute("INSERT INTO employee_permissions (user_id,permission_key) VALUES (%s,%s)", (uid, PERMISSION_CONFIG_MARKER))
     for key in d.get("permissions") or []:
         if key in PERMISSION_LABELS:
-            cur.execute("INSERT IGNORE INTO employee_permissions (user_id,permission_key) VALUES (%s,%s)",(uid,key))
+            if not full_acc and key not in allowed_non_ceo_perms:
+                continue
+            cur.execute("INSERT IGNORE INTO employee_permissions (user_id,permission_key) VALUES (%s,%s)", (uid, key))
 
-    # Multi-role assignment. The legacy team_members.role column stays as the
-    # primary/display role so old reports remain compatible.
-    requested=[str(x) for x in (d.get("roles") or []) if str(x) in ROLE_CATALOG]
-    primary=str(d.get("role") or "").strip()
+    requested = [str(x) for x in (d.get("roles") or []) if str(x) in ROLE_CATALOG]
+    primary = str(d.get("role") or "").strip()
     if primary in ROLE_CATALOG and primary not in requested:
-        requested.insert(0,primary)
+        requested.insert(0, primary)
     if not requested and primary:
-        requested=[primary]
-    cur.execute("DELETE FROM employee_roles WHERE user_id=%s",(uid,))
+        requested = [primary]
+    if not full_acc:
+        requested = [r for r in requested if r in allowed_non_ceo_roles] or ["Photographer"]
+    cur.execute("DELETE FROM employee_roles WHERE user_id=%s", (uid,))
     for role_key in dict.fromkeys(requested):
-        cur.execute("SELECT id FROM roles WHERE role_key=%s LIMIT 1",(role_key,));rr=cur.fetchone()
-        if rr:cur.execute("INSERT IGNORE INTO employee_roles (user_id,role_id) VALUES (%s,%s)",(uid,rr[0]))
+        cur.execute("SELECT id FROM roles WHERE role_key=%s LIMIT 1", (role_key,))
+        rr = cur.fetchone()
+        if rr:
+            cur.execute("INSERT IGNORE INTO employee_roles (user_id,role_id) VALUES (%s,%s)", (uid, rr[0]))
 
 
 @app.put("/api/team/<int:uid>")
 @require_permission("team_access")
 def api_team_update(uid):
-    d=request.get_json(silent=True) or {}
-    roles=[str(x) for x in (d.get("roles") or []) if str(x) in ROLE_CATALOG]
-    if not d.get("role") and roles:d["role"]=roles[0]
+    d = request.get_json(silent=True) or {}
+    full_acc = has_full_access()
+    allowed_non_ceo_roles = {"Photographer", "Sales"}
+
+    requested_roles = [str(x).strip() for x in (d.get("roles") or []) if str(x).strip() in ROLE_CATALOG]
+    primary_role = str(d.get("role") or (requested_roles[0] if requested_roles else "")).strip()
+
     with get_db_connection() as conn:
-        cur=conn.cursor(dictionary=True);cur.execute("SELECT * FROM team_members WHERE id=%s",(uid,));old=cur.fetchone()
-        if not old:return fail("الموظف غير موجود",404)
-        c=conn.cursor();fields=(d.get("full_name",old.get("full_name")),d.get("nickname",old.get("nickname")),d.get("phone_number",old.get("phone_number")),d.get("role",old.get("role")),d.get("access_type",old.get("access_type")),d.get("hotel_id",old.get("hotel_id")),safe_float(d.get("commission_rate",old.get("commission_rate"))),safe_float(d.get("base_salary",old.get("base_salary"))),d.get("national_id",old.get("national_id")),d.get("visa_card_number",old.get("visa_card_number")),d.get("username",old.get("username")))
-        c.execute("UPDATE team_members SET full_name=%s,nickname=%s,phone_number=%s,role=%s,access_type=%s,hotel_id=%s,commission_rate=%s,base_salary=%s,national_id=%s,visa_card_number=%s,username=%s WHERE id=%s",fields+(uid,))
-        if d.get("password"):c.execute("UPDATE team_members SET password_hash=%s,session_active=1 WHERE id=%s",(hash_password(str(d.get("password"))),uid))
-        save_user_permissions(c,uid,d)
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM team_members WHERE id=%s", (uid,))
+        old = cur.fetchone()
+        if not old:
+            return fail("الموظف غير موجود", 404)
+
+        if not full_acc:
+            if _is_privileged_member(old):
+                return fail("🔒 غير مسموح لمدير الفندق بتعديل بيانات حساب الأونر أو المديرين أو المحاسبين!", 403)
+            old_hid = safe_int(old.get("hotel_id"), 0)
+            allowed_hids = allowed_hotel_ids()
+            if allowed_hids is not None and (not old_hid or old_hid not in allowed_hids):
+                return fail("هذا الموظف خارج نطاق الفنادق المخصصة لك", 403)
+            all_req_roles = set(requested_roles) | ({primary_role} if primary_role else set())
+            if not all_req_roles or not all_req_roles.issubset(allowed_non_ceo_roles):
+                return fail("🔒 غير مسموح لمدير الفندق بترقية أي حساب إلى أونر أو مدير أو محاسب — مسموح فقط بـ (مصور أو سيلز)!", 403)
+            new_hid = safe_int(d.get("hotel_id", old_hid), 0)
+            if allowed_hids is not None and (not new_hid or new_hid not in allowed_hids):
+                return fail("يمكنك إسناد الفنادق المخصصة لك فقط", 403)
+            d["roles"] = [r for r in requested_roles if r in allowed_non_ceo_roles] or [primary_role]
+            d["role"] = d["roles"][0]
+            d["manager_hotels"] = []
+            allowed_mgr_perms = {"bookings_access", "sales_access", "assets_access", "laundry_access"}
+            d["permissions"] = [p for p in (d.get("permissions") or []) if p in allowed_mgr_perms]
+        else:
+            if not d.get("role") and requested_roles:
+                d["role"] = requested_roles[0]
+
+        c = conn.cursor()
+        fields = (
+            d.get("full_name", old.get("full_name")),
+            d.get("nickname", old.get("nickname")),
+            d.get("phone_number", old.get("phone_number")),
+            d.get("role", old.get("role")),
+            d.get("access_type", old.get("access_type")),
+            d.get("hotel_id", old.get("hotel_id")),
+            safe_float(d.get("commission_rate", old.get("commission_rate"))),
+            safe_float(d.get("base_salary", old.get("base_salary"))) if full_acc else safe_float(old.get("base_salary")),
+            d.get("national_id", old.get("national_id")),
+            d.get("visa_card_number", old.get("visa_card_number")),
+            d.get("username", old.get("username")),
+        )
+        c.execute(
+            "UPDATE team_members SET full_name=%s,nickname=%s,phone_number=%s,role=%s,access_type=%s,hotel_id=%s,commission_rate=%s,base_salary=%s,national_id=%s,visa_card_number=%s,username=%s WHERE id=%s",
+            fields + (uid,),
+        )
+        if d.get("password"):
+            c.execute("UPDATE team_members SET password_hash=%s,session_active=1 WHERE id=%s", (hash_password(str(d.get("password"))), uid))
+        save_user_permissions(c, uid, d)
     return ok()
 
 
@@ -5040,20 +5225,60 @@ def api_team_update(uid):
 @require_permission("team_access")
 def api_team_toggle(uid):
     with get_db_connection() as conn:
-        cur=conn.cursor(dictionary=True);cur.execute("SELECT is_active FROM team_members WHERE id=%s",(uid,));row=cur.fetchone()
-        if not row:return fail("الموظف غير موجود",404)
-        new=0 if row.get("is_active") else 1;conn.cursor().execute("UPDATE team_members SET is_active=%s,session_active=%s WHERE id=%s",(new,new,uid))
-    return ok({"is_active":bool(new)})
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM team_members WHERE id=%s", (uid,))
+        row = cur.fetchone()
+        if not row:
+            return fail("الموظف غير موجود", 404)
+        if not has_full_access():
+            if _is_privileged_member(row):
+                return fail("🔒 غير مسموح بتعطيل حساب الأونر أو المديرين أو المحاسبين", 403)
+            allowed_hids = allowed_hotel_ids()
+            if allowed_hids is not None and safe_int(row.get("hotel_id"), 0) not in allowed_hids:
+                return fail("هذا الموظف خارج نطاق فنادقك", 403)
+        new = 0 if row.get("is_active") else 1
+        conn.cursor().execute("UPDATE team_members SET is_active=%s,session_active=%s WHERE id=%s", (new, new, uid))
+    return ok({"is_active": bool(new)})
 
 
 @app.post("/api/team/<int:uid>/force-logout")
 @require_permission("team_access")
 def api_team_force_logout(uid):
-    with get_db_connection() as conn:conn.cursor().execute("UPDATE team_members SET session_active=0 WHERE id=%s",(uid,))
-    audit("FORCE_LOGOUT","team_members",f"إجبار خروج المستخدم #{uid}")
+    with get_db_connection() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT * FROM team_members WHERE id=%s", (uid,))
+        row = cur.fetchone()
+        if not row:
+            return fail("الموظف غير موجود", 404)
+        if not has_full_access() and _is_privileged_member(row):
+            return fail("🔒 غير مسموح بإجبار خروج الأونر أو المديرين", 403)
+        conn.cursor().execute("UPDATE team_members SET session_active=0 WHERE id=%s", (uid,))
+    audit("FORCE_LOGOUT", "team_members", f"إجبار خروج المستخدم #{uid}")
     return ok()
 
 
+@app.delete("/api/team/<int:uid>")
+@require_permission("team_access")
+def api_team_delete(uid):
+    """حذف حساب موظف نهائياً (متاح للأونر CEO فقط)."""
+    if not has_full_access():
+        return fail("🔒 حذف الحسابات نهائياً متاح للأونر (CEO) فقط", 403)
+    cur_uid = safe_int((current_user() or {}).get("id"), -1)
+    if uid == cur_uid:
+        return fail("لا يمكنك حذف حسابك الشخصي الحالي", 400)
+    with get_db_connection() as conn:
+        cur = conn.cursor(dictionary=True)
+        cur.execute("SELECT id, nickname, full_name FROM team_members WHERE id=%s", (uid,))
+        row = cur.fetchone()
+        if not row:
+            return fail("الموظف غير موجود", 404)
+        c = conn.cursor()
+        c.execute("DELETE FROM employee_roles WHERE user_id=%s", (uid,))
+        c.execute("DELETE FROM employee_permissions WHERE user_id=%s", (uid,))
+        c.execute("DELETE FROM user_hotel_permissions WHERE user_id=%s", (uid,))
+        c.execute("DELETE FROM team_members WHERE id=%s", (uid,))
+    audit("DELETE_MEMBER", "team_members", f"حذف الموظف #{uid} ({row.get('nickname')}) نهائياً")
+    return ok({"deleted": uid, "message": f"تم حذف الحساب ({row.get('nickname')}) نهائياً"})
 
 
 @app.post("/api/team/<int:uid>/transfer-hotel")
@@ -5306,6 +5531,7 @@ def api_settings():
 @app.put("/api/settings")
 @require_permission("finances_access")
 def api_settings_update():
+    if not is_full_access(): return fail("🔒 تعديل إعدادات النظام العامة متاح للأونر (CEO) فقط", 403)
     d = request.get_json(silent=True) or {}
     with get_db_connection() as conn:
         cur = conn.cursor()
@@ -5804,19 +6030,14 @@ ARABIC_MONTH_MAP = {
     "ديسمبر": 12, "كانون الأول": 12, "dec": 12, "december": 12,
 }
 
-ARABIC_NAME_ALIASES = {
-    "احمد": "ahmed", "أحمد": "ahmed", "ahmed": "ahmed",
-    "عمر": "omar", "عمرو": "omar", "omar": "omar",
-    "كريم": "karim", "karim": "karim",
-    "سارة": "sara", "ساره": "sara", "sara": "sara", "sarah": "sara",
-    "محمود": "mahmoud", "mahmoud": "mahmoud",
-    "نادية": "nadia", "ناديه": "nadia", "nadia": "nadia",
-    "باسم": "bassem", "bassem": "bassem",
-    "محمد": "mohamed", "mohamed": "mohamed",
-    "علي": "ali", "على": "ali", "ali": "ali",
-    "حسن": "hassan", "hassan": "hassan",
-    "مصطفى": "mostafa", "مصطفي": "mostafa", "mostafa": "mostafa",
-}
+# لا يتم استخدام أي أسماء افتراضية أو عشوائية من خارج قاعدة البيانات؛ المطابقة تتم فقط مع فريق العمل الفعلي المسجل بالنظام
+ARABIC_NAME_ALIASES = {}
+
+def _norm_ar_name(val: str) -> str:
+    s = str(val or "").strip().lower()
+    s = re.sub(r"[أإآ]", "ا", s)
+    s = s.replace("ة", "ه").replace("ى", "ي")
+    return re.sub(r"\s+", " ", s).strip()
 
 def _normalize_arabic_digits(s):
     trans = str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789")
@@ -6018,12 +6239,32 @@ def _build_ai_context_snapshot():
         with get_db_connection() as conn:
             cur = conn.cursor(dictionary=True)
 
-            # 1. فريق العمل
+            # 1. فريق العمل والفنادق الفعلية من قاعدة البيانات (نفس مصدر /api/team/options بدون أي أسماء خارجية)
             try:
-                cur.execute("SELECT nickname, full_name, role FROM team_members")
-                snap["team_names"] = rows_to_json(cur.fetchall() or [])
+                ensure_nbe_team_members_seeded()
             except Exception:
                 pass
+            try:
+                cur.execute("SELECT id, nickname, full_name, role, hotel_id, is_active FROM team_members ORDER BY nickname")
+                raw_tm = cur.fetchall() or []
+                h_ids_allowed = allowed_hotel_ids(u)
+                filtered_tm = []
+                for r in raw_tm:
+                    hid = r.get("hotel_id")
+                    if h_ids_allowed is not None and hid not in (None, "") and safe_int(hid, -1) not in h_ids_allowed:
+                        continue
+                    filtered_tm.append(r)
+                snap["team_names"] = rows_to_json(filtered_tm)
+            except Exception:
+                snap["team_names"] = []
+
+            try:
+                h_ids_allowed = allowed_hotel_ids(u)
+                hw, hp = make_where_for_hotels("id", h_ids_allowed)
+                cur.execute(f"SELECT id, hotel_name FROM hotels WHERE 1=1 {hw} ORDER BY id", tuple(hp))
+                snap["hotels_list"] = rows_to_json(cur.fetchall() or [])
+            except Exception:
+                snap["hotels_list"] = []
 
             # 2. الحجوزات باستخدام fetch_booking_rows الرسمية لتوحيد أسماء الأعمدة
             try:
@@ -6125,57 +6366,345 @@ def _build_ai_context_snapshot():
     except Exception:
         pass
 
+    # تجميع قوائم السيلز والمصورين الفعليين من نطاق العمل فقط (team_members + daily_income + bookings)
+    sales_map = {}
+    photo_map = {}
+    all_emp_map = {}
+
+    for tm in (snap.get("team_names") or []):
+        nick = str(tm.get("nickname") or tm.get("full_name") or "").strip()
+        if not nick:
+            continue
+        k = _norm_ar_name(nick)
+        all_emp_map[k] = nick
+        role_norm = _normalize_role(tm.get("role"))
+        if role_norm in {"sales", "سيلز", "مبيعات"}:
+            sales_map[k] = nick
+        elif role_norm in {"photographer", "مصور"}:
+            photo_map[k] = nick
+
+    for inc in (snap.get("incomes") or []):
+        for s_name in split_names(inc.get("sales_person") or inc.get("deposit_sales_person")):
+            if s_name and s_name not in {"-", "—", "دخل سريع"}:
+                k = _norm_ar_name(s_name)
+                sales_map.setdefault(k, s_name)
+                all_emp_map.setdefault(k, s_name)
+        for p_name in split_names(inc.get("photographer")):
+            if p_name and p_name not in {"-", "—", "بدون مصور"}:
+                k = _norm_ar_name(p_name)
+                photo_map.setdefault(k, p_name)
+                all_emp_map.setdefault(k, p_name)
+
+    for b in (snap.get("bookings") or []):
+        for s_name in split_names(b.get("sales_person")):
+            if s_name and s_name not in {"-", "—"}:
+                k = _norm_ar_name(s_name)
+                sales_map.setdefault(k, s_name)
+                all_emp_map.setdefault(k, s_name)
+        for p_name in split_names(b.get("photographer")):
+            if p_name and p_name not in {"-", "—", "بدون مصور"}:
+                k = _norm_ar_name(p_name)
+                photo_map.setdefault(k, p_name)
+                all_emp_map.setdefault(k, p_name)
+
+    snap["sales_list"] = sorted(sales_map.values(), key=lambda x: str(x).casefold())
+    snap["photographers_list"] = sorted(photo_map.values(), key=lambda x: str(x).casefold())
+    snap["all_employees_list"] = sorted(all_emp_map.values(), key=lambda x: str(x).casefold())
     return snap
 
 
 def _extract_employee_from_query(ql, snap):
-    known_candidates = set()
+    """يستخرج اسم موظف من النص بشرط أن يكون موجوداً فعلياً في قاعدة بيانات النظام فقط."""
+    q_norm = _norm_ar_name(ql)
+    known_candidates = list(snap.get("all_employees_list") or [])
     for tm in (snap.get("team_names") or []):
         for k in ("nickname", "full_name"):
             v = str(tm.get(k) or "").strip()
-            if v:
-                known_candidates.add(v)
-    for b in (snap.get("bookings") or []):
-        for p in split_names(b.get("photographer")):
-            known_candidates.add(p)
-        for s in split_names(b.get("sales_person")):
-            known_candidates.add(s)
-    for inc in (snap.get("incomes") or []):
-        for p in split_names(inc.get("photographer")):
-            known_candidates.add(p)
-        for s in split_names(inc.get("sales_person") or inc.get("deposit_sales_person")):
-            known_candidates.add(s)
+            if v and v not in known_candidates:
+                known_candidates.append(v)
 
     for cand in sorted(known_candidates, key=lambda x: len(x), reverse=True):
-        cl = cand.lower()
-        if len(cl) >= 2 and cl in ql:
+        cn = _norm_ar_name(cand)
+        if len(cn) >= 2 and re.search(r"(?:^|\s|المصور|مصور|السيلز|سيلز|الموظف|على|علي)" + re.escape(cn) + r"(?:$|\s|[،,.])", q_norm):
             return cand
-
-    for ar_name, en_norm in ARABIC_NAME_ALIASES.items():
-        if re.search(r"(?:^|\s|المصور|مصور|السيلز|سيلز)" + re.escape(ar_name) + r"(?:$|\s)", ql):
-            for cand in known_candidates:
-                if en_norm in cand.lower() or ar_name in cand.lower():
-                    return cand
-            return en_norm.capitalize()
-
-    m_emp = re.search(r"(?:المصور|مصور|السيلز|سيلز|الموظف)\s+([a-zA-Z\u0600-\u06FF]{2,16})", ql)
-    if m_emp:
-        word = m_emp.group(1).strip()
-        if word not in {"اليوم", "النهارده", "امبارح", "أمس", "في", "يوم", "شهر", "كل", "اعلى", "أعلى", "افضل"}:
-            mapped = ARABIC_NAME_ALIASES.get(word, word)
-            for cand in known_candidates:
-                if mapped.lower() in cand.lower() or word.lower() in cand.lower():
-                    return cand
-            return word
+        if len(cn) >= 3 and cn in q_norm:
+            return cand
     return None
+
+
+def _extract_sales_and_photographers_from_query(ql, snap):
+    """يستخرج اسم السيلز واسم المصور من نص الأمر بالاعتماد الحصري على أسماء فريق العمل الفعلي في النظام."""
+    q_norm = _norm_ar_name(ql)
+    sales_list = snap.get("sales_list") or []
+    photo_list = snap.get("photographers_list") or []
+
+    matched_sales = None
+    matched_photogs = []
+
+    # 1) البحث الموجه بعد كلمة السيلز / سيلز
+    m_s = re.search(r"(?:السيلز|سيلز|مبيعات)\s*[:\-]?\s*([a-zA-Z\u0600-\u06FF]+(?:\s+[a-zA-Z\u0600-\u06FF]+)?)", q_norm)
+    if m_s:
+        s_Hint = _norm_ar_name(m_s.group(1))
+        for s_cand in sorted(sales_list, key=lambda x: len(x), reverse=True):
+            sc_norm = _norm_ar_name(s_cand)
+            if sc_norm and (sc_norm in s_Hint or s_Hint.startswith(sc_norm)):
+                matched_sales = s_cand
+                break
+
+    # 2) البحث الموجه بعد كلمة المصور / مصور
+    m_p = re.search(r"(?:المصورين|المصور|مصور)\s*[:\-]?\s*([a-zA-Z\u0600-\u06FF]+(?:\s+[a-zA-Z\u0600-\u06FF]+)?)", q_norm)
+    if m_p:
+        p_Hint = _norm_ar_name(m_p.group(1))
+        for p_cand in sorted(photo_list, key=lambda x: len(x), reverse=True):
+            pc_norm = _norm_ar_name(p_cand)
+            if pc_norm and (pc_norm in p_Hint or p_Hint.startswith(pc_norm)):
+                matched_photogs.append(p_cand)
+                break
+
+    # 3) البحث العام في الجملة ضمن قوائم السيلز والمصورين الفعليين بالنظام
+    if not matched_sales:
+        for s_cand in sorted(sales_list, key=lambda x: len(x), reverse=True):
+            sc_norm = _norm_ar_name(s_cand)
+            if len(sc_norm) >= 2 and re.search(r"(?:^|\s)" + re.escape(sc_norm) + r"(?:$|\s|[،,.])", q_norm):
+                matched_sales = s_cand
+                break
+
+    for p_cand in sorted(photo_list, key=lambda x: len(x), reverse=True):
+        pc_norm = _norm_ar_name(p_cand)
+        if len(pc_norm) >= 2 and re.search(r"(?:^|\s)" + re.escape(pc_norm) + r"(?:$|\s|[،,.])", q_norm):
+            if p_cand not in matched_photogs and p_cand != matched_sales:
+                matched_photogs.append(p_cand)
+
+    return matched_sales, matched_photogs[:3]
+
+
+def _parse_income_amounts_by_type(q_str: str):
+    """يستخرج المبالغ بأنواعها (دولار $، يورو €، كاش مصري LE، مكتب/فيزا LE، وعربون $) من النص."""
+    s = str(q_str or "").lower()
+    # نحذف رقم الغرفة والتاريخ من النص أولاً حتى لا يختلطا بالمبالغ
+    s_clean = re.sub(r"\b20\d{2}[-/]\d{1,2}[-/]\d{1,2}\b", " ", s)
+    s_clean = re.sub(r"(?:غرفة|غرفه|الغرفة|الغرفه|اوردر|أوردر|حجز|رقم)\s*[:#\-]?\s*\d+", " ", s_clean)
+
+    usd = 0.0
+    eur = 0.0
+    cash = 0.0
+    office = 0.0
+    deposit = 0.0
+
+    # عربون
+    for m in re.finditer(r"(?:عربون)\s*(\d+(?:\.\d+)?)", s_clean):
+        deposit += float(m.group(1))
+    s_clean = re.sub(r"(?:عربون)\s*\d+(?:\.\d+)?", " ", s_clean)
+
+    # دولار
+    for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(?:دولار|دولارات|\$|usd)", s_clean):
+        usd += float(m.group(1))
+    s_clean = re.sub(r"\d+(?:\.\d+)?\s*(?:دولار|دولارات|\$|usd)", " ", s_clean)
+
+    # يورو
+    for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(?:يورو|€|eur)", s_clean):
+        eur += float(m.group(1))
+    s_clean = re.sub(r"\d+(?:\.\d+)?\s*(?:يورو|€|eur)", " ", s_clean)
+
+    # مكتب / فيزا مصري
+    for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(?:جنيه\s*|مصري\s*| ج\.م\s*|le\s*)?(?:مكتب|فيزا|كارت|بنك|visa|office)", s_clean):
+        office += float(m.group(1))
+    for m in re.finditer(r"(?:مكتب|فيزا|كارت)\s*(\d+(?:\.\d+)?)", s_clean):
+        office += float(m.group(1))
+    s_clean = re.sub(r"\d+(?:\.\d+)?\s*(?:جنيه\s*|مصري\s*| ج\.م\s*|le\s*)?(?:مكتب|فيزا|كارت|بنك|visa|office)", " ", s_clean)
+    s_clean = re.sub(r"(?:مكتب|فيزا|كارت)\s*\d+(?:\.\d+)?", " ", s_clean)
+
+    # كاش مصري / جنيه مصري
+    for m in re.finditer(r"(\d+(?:\.\d+)?)\s*(?:جنيه\s*كاش|كاش\s*مصري|كاش\s*جنيه|مصري\s*كاش|كاش|جنيه|جنية|مصري|ج\.م|le|egp)", s_clean):
+        cash += float(m.group(1))
+    for m in re.finditer(r"(?:كاش)\s*(\d+(?:\.\d+)?)", s_clean):
+        cash += float(m.group(1))
+    s_clean = re.sub(r"\d+(?:\.\d+)?\s*(?:جنيه\s*كاش|كاش\s*مصري|كاش\s*جنيه|مصري\s*كاش|كاش|جنيه|جنية|مصري|ج\.م|le|egp)", " ", s_clean)
+    s_clean = re.sub(r"(?:كاش)\s*\d+(?:\.\d+)?", " ", s_clean)
+
+    # إذا كتب مبلغ بدون تحديد عملة (مثل: المبلغ 150) ولم يذكر أي عملة أخرى، نعتبره دولار $
+    if usd == 0 and eur == 0 and cash == 0 and office == 0:
+        rem_nums = re.findall(r"(\d+(?:\.\d+)?)", s_clean)
+        if rem_nums:
+            usd = float(rem_nums[0])
+
+    rate = 50.0
+    equiv_usd = round(deposit + usd + eur + ((cash + office) / rate), 2)
+    return {
+        "usd": usd,
+        "eur": eur,
+        "cash": cash,
+        "office": office,
+        "deposit": deposit,
+        "rate": rate,
+        "equiv_usd": equiv_usd,
+    }
 
 
 
 # =============================================================================
 # 📌 15. كود المساعد الذكي التنفيذي (حجز أوردر، تنزيل خصم، تعديل/إضافة دخل، تغيير ميعاد بالصوت أو الكتابة)
 # =============================================================================
+
+def _convert_spoken_arabic_numbers_to_digits(raw_text: str) -> str:
+    if not raw_text:
+        return ""
+    s = _normalize_arabic_digits(str(raw_text))
+    s = re.sub(r"الوردر|لوردر|الأوردر|الاوردر|أوردر", "اوردر", s)
+    s = re.sub(r"أحجز|إحجز", "احجز", s)
+    s = s.replace("غرفه", "غرفة").replace("الغرفه", "الغرفة")
+
+    s = re.sub(r"(?:أحد|احد|إحدى|احدى)\s+عشر(?:ة|ه)?", "حداشر", s)
+    s = re.sub(r"(?:اثنا|إثنا|اثني|إثني|اتنين)\s+عشر(?:ة|ه)?", "اتناشر", s)
+    s = re.sub(r"(?:ثلاثة|ثلاث|تلاته|تلاتة|تلات)\s+عشر(?:ة|ه)?", "تلتاشر", s)
+    s = re.sub(r"(?:أربعة|اربعة|أربع|اربع|اربعه)\s+عشر(?:ة|ه)?", "اربعتاشر", s)
+    s = re.sub(r"(?:خمسة|خمس|خمسه)\s+عشر(?:ة|ه)?", "خمستاشر", s)
+    s = re.sub(r"(?:ستة|ست|سته)\s+عشر(?:ة|ه)?", "ستاشر", s)
+    s = re.sub(r"(?:سبعة|سبع|سبعه)\s+عشر(?:ة|ه)?", "سبعتاشر", s)
+    s = re.sub(r"(?:ثمانية|ثماني|تمانية|تمانيه|ثمان)\s+عشر(?:ة|ه)?", "تمنتاشر", s)
+    s = re.sub(r"(?:تسعة|تسع|تسعه)\s+عشر(?:ة|ه)?", "تسعتاشر", s)
+
+    single_digits = {
+        "صفر": 0, "زيرو": 0, "zero": 0,
+        "واحد": 1, "واحده": 1, "واحدة": 1, "ون": 1, "one": 1,
+        "اتنين": 2, "إتنين": 2, "اثنين": 2, "اثنان": 2, "إثنين": 2, "إثنان": 2, "تو": 2, "two": 2,
+        "تلاته": 3, "تلاتة": 3, "ثلاثه": 3, "ثلاثة": 3, "تلات": 3, "ثلاث": 3, "ثري": 3, "three": 3,
+        "اربعه": 4, "اربعة": 4, "أربعه": 4, "أربعة": 4, "اربع": 4, "أربع": 4, "فور": 4, "four": 4,
+        "خمسه": 5, "خمسة": 5, "خمس": 5, "فايف": 5, "five": 5,
+        "سته": 6, "ستة": 6, "ست": 6, "سكس": 6, "six": 6,
+        "سبعه": 7, "سبعة": 7, "سبع": 7, "سفن": 7, "seven": 7,
+        "تمانيه": 8, "تمانية": 8, "ثمانيه": 8, "ثمانية": 8, "تمن": 8, "ثمان": 8, "ثماني": 8, "ايت": 8, "eight": 8,
+        "تسعه": 9, "تسعة": 9, "تسع": 9, "ناين": 9, "nine": 9,
+    }
+    teens = {
+        "عشره": 10, "عشرة": 10, "عشر": 10, "تن": 10, "ten": 10,
+        "حداشر": 11, "احداشر": 11, "إحداشر": 11, "أحداشر": 11,
+        "اتناشر": 12, "إتناشر": 12, "اثناشر": 12, "إثناشر": 12,
+        "تلتاشر": 13, "تلاتاشر": 13, "ثلاثتاشر": 13,
+        "اربعتاشر": 14, "أربعتاشر": 14,
+        "خمستاشر": 15, "ستاشر": 16, "سبعتاشر": 17,
+        "تمنتاشر": 18, "ثمانتاشر": 18, "تمانتاشر": 18,
+        "تسعتاشر": 19,
+    }
+    tens = {
+        "عشرين": 20, "عشرون": 20, "تلاتين": 30, "ثلاثين": 30, "ثلاثون": 30,
+        "اربعين": 40, "أربعين": 40, "اربعون": 40, "أربعون": 40,
+        "خمسين": 50, "خمسون": 50, "ستين": 60, "ستون": 60,
+        "سبعين": 70, "سبعون": 70, "تمانين": 80, "ثمانين": 80, "ثمانون": 80,
+        "تسعين": 90, "تسعون": 90,
+    }
+    hundreds = {
+        "ميه": 100, "مية": 100, "مائة": 100, "مائه": 100, "مئة": 100, "مئه": 100,
+        "ميتين": 200, "مائتين": 200, "مائتان": 200, "مئتين": 200, "مئتان": 200,
+        "تلتميه": 300, "تلتمية": 300, "ثلاثمائة": 300, "ثلاثمئة": 300, "تلاتميه": 300, "تلاتمية": 300,
+        "اربعميه": 400, "اربعمية": 400, "أربعميه": 400, "أربعمية": 400, "اربعمائة": 400, "أربعمائة": 400, "اربعمئة": 400,
+        "خمسميه": 500, "خمسمية": 500, "خمسمائة": 500, "خمسمئة": 500,
+        "ستميه": 600, "ستمية": 600, "ستمائة": 600, "ستمئة": 600,
+        "سبعميه": 700, "سبعمية": 700, "سبعمائة": 700, "سبعمئة": 700,
+        "تمنميه": 800, "تمنمية": 800, "ثمانمائة": 800, "ثمانمئة": 800, "تمانميه": 800, "تمانمية": 800,
+        "تسعميه": 900, "تسعمية": 900, "تسعمائة": 900, "تسعمئة": 900,
+    }
+    thousands = {
+        "الف": 1000, "ألف": 1000, "الفين": 2000, "ألفين": 2000, "ألفان": 2000, "الفان": 2000,
+    }
+
+    def classify(tok: str):
+        clean = re.sub(r"[،,.;:!?]", "", tok)
+        waw = False
+        base = clean
+        if clean == "و":
+            return {"type": "waw", "raw": tok}
+        if clean.startswith("و") and len(clean) > 1:
+            sub = clean[1:]
+            if sub in single_digits or sub in teens or sub in tens or sub in hundreds or sub in thousands:
+                waw = True
+                base = sub
+        if base in single_digits:
+            return {"type": "digit", "val": single_digits[base], "waw": waw, "raw": tok}
+        if base in teens:
+            return {"type": "teen", "val": teens[base], "waw": waw, "raw": tok}
+        if base in tens:
+            return {"type": "ten", "val": tens[base], "waw": waw, "raw": tok}
+        if base in hundreds:
+            return {"type": "hundred", "val": hundreds[base], "waw": waw, "raw": tok}
+        if base in thousands:
+            return {"type": "thousand", "val": thousands[base], "waw": waw, "raw": tok}
+        if base.isdigit():
+            return {"type": "num_literal", "val": base, "waw": waw, "raw": tok}
+        return {"type": "word", "raw": tok}
+
+    num_types = {"digit", "teen", "ten", "hundred", "thousand", "num_literal"}
+    classified = [classify(t) for t in s.strip().split() if t]
+    out = []
+    i = 0
+    while i < len(classified):
+        cur = classified[i]
+        if cur["type"] in ("word", "waw"):
+            out.append(cur["raw"])
+            i += 1
+            continue
+        seq = [cur]
+        j = i + 1
+        while j < len(classified):
+            if classified[j]["type"] == "waw" and j + 1 < len(classified) and classified[j + 1]["type"] in num_types:
+                nxt = dict(classified[j + 1])
+                nxt["waw"] = True
+                seq.append(nxt)
+                j += 2
+            elif classified[j]["type"] in num_types:
+                seq.append(classified[j])
+                j += 1
+            else:
+                break
+
+        if all(x["type"] in ("digit", "num_literal") for x in seq):
+            out.append("".join(str(x["val"]) for x in seq))
+            i = j
+            continue
+
+        if len(seq) == 2 and not seq[1].get("waw"):
+            if (seq[0]["type"] == "digit" and seq[1]["type"] == "teen") or (seq[0]["type"] == "teen" and seq[1]["type"] == "digit"):
+                out.append(f"{seq[0]['val']}{seq[1]['val']}")
+                i = j
+                continue
+            if seq[0]["type"] == "ten" and seq[1]["type"] == "digit":
+                out.append(f"{int(seq[0]['val'] // 10)}0{seq[1]['val']}")
+                i = j
+                continue
+
+        total = 0
+        k = 0
+        while k < len(seq):
+            item = seq[k]
+            if item["type"] == "digit" and k + 1 < len(seq) and seq[k + 1]["type"] == "thousand" and not seq[k + 1].get("waw"):
+                total += item["val"] * 1000
+                k += 2
+            elif item["type"] == "digit" and k + 1 < len(seq) and seq[k + 1]["type"] == "hundred" and not seq[k + 1].get("waw"):
+                total += item["val"] * 100
+                k += 2
+            elif item["type"] in ("thousand", "hundred", "teen"):
+                total += item["val"]
+                k += 1
+            elif item["type"] == "digit" and k + 1 < len(seq) and seq[k + 1]["type"] == "ten":
+                total += item["val"] + seq[k + 1]["val"]
+                k += 2
+            elif item["type"] in ("ten", "digit"):
+                total += item["val"]
+                k += 1
+            elif item["type"] == "num_literal":
+                total += int(item["val"])
+                k += 1
+            else:
+                k += 1
+        out.append(str(total))
+        i = j
+
+    res = " ".join(out)
+    res = re.sub(r"(?:برقم|رقم)\s*(?:الغرفة|غرفة)\s*(\d+)", r"غرفة \1", res)
+    return res.strip()
+
 def _generate_local_ai_reply(query_text, snap):
-    q = _normalize_arabic_digits(str(query_text or "").strip())
+    q = _convert_spoken_arabic_numbers_to_digits(str(query_text or "").strip())
     ql = q.lower()
     is_owner_or_mgr = has_full_access() or is_manager_role()
     # 0) تنفيذ أمر حذف أوردر برقم الغرفة عبر المساعد الذكي
@@ -6197,13 +6726,25 @@ def _generate_local_ai_reply(query_text, snap):
         except Exception as exc:
             return {"reply": f"⚠️ تعذر حذف الأوردر: {exc}", "actions": []}
 
-    # A) تنفيذ أمر خصم على موظف عبر المساعد الذكي
-    if any(k in ql for k in ["خصم", "جزاء", "اخصم"]) and any(k in ql for k in ["نزل", "سجل", "ضيف", "اضف", "على", "علي"]):
+    # A) تنفيذ أمر خصم على موظف عبر المساعد الذكي (بدون أي أسماء عشوائية من خارج النظام)
+    if any(k in ql for k in ["خصم", "جزاء", "اخصم"]) and any(k in ql for k in ["نزل", "سجل", "ضيف", "اضف", "على", "علي", "خصم"]):
         if not is_owner_or_mgr:
             return {"reply": "🔒 **عفواً، تنزيل الخصومات متاح فقط للأونر (CEO) أو المدير (Manager).**", "actions": []}
-        emp_name = _extract_employee_from_query(ql, snap) or "Ahmed"
+        emp_name = _extract_employee_from_query(ql, snap)
         nums = re.findall(r"\d+(?:\.\d+)?", ql)
-        amt = float(nums[0]) if nums else 100.0
+        amt = float(nums[0]) if nums else 0.0
+        if not emp_name or amt <= 0:
+            emp_preview = " ، ".join(f"`{n}`" for n in (snap.get("all_employees_list") or [])[:15]) or "لا يوجد موظفون مسجلون بعد"
+            missing_lbl = "اسم الموظف وقيمة الخصم" if (not emp_name and amt <= 0) else ("اسم الموظف من فريق العمل" if not emp_name else "قيمة مبلغ الخصم")
+            return {
+                "reply": (
+                    f"💸 **لتسجيل خصم عبر المساعد الذكي، يرجى تحديد ({missing_lbl}) من نطاق عملنا الفعلي:**\n"
+                    f"• **أعضاء الفريق المسجلون بالنظام:** {emp_preview}\n"
+                    f"• **مثال للكتابة:** `سجل خصم على [اسم الموظف] [المبلغ] جنيه بسبب [السبب]`"
+                ),
+                "actions": [{"label": "📊 فتح شاشة العمولات والخصومات", "href": "/commissions"}],
+                "mode": "exec_action",
+            }
         reason_m = re.search(r"(?:بسبب|عشان|لأن|بيان)\s+(.+)$", q)
         reason_txt = reason_m.group(1).strip() if reason_m else "خصم إداري عبر المساعد الذكي"
         try:
@@ -6215,54 +6756,204 @@ def _generate_local_ai_reply(query_text, snap):
                 )
             return {
                 "reply": f"✅ **تم تنفيذ أمر الخصم فوراً في قاعدة البيانات!**\n• **الموظف:** `{emp_name}`\n• **المبلغ:** **{amt:,.2f} LE**\n• **السبب:** {reason_txt}",
-                "actions": [{"label": "📊 فتح شاشة العمولات والخصومات", "url": "/commissions"}],
+                "actions": [{"label": "📊 فتح شاشة العمولات والخصومات", "href": "/commissions"}],
+                "mode": "exec_action",
             }
         except Exception as exc:
             return {"reply": f"⚠️ تعذر تسجيل الخصم: {exc}", "actions": []}
 
-    # B) تنفيذ أمر تعديل أو إضافة دخل أوردر عبر المساعد الذكي
-    if any(k in ql for k in ["دخل", "تحصيل"]) and any(k in ql for k in ["عدل", "تعديل", "خليه", "ضيف", "اضف", "سجل"]):
+    # B) تنفيذ أمر تسجيل دخل جديد أو تعديل دخل أوردر عبر المساعد الذكي (بدون أي أسماء عشوائية نهائياً)
+    is_edit_income_cmd = any(k in ql for k in ["عدل", "تعديل", "غير", "خليه"]) and any(k in ql for k in ["دخل", "تحصيل", "مبيعات"])
+    is_add_income_cmd = (not is_edit_income_cmd) and (
+        any(p in ql for p in ["سجل دخل", "تسجيل دخل", "ضيف دخل", "اضف دخل", "إضافة دخل", "اضافة دخل", "دخل جديد", "دخل سريع", "سجل مبيعات", "ضيف مبيعات"])
+        or (any(k in ql for k in ["دخل", "تحصيل"]) and any(k in ql for k in ["ضيف", "اضف", "سجل", "جديد", "سريع", "إضافة", "اضافة"]))
+    )
+
+    if is_edit_income_cmd:
         if not (is_owner_or_mgr or is_accountant_only()):
-            return {"reply": "🔒 **تعديل أو إضافة دخل الأوردرات عبر المساعد الذكي متاح للأونر أو المدير أو المحاسب فقط.**", "actions": []}
+            return {"reply": "🔒 **تعديل دخل الأوردرات عبر المساعد الذكي متاح للأونر أو المدير أو المحاسب فقط.**", "actions": []}
         rm = re.search(r"(?:غرفة|غرفه|اوردر|أوردر|رقم)\s*(\d+)", ql)
-        room_no = rm.group(1) if rm else "214"
-        rem_q = ql.replace(rm.group(0), "") if rm else ql
-        nums = re.findall(r"\d+(?:\.\d+)?", rem_q)
-        new_amt = float(nums[0]) if nums else 180.0
+        room_no = rm.group(1) if rm else None
+        parsed_amts = _parse_income_amounts_by_type(ql)
+        if not room_no or parsed_amts["equiv_usd"] <= 0:
+            return {
+                "reply": (
+                    "✏️ **لتعديل دخل أوردر مسجل، يرجى تحديد رقم الغرفة الفعلي والمبلغ الجديد بأنواعه:**\n"
+                    "• مثال: `عدل دخل غرفة [رقم الغرفة] إلى [المبلغ] دولار`"
+                ),
+                "actions": [{"label": "💰 فتح الدخل اليومي", "href": "/daily-sales"}],
+                "mode": "exec_action",
+            }
         try:
             with get_db_connection() as conn:
                 cur = conn.cursor(dictionary=True)
                 cur.execute("SELECT * FROM daily_income WHERE room_number=%s ORDER BY id DESC LIMIT 1", (room_no,))
                 ex = cur.fetchone()
-                if ex:
-                    cost_tot = safe_float(ex.get("cost_total"), 0.0)
-                    net_tot = max(0.0, new_amt - cost_tot)
-                    conn.cursor().execute(
-                        "UPDATE daily_income SET income_usd=%s, daily_total=%s WHERE id=%s",
-                        (new_amt, net_tot, ex["id"]),
-                    )
+                if not ex:
                     return {
-                        "reply": f"✅ **تم تعديل دخل أوردر غرفة `{room_no}` في قاعدة البيانات!**\n• **الدخل الجديد:** **${new_amt:,.2f}**\n• **الصافي بعد التكلفة:** **${net_tot:,.2f}**",
-                        "actions": [{"label": "💰 فتح الدخل اليومي", "url": "/daily-sales"}],
+                        "reply": f"⚠️ لا يوجد سجل دخل مسجل مسبقاً لغرفة `{room_no}` لتعديله. يمكنك تسجيل دخل جديد لها باختيار اسم السيلز واسم المصور والمبلغ.",
+                        "actions": [
+                            {"label": "⚡➕ إضافة دخل سريع", "onclick": f"openQuickIncomeModal({{room: '{room_no}'}})"},
+                            {"label": "💰 فتح الدخل اليومي", "href": "/daily-sales"},
+                        ],
+                        "mode": "exec_action",
                     }
-                else:
-                    conn.cursor().execute(
-                        "INSERT INTO daily_income (hotel_id, room_number, sales_person, photographer, income_usd, daily_total, income_date) VALUES (1, %s, %s, %s, %s, %s, %s)",
-                        (room_no, "Sara", "Ahmed", new_amt, new_amt, date.today().isoformat()),
-                    )
-                    return {
-                        "reply": f"✅ **تم إضافة دخل أوردر جديد لغرفة `{room_no}` بمبلغ ${new_amt:,.2f} في قاعدة البيانات!**",
-                        "actions": [{"label": "💰 فتح الدخل اليومي", "url": "/daily-sales"}],
-                    }
+                cost_tot = safe_float(ex.get("cost_total"), 0.0)
+                dep_app = parsed_amts["deposit"] if parsed_amts["deposit"] > 0 else safe_float(ex.get("deposit_applied"), 0.0)
+                gross_tot = dep_app + parsed_amts["usd"] + parsed_amts["eur"] + ((parsed_amts["cash"] + parsed_amts["office"]) / parsed_amts["rate"])
+                net_tot = max(0.0, gross_tot - cost_tot)
+                conn.cursor().execute(
+                    "UPDATE daily_income SET income_usd=%s, income_eur=%s, income_le_k=%s, income_le_m=%s, daily_total=%s WHERE id=%s",
+                    (parsed_amts["usd"], parsed_amts["eur"], parsed_amts["cash"], parsed_amts["office"], net_tot, ex["id"]),
+                )
+                return {
+                    "reply": (
+                        f"✅ **تم تعديل دخل أوردر غرفة `{room_no}` في قاعدة البيانات!**\n"
+                        f"• **السيلز:** `{ex.get('sales_person') or '-'}` | **المصور:** `{ex.get('photographer') or '-'}`\n"
+                        f"• **الدخل الجديد:** دولار **${parsed_amts['usd']:,.2f}** | يورو **€{parsed_amts['eur']:,.2f}** | كاش **{parsed_amts['cash']:,.0f} LE** | مكتب **{parsed_amts['office']:,.0f} LE**\n"
+                        f"• **الصافي بعد التكلفة:** **${net_tot:,.2f}**"
+                    ),
+                    "actions": [{"label": "💰 فتح الدخل اليومي", "href": "/daily-sales"}],
+                    "mode": "exec_action",
+                }
         except Exception as exc:
-            return {"reply": f"⚠️ تعذر حفظ دخل الأوردر: {exc}", "actions": []}
+            return {"reply": f"⚠️ تعذر تعديل دخل الأوردر: {exc}", "actions": []}
 
-    # C) تنفيذ أمر حجز أوردر كامل بالصوت أو الكتابة
-    if any(k in ql for k in ["احجز", "حجز اوردر", "حجز أوردر", "سجل حجز", "اوردر جديد", "أوردر جديد"]):
-        rm = re.search(r"(?:غرفة|غرفه|الغرفة|الغرفه|رقم)\s*(\d+)", ql)
-        room_no = rm.group(1) if rm else "412"
+    if is_add_income_cmd:
+        if not (is_owner_or_mgr or is_accountant_only()):
+            return {"reply": "🔒 **تسجيل أو إضافة الدخل اليومي عبر المساعد الذكي متاح للأونر أو المدير أو المحاسب فقط.**", "actions": []}
+
+        rm = re.search(r"(?:غرفة|غرفه|اوردر|أوردر|رقم)\s*(\d+)", ql)
+        room_no = rm.group(1) if rm else ""
+        matched_sales, matched_photogs = _extract_sales_and_photographers_from_query(ql, snap)
+        parsed_amts = _parse_income_amounts_by_type(ql)
+
+        # إذا لم يحدد المستخدم اسم السيلز الفعلي + اسم المصور الفعلي + المبلغ، لا نضيف أي أسماء عشوائية أبداً، بل نطلب منه اختيارها من نموذج عملنا الفعلي
+        if not matched_sales or not matched_photogs or parsed_amts["equiv_usd"] <= 0:
+            missing = []
+            if not matched_sales:
+                missing.append("**اختر اسم السيلز**")
+            if not matched_photogs:
+                missing.append("**اختر اسم المصور**")
+            if parsed_amts["equiv_usd"] <= 0:
+                missing.append("**أدخل المبلغ بأنواعه** (`$ دولار` / `€ يورو` / `L.E كاش` / `L.E مكتب`)")
+
+            sales_opts = snap.get("sales_list") or []
+            photo_opts = snap.get("photographers_list") or []
+            hotels_opts = snap.get("hotels_list") or []
+
+            return {
+                "reply": (
+                    f"💰 **لتسجيل دخل جديد في الدخل اليومي، يرجى تحديد ({' + '.join(missing)}) من نطاق شغلنا الفعلي:**\n"
+                    f"• **اسم السيلز:** اختر من قائمة السيلز المسجلين بالنظام ({len(sales_opts)} سيلز)\n"
+                    f"• **اسم المصور:** اختر من قائمة المصورين المسجلين بالنظام ({len(photo_opts)} مصور)\n"
+                    f"• **المبلغ بأنواعه:** دولار (`$`) • يورو (`€`) • كاش مصري (`L.E كاش`) • مكتب/فيزا (`L.E مكتب`)\n"
+                    f"👇 اختر الأسماء والمبلغ مباشرة من النموذج التفاعلي التالي وسيُحفظ فوراً في **الدخل اليومي**:"
+                ),
+                "widget": {
+                    "type": "quick_income_form",
+                    "sales": sales_opts,
+                    "photographers": photo_opts,
+                    "hotels": hotels_opts,
+                    "default_date": date.today().isoformat(),
+                    "preselected_sales": matched_sales or "",
+                    "preselected_photographer": matched_photogs[0] if matched_photogs else "",
+                    "preselected_photographer_2": matched_photogs[1] if len(matched_photogs) > 1 else "",
+                    "preselected_room": room_no or "",
+                    "preselected_usd": parsed_amts["usd"],
+                    "preselected_eur": parsed_amts["eur"],
+                    "preselected_cash": parsed_amts["cash"],
+                    "preselected_office": parsed_amts["office"],
+                    "preselected_deposit": parsed_amts["deposit"],
+                },
+                "actions": [
+                    {"label": "⚡➕ نافذة إضافة دخل سريع الكاملة", "onclick": "openQuickIncomeModal()"},
+                    {"label": "💰 فتح شاشة الدخل اليومي", "href": "/daily-sales"},
+                ],
+                "mode": "interactive_quick_income",
+            }
+
+        # إذا حدد المستخدم اسم السيلز الفعلي + اسم المصور الفعلي + المبلغ بأنواعه من نطاق العمل، نحفظه فوراً في الدخل اليومي
+        try:
+            hotels_opts = snap.get("hotels_list") or []
+            hid = (hotels_opts[0].get("id") if hotels_opts else 1) or 1
+            for h_item in hotels_opts:
+                hn = str(h_item.get("hotel_name") or "").strip()
+                if hn and _norm_ar_name(hn) in _norm_ar_name(ql):
+                    hid = safe_int(h_item.get("id"), 1)
+                    break
+
+            photog_str = ", ".join(matched_photogs)
+            room_val = room_no or "دخل سريع"
+            gross_tot = parsed_amts["equiv_usd"]
+            net_tot = gross_tot
+
+            with get_db_connection() as conn:
+                cols = table_columns("daily_income")
+                insert_vals = {
+                    "hotel_id": hid,
+                    "room_number": room_val,
+                    "sales_person": matched_sales,
+                    "photographer": photog_str,
+                    "deposit_applied": parsed_amts["deposit"],
+                    "income_usd": parsed_amts["usd"],
+                    "income_eur": parsed_amts["eur"],
+                    "income_le_k": parsed_amts["cash"],
+                    "income_le_m": parsed_amts["office"],
+                    "le_to_usd": parsed_amts["rate"],
+                    "order_exchange_rate": parsed_amts["rate"],
+                    "cost_dress": 0.0,
+                    "cost_usb": 0.0,
+                    "cost_album": 0.0,
+                    "cost_total": 0.0,
+                    "daily_total": net_tot,
+                    "income_date": date.today().isoformat(),
+                }
+                use_cols = {k: v for k, v in insert_vals.items() if k in cols}
+                col_names = list(use_cols.keys())
+                conn.cursor().execute(
+                    "INSERT INTO daily_income (" + ",".join(f"`{k}`" for k in col_names) + ") VALUES (" + ",".join(["%s"] * len(col_names)) + ")",
+                    [use_cols[k] for k in col_names],
+                )
+            audit("ADD_SALE", "daily_income", f"تسجيل دخل سريع عبر المساعد الذكي ({room_val}) بصافي {net_tot:.2f}$")
+            return {
+                "reply": (
+                    f"✅ **تم حفظ الدخل الجديد في الدخل اليومي بنجاح!**\n"
+                    f"• **السيلز:** `{matched_sales}` | **المصور:** `{photog_str}`\n"
+                    f"• **الغرفة / البيان:** `{room_val}` | **التاريخ:** `{date.today().isoformat()}`\n"
+                    f"• **تفصيل المبلغ:** دولار **${parsed_amts['usd']:,.2f}** | يورو **€{parsed_amts['eur']:,.2f}** | كاش **{parsed_amts['cash']:,.0f} LE** | مكتب **{parsed_amts['office']:,.0f} LE**\n"
+                    f"• **صافي الدخل المحفوظ:** **${net_tot:,.2f}**"
+                ),
+                "actions": [
+                    {"label": "⚡➕ إضافة دخل سريع آخر", "onclick": "openQuickIncomeModal()"},
+                    {"label": "💰 فتح الدخل اليومي", "href": "/daily-sales"},
+                ],
+                "mode": "exec_action",
+            }
+        except Exception as exc:
+            return {"reply": f"⚠️ تعذر حفظ الدخل اليومي: {exc}", "actions": []}
+
+    # C) تنفيذ أمر حجز أوردر كامل بالصوت أو الكتابة (بدون أي أسماء عشوائية من خارج النظام)
+    if any(k in ql for k in ["احجز", "حجز اوردر", "حجز أوردر", "سجل حجز", "سجل اوردر", "سجل أوردر", "اعمل اوردر", "ضيف اوردر", "افتح اوردر", "اوردر جديد", "أوردر جديد"]) or ("سجل" in ql and "غرفة" in ql):
+        rm = re.search(r"(?:غرفة|غرفه|الغرفة|الغرفه|برقم|رقم|اوردر|حجز)(?:\s+(?:غرفة|غرفه|الغرفة|الغرفه|برقم|رقم))*\s*[:#\-]?\s*(\d+)", ql)
+        room_no = rm.group(1) if rm else None
+        matched_sales, matched_photogs = _extract_sales_and_photographers_from_query(ql, snap)
+        u = current_user() or {}
+        u_nick = str(u.get("nickname") or u.get("full_name") or "").strip()
+        sales_p = matched_sales or (u_nick if is_sales_only(u) else "")
+        if not room_no or not sales_p:
+            sales_preview = " ، ".join(f"`{n}`" for n in (snap.get("sales_list") or [])[:12]) or "قائمة السيلز"
+            return {
+                "reply": (
+                    "📅 **لتسجيل حجز أوردر جديد، يرجى تحديد رقم الغرفة واسم السيلز من نطاق عملنا الفعلي:**\n"
+                    f"• **السيلز المسجلون بالنظام:** {sales_preview}\n"
+                    "• **مثال:** `احجز اوردر غرفة [رقم الغرفة] السيلز [اسم السيلز] الساعة 16:00 عربون [المبلغ] دولار`"
+                ),
+                "actions": [{"label": "📅 فتح شاشة الحجوزات", "href": "/reservations"}],
+                "mode": "exec_action",
+            }
         iso_m = re.search(r"(\d{4}-\d{2}-\d{2})", ql)
-        b_date = iso_m.group(1) if iso_m else ( (date.today() + timedelta(days=1)).isoformat() if any(w in ql for w in ["بكرة", "بكره", "غدا", "غداً"]) else date.today().isoformat() )
+        b_date = iso_m.group(1) if iso_m else ((date.today() + timedelta(days=1)).isoformat() if any(w in ql for w in ["بكرة", "بكره", "غدا", "غداً"]) else date.today().isoformat())
         tm = re.search(r"(?:الساعة|الساعه|ساعة|ساعه)\s*(\d{1,2})(?::(\d{2}))?", ql)
         if tm:
             hh = int(tm.group(1))
@@ -6273,23 +6964,22 @@ def _generate_local_ai_reply(query_text, snap):
         else:
             b_time = "16:00"
         dep_m = re.search(r"(?:عربون|دافع|مدفوع)\s*(?:عربون\s*)?(\d+(?:\.\d+)?)", ql)
-        dep_usd = float(dep_m.group(1)) if dep_m else 20.0
+        dep_usd = float(dep_m.group(1)) if dep_m else 0.0
         agr_m = re.search(r"(?:اتفاق|إجمالي|اجمالي)\s*(\d+(?:\.\d+)?)", ql)
-        tot_agr = float(agr_m.group(1)) if agr_m else max(150.0, dep_usd + 100.0)
+        tot_agr = float(agr_m.group(1)) if agr_m else dep_usd
         rem_amt = max(0.0, tot_agr - dep_usd)
         dresses_found = re.findall(r"فستان\s+([^،,و\d]+?)(?=\s+و|\s+دافع|\s+عربون|\s+اتفاق|$)", q)
-        clothing_str = " + ".join(f"فستان {d.strip()}" for d in dresses_found) if dresses_found else ("فستان ملكي" if "فستان" in ql else "بدون فساتين")
-        u = current_user() or {}
-        sales_p = str(u.get("nickname") or "Sara")
-        hotel_n = get_current_user_hotel_name(u) or "الفندق الرئيسي"
+        clothing_str = " + ".join(f"فستان {d.strip()}" for d in dresses_found) if dresses_found else ("فستان" if "فستان" in ql else "بدون فساتين")
+        photog_str = ", ".join(matched_photogs) if matched_photogs else ""
+        hotel_n = get_current_user_hotel_name(u) or ((snap.get("hotels_list") or [{}])[0].get("hotel_name")) or "الفندق الرئيسي"
         try:
             with get_db_connection() as conn:
                 cur = conn.cursor()
                 cur.execute(
                     """INSERT INTO bookings
-                       (hotel, booking_date, room_number, booking_time, session_details, clothing, deposit_usd, total_agreement, remaining, sales_person, status)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'مؤكد')""",
-                    (hotel_n, b_date, room_no, b_time, f"حجز ذكي ({clothing_str})", clothing_str, dep_usd, tot_agr, rem_amt, sales_p),
+                       (hotel, booking_date, room_number, booking_time, session_details, clothing, deposit_usd, total_agreement, remaining, sales_person, photographer, status)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'مؤكد')""",
+                    (hotel_n, b_date, room_no, b_time, f"حجز ذكي ({clothing_str})", clothing_str, dep_usd, tot_agr, rem_amt, sales_p, photog_str),
                 )
                 bid = cur.lastrowid
                 if dep_usd > 0:
@@ -6298,11 +6988,13 @@ def _generate_local_ai_reply(query_text, snap):
                 "reply": (
                     f"🎉 **تم تسجيل وحجز الأوردر الجديد فوراً في قاعدة البيانات!**\n"
                     f"• **رقم الغرفة:** `{room_no}` ({hotel_n})\n"
+                    f"• **السيلز:** `{sales_p}` | **المصور:** `{photog_str or 'يحدد لاحقاً'}`\n"
                     f"• **التاريخ والموعد:** يوم `{b_date}` الساعة `{b_time}`\n"
                     f"• **الفساتين والملابس:** {clothing_str}\n"
-                    f"• **العربون المسجل مع السيلز:** **${dep_usd:,.2f}** (المتبقي: ${rem_amt:,.2f})"
+                    f"• **العربون المسجل:** **${dep_usd:,.2f}** (المتبقي: ${rem_amt:,.2f})"
                 ),
-                "actions": [{"label": "📅 فتح قائمة الحجوزات", "url": "/reservations"}],
+                "actions": [{"label": "📅 فتح قائمة الحجوزات", "href": "/reservations"}],
+                "mode": "exec_action",
             }
         except Exception as exc:
             return {"reply": f"⚠️ تعذر حفظ الحجز: {exc}", "actions": []}
@@ -6788,7 +7480,7 @@ def api_ai_chat():
 
     ext_key = (d.get("api_key") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or "").strip()
     provider = (d.get("provider") or "auto").strip().lower()
-    if ext_key and local_result.get("mode") != "privacy_guard" and provider in {"auto", "gemini", "openai"}:
+    if ext_key and local_result.get("mode") not in {"privacy_guard", "interactive_quick_income", "exec_action"} and provider in {"auto", "gemini", "openai"}:
         try:
             import urllib.request
             sys_prompt = (
@@ -7304,7 +7996,7 @@ def api_thirty_min_session_alerts():
 def page_bank_accounts():
     if not is_full_access():
         return redirect(url_for("forbidden"))
-    return render_template("bank_accounts.html")
+    return render_page("bank_accounts.html")
 
 
 @app.get("/api/bank-accounts/overview")
@@ -7337,9 +8029,31 @@ def api_bank_accounts_overview():
         cur.execute(q, tuple(params))
         rows = rows_to_json(cur.fetchall() or [])
 
+    hotel_expenses = {}
+    try:
+        with get_db_connection() as conn:
+            cur = conn.cursor(dictionary=True)
+            cur.execute("""SELECT h.hotel_name, COALESCE(SUM(l.total_cost), 0) AS laundry_egp
+                           FROM laundry_tracker l JOIN hotels h ON h.id = l.hotel_id
+                           WHERE l.log_date BETWEEN %s AND %s GROUP BY h.hotel_name""", (start, end))
+            for lr in (cur.fetchall() or []):
+                hn = lr.get("hotel_name")
+                if hn:
+                    hotel_expenses.setdefault(hn, {"laundry_egp": 0.0, "treasury_egp": 0.0})["laundry_egp"] = safe_float(lr.get("laundry_egp"))
+            cur.execute("""SELECT hotel_name, COALESCE(SUM(amount_egp + (amount_usd * 50)), 0) AS trs_egp
+                           FROM treasury_transactions
+                           WHERE tx_type='EXPENSE' AND tx_date BETWEEN %s AND %s GROUP BY hotel_name""", (start, end))
+            for tr in (cur.fetchall() or []):
+                hn = tr.get("hotel_name")
+                if hn:
+                    hotel_expenses.setdefault(hn, {"laundry_egp": 0.0, "treasury_egp": 0.0})["treasury_egp"] = safe_float(tr.get("trs_egp"))
+    except Exception:
+        pass
+
     rate_usd = safe_float(get_setting("exchange_rate", 50)) or 50.0
     return ok({
         "rows": rows,
+        "hotel_expenses": hotel_expenses,
         "exchange_rate_usd": rate_usd,
         "exchange_rate_eur": round(rate_usd * 1.08, 2)
     })
@@ -7450,6 +8164,32 @@ def api_backup_restore():
             except Exception:
                 pass
     return ok({"message": f"✅ تم استرجاع النسخة الاحتياطية بنجاح ({restored_count} جدول)"})
+
+
+
+@app.post("/api/end-of-day/execute")
+@login_required
+def api_execute_smart_end_of_day():
+    """تنفيذ معالج تقفيل اليوم الذكي في خطوة واحدة (ترحيل المغسلة + قفل حسابات اليوم)."""
+    d = request.get_json(silent=True) or {}
+    target_date = str(d.get("date") or date.today().isoformat()).strip()
+    hotel_name = str(d.get("hotel_name") or "جميع الفنادق").strip()
+    do_lock = bool(d.get("lock_day", True))
+
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        if do_lock:
+            try:
+                actor = (current_user() or {}).get("nickname") or "المحاسب"
+                cur.execute(
+                    """INSERT INTO daily_account_locks (lock_date, hotel_name, is_locked, unlocked_for_manager, locked_by, notes)
+                       VALUES (%s, %s, 1, 0, %s, 'تم التقفيل عبر معالج تقفيل اليوم الذكي')
+                       ON DUPLICATE KEY UPDATE is_locked=1, unlocked_for_manager=0, locked_by=VALUES(locked_by)""",
+                    (target_date, hotel_name, actor)
+                )
+            except Exception:
+                pass
+    return ok({"date": target_date, "hotel_name": hotel_name, "locked": do_lock})
 
 
 if __name__ == '__main__':

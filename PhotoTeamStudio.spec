@@ -1,25 +1,51 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
 
+block_cipher = None
+
+added_files = [
+    ('templates', 'templates'),
+    ('static', 'static'),
+    ('photo_team_icon.ico', '.'),
+]
 
 a = Analysis(
     ['app.py'],
-    pathex=[],
+    pathex=[os.path.abspath('.')],
     binaries=[],
-    datas=[('templates', 'templates'), ('static', 'static'), ('photo_team_icon.ico', '.')],
-    hiddenimports=['database', 'mysql.connector', 'mysql.connector.plugins.mysql_native_password', 'mysql.connector.plugins.caching_sha2_password', 'bcrypt', 'waitress', 'webview', 'flask_cors', 'dotenv'],
+    datas=added_files,
+    hiddenimports=[
+        'database',
+        'mysql',
+        'mysql.connector',
+        'mysql.connector.locales',
+        'mysql.connector.locales.eng',
+        'mysql.connector.plugins',
+        'mysql.connector.plugins.mysql_native_password',
+        'mysql.connector.plugins.caching_sha2_password',
+        'bcrypt',
+        'waitress',
+        'webview',
+        'flask_cors',
+        'dotenv',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
     noarchive=False,
-    optimize=0,
 )
-pyz = PYZ(a.pure)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
+    a.zipfiles,
     a.datas,
     [],
     name='PhotoTeamStudio',
@@ -35,5 +61,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:/Users/PhotoTeam/Desktop/PhotoTeam_System_Complete_6-11/photo_team_icon.ico'],
+    icon='photo_team_icon.ico',
 )

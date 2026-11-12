@@ -266,3 +266,109 @@ async function triggerSystemBackupSaveAs() {
 }
 
 document.addEventListener('DOMContentLoaded', initBankAccountsPage);
+
+
+let bkHotelExpensesMap = {};
+
+const origLoadBankOverview = loadBankAccountsOverview;
+loadBankAccountsOverview = async function() {
+  try {
+    const q = new URLSearchParams({
+      start: $('bkFrom')?.value || firstDayMonth(),
+      end: $('bkTo')?.value || todayISO(),
+      hotel_id: $('bkHotel')?.value || ''
+    });
+    const res = await api('/api/bank-accounts/overview?' + q.toString());
+    bkRawRows = res.rows || [];
+    bkRateUsd = Number(res.exchange_rate_usd || 50) || 50;
+    bkRateEur = Number(res.exchange_rate_eur || 54) || 54;
+    bkHotelExpensesMap = res.hotel_expenses || {};
+    renderBankAccountsData();
+    renderOwnerNetProfitFlask();
+  } catch (e) {
+    toast(e.message || 'تعذر تحميل بيانات حسابات البنك', 'bad');
+  }
+};
+
+function renderOwnerNetProfitFlask() {
+  const tbody = $('bkOwnerNetProfitBody');
+  if (!tbody) return;
+  const rows = getFilteredBkRows();
+  const feePct = num($('bkFeePct')?.value ?? 1.5);
+  const byHotel = {};
+
+  rows.forEach(r => {
+    const hName = r.hotel_name || 'الفندق الرئيسي';
+    if (!byHotel[hName]) {
+      byHotel[hName] = { grossEgp: 0, matUsd: 0, commUsd: 0, visaFeeEgp: 0 };
+    }
+    const u = num(r.income_usd) + num(r.deposit_applied);
+    const e = num(r.income_eur);
+    const lc = num(r.income_le_k) + num(r.deposit_le_cash);
+    const lv = num(r.income_le_m) + num(r.deposit_le_visa);
+    const vFee = lv * (feePct / 100);
+    byHotel[hName].visaFeeEgp += vFee;
+    byHotel[hName].grossEgp += (u * bkRateUsd) + (e * bkRateEur) + lc + lv;
+    byHotel[hName].matUsd += num(r.cost_total);
+    const orderNet = num(r.daily_total);
+    if (r.sales_person) byHotel[hName].commUsd += orderNet * 0.10;
+    if (r.photographer) byHotel[hName].commUsd += orderNet * 0.12;
+  });
+
+  let totGross = 0, totComm = 0, totMat = 0, totLaundry = 0, totTrs = 0, totFee = 0, totNet = 0;
+  const entries = Object.entries(byHotel);
+
+  const htmlRows = entries.map(([hName, st]) => {
+    const expInfo = bkHotelExpensesMap[hName] || {};
+    const laundryUsd = num(expInfo.laundry_egp) / bkRateUsd;
+    const trsUsd = num(expInfo.treasury_egp) / bkRateUsd;
+    const grossUsd = st.grossEgp / bkRateUsd;
+    const feeUsd = st.visaFeeEgp / bkRateUsd;
+    const netUsd = grossUsd - (st.commUsd + st.matUsd + laundryUsd + trsUsd + feeUsd);
+    const netEgp = netUsd * bkRateUsd;
+    const margin = grossUsd > 0 ? Math.round((netUsd / grossUsd) * 1000) / 10 : 0;
+
+    totGross += grossUsd;
+    totComm += st.commUsd;
+    totMat += st.matUsd;
+    totLaundry += laundryUsd;
+    totTrs += trsUsd;
+    totFee += feeUsd;
+    totNet += netUsd;
+
+    return `
+      <tr>
+        <td><b>🏨 ${esc(hName)}</b></td>
+        <td class="text-green"><b>$${money(grossUsd)}</b></td>
+        <td class="text-red">-$${money(st.commUsd)}</td>
+        <td class="text-red">-$${money(st.matUsd)}</td>
+        <td class="text-red">-$${money(laundryUsd)}</td>
+        <td class="text-red">-$${money(trsUsd)}</td>
+        <td class="text-red">-$${money(feeUsd)}</td>
+        <td style="font-weight:900;color:${netUsd >= 0 ? '#059669' : '#dc2626'};">$${money(netUsd)}</td>
+        <td style="font-weight:900;color:${netEgp >= 0 ? '#059669' : '#dc2626'};">${money(netEgp, 0)} LE</td>
+        <td><span class="badge ${margin >= 50 ? 'green' : 'amber'}">${margin}%</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  const totNetEgp = totNet * bkRateUsd;
+  const totMargin = totGross > 0 ? Math.round((totNet / totGross) * 1000) / 10 : 0;
+  tbody.innerHTML = htmlRows + `
+    <tr style="font-weight:900;border-top:2px solid #059669;">
+      <td>👑 إجمالي صافي ربح الأونر النهائي</td>
+      <td class="text-green">$${money(totGross)}</td>
+      <td class="text-red">-$${money(totComm)}</td>
+      <td class="text-red">-$${money(totMat)}</td>
+      <td class="text-red">-$${money(totLaundry)}</td>
+      <td class="text-red">-$${money(totTrs)}</td>
+      <td class="text-red">-$${money(totFee)}</td>
+      <td class="text-green">$${money(totNet)}</td>
+      <td class="text-green">${money(totNetEgp, 0)} LE</td>
+      <td><span class="badge green">${totMargin}%</span></td>
+    </tr>
+  `;
+  if ($('bkOwnerGrandNetBadge')) {
+    $('bkOwnerGrandNetBadge').textContent = `💎 صافي ربح الأونر النهائي: $${money(totNet)} (${money(totNetEgp, 0)} LE • ${totMargin}%)`;
+  }
+}

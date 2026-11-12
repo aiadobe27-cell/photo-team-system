@@ -22,6 +22,7 @@
     <div class="heading-actions" style="display:flex; gap:10px; align-items:center;">
         <select class="input compact" id="dsHotel" style="border-radius: 10px; width: 170px;"><option value="">الكل</option></select>
         {% if not photographer_only and not sales_only %}
+        <button class="btn green" style="border-radius: 10px; font-weight:900;" onclick="openQuickIncomeModal()">⚡➕ إضافة دخل سريع</button>
         <button class="btn amber" style="border-radius: 10px; font-weight:900;" onclick="openDailyIncomeNoteModal()">📝➕ إضافة حركة (وارد / منصرف)</button>
         {% endif %}
         <button class="btn primary" style="border-radius: 10px;" onclick="refreshDailyAll()">🔄 تحديث</button>
@@ -86,12 +87,15 @@
 
     <!-- الجانب الأيسر (الفورم) -->
     <section class="panel">
-        <div class="panel-head" style="flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div class="panel-head" style="flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div>
                 <h2 id="saleFormTitle">📝 تفاصيل الأوردر وتسجيل الدخل</h2>
-                <p id="selectedOrderInfo" style="margin:4px 0 0;">اختر أوردر من القائمة الجانبية للبدء أو لتعديل دخل مسجل</p>
+                <p id="selectedOrderInfo" style="margin:4px 0 0;">اختر أوردر من القائمة الجانبية أو سجل دخل سريع مباشرة باختيار السيلز والمصور والمبلغ</p>
             </div>
-            <span id="saleModeBadge" class="badge blue" hidden>وضع التعديل ✏️</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn green" style="min-height:34px;padding:6px 12px;font-size:12.5px;font-weight:900;" onclick="openQuickIncomeModal()">⚡➕ نافذة إضافة دخل سريع</button>
+                <span id="saleModeBadge" class="badge blue" hidden>وضع التعديل ✏️</span>
+            </div>
         </div>
 
         <!-- شريط تنبيه وضع التعديل + سبب التعديل وسجل التعديلات -->
@@ -118,13 +122,17 @@
             <input type="hidden" id="saleHotelId">
             <input type="hidden" id="saleIncomeDate">
 
-            <div class="form-grid three">
-                <div class="field"><label>سيلز التنفيذ</label><select class="input" id="saleSales"></select></div>
+            <div class="form-grid four" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                <div class="field"><label>اختر اسم السيلز *</label><select class="input" id="saleSales"><option value="">-- اختر اسم السيلز --</option></select></div>
                 <div class="field">
-                    <label>المصورين المشاركين</label>
-                    <input class="input" id="salePhotog" list="photoNamesList" placeholder="مثال: Ahmed, Ali">
+                    <label>اختر اسم المصور *</label>
+                    <div style="display:flex;gap:6px;">
+                        <select class="input" id="salePhotogSelect" onchange="onSalePhotogSelectChange(this.value)" style="flex:1;"><option value="">-- اختر اسم المصور --</option></select>
+                        <input class="input" id="salePhotog" list="photoNamesList" placeholder="المصور المختار..." style="flex:1;">
+                    </div>
                     <datalist id="photoNamesList"></datalist>
                 </div>
+                <div class="field"><label>رقم الغرفة / البيان (اختياري)</label><input class="input" id="saleQuickRoomInput" placeholder="رقم الغرفة أو دخل سريع" oninput="$('saleRoomNumber').value=this.value.trim()"></div>
                 <div class="field"><label>إجمالي العربون المسدد ($)</label><input class="input sale-calc" id="saleDeposit" type="number" step=".01" value="0"></div>
             </div>
             <hr class="sep" style="border-color: var(--border); margin: 15px 0;">
@@ -180,6 +188,7 @@
     <section class="panel">
         <div class="action-grid">
             {% if not photographer_only and not sales_only %}
+            <button class="btn green" style="font-weight:900;" onclick="openQuickIncomeModal()">⚡➕ إضافة دخل سريع</button>
             <button class="btn primary" onclick="location.href='/api/backup/sql'">نسخ احتياطي</button>
             <button class="btn purple" onclick="openIncomeAdjustments()">📜 سجل تعديلات الدخل</button>
             <button class="btn" onclick="openAudit()">Audit</button>
