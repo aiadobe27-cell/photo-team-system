@@ -175,6 +175,7 @@ def _ensure_core_tables(cursor):
             photographer VARCHAR(255),
             photographer_id INT DEFAULT NULL,
             status VARCHAR(50) DEFAULT 'انتظار',
+            visa_receipt_image LONGTEXT DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_bookings_date (booking_date),
             INDEX idx_bookings_room (room_number),
@@ -194,6 +195,7 @@ def _ensure_core_tables(cursor):
             deposit_le_visa DECIMAL(12,2) DEFAULT 0.00,
             deposit_le_cash DECIMAL(12,2) DEFAULT 0.00,
             deposit_date DATE NOT NULL,
+            visa_receipt_image LONGTEXT DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_deposits_room (room_number),
             INDEX idx_deposits_date (deposit_date)
@@ -224,6 +226,7 @@ def _ensure_core_tables(cursor):
             cost_album DECIMAL(12,2) DEFAULT 0.00,
             cost_total DECIMAL(12,2) DEFAULT 0.00,
             income_date DATE DEFAULT NULL,
+            visa_receipt_image LONGTEXT DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_income_date (income_date),
             INDEX idx_income_hotel (hotel_id)
@@ -325,6 +328,25 @@ def _ensure_core_tables(cursor):
 def _ensure_support_tables(cursor):
     """جداول الشاشات المالية والعمولات والأصول والمغسلة والتقارير."""
     statements = [
+        """
+        CREATE TABLE IF NOT EXISTS visa_receipts_archive (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            record_type VARCHAR(30) NOT NULL DEFAULT 'booking',
+            record_id INT DEFAULT NULL,
+            booking_id INT DEFAULT NULL,
+            hotel_name VARCHAR(150) DEFAULT '',
+            room_number VARCHAR(50) DEFAULT '',
+            amount_visa DECIMAL(12,2) DEFAULT 0.00,
+            sales_person VARCHAR(100) DEFAULT '',
+            photographer VARCHAR(255) DEFAULT '',
+            receipt_image LONGTEXT NOT NULL,
+            file_path VARCHAR(255) DEFAULT '',
+            uploaded_by VARCHAR(100) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_vra_booking (booking_id),
+            INDEX idx_vra_room (room_number)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        """,
         """
         CREATE TABLE IF NOT EXISTS daily_account_locks (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -723,6 +745,7 @@ def _migrate_existing_schema(cursor):
         "remaining": "DECIMAL(12,2) DEFAULT 0.00",
         "status": "VARCHAR(50) DEFAULT 'انتظار'",
         "photographer_id": "INT DEFAULT NULL",
+        "visa_receipt_image": "LONGTEXT DEFAULT NULL",
         "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
     }
     for name, definition in booking_columns.items():
@@ -761,10 +784,12 @@ def _migrate_existing_schema(cursor):
         "deposit_le_cash": "DECIMAL(12,2) DEFAULT 0.00",
         "order_exchange_rate": "DECIMAL(12,4) DEFAULT 0.00",
         "bank_visa_settled": "TINYINT(1) DEFAULT 0",
+        "visa_receipt_image": "LONGTEXT DEFAULT NULL",
         "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
     }
     for name, definition in daily_columns.items():
         _ensure_column(cursor, "daily_income", name, definition)
+    _ensure_column(cursor, "deposits", "visa_receipt_image", "LONGTEXT DEFAULT NULL")
 
     # بقية الأعمدة التي تضيفها الشاشات عند الحاجة.
     team_columns = {

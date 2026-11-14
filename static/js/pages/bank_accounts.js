@@ -175,7 +175,7 @@ function renderBankAccountsData() {
           <td class="text-blue"><b>${money(netV, 1)} LE</b></td>
           <td class="text-green"><b>$${money(r.daily_total)}</b></td>
           <td>${lv <= 0 ? '<span class="badge">كاش</span>' : settled ? '<span class="badge green">✅ نزل بالبنك</span>' : '<span class="badge amber">⏳ معلق بالبنك</span>'}</td>
-          <td>${lv > 0 ? `<button class="mini-btn ${settled ? 'amber' : 'green'}" onclick="toggleBankRowVisa(${r.id})">${settled ? '↩️ تعليق' : '✅ تأكيد نزول'}</button>` : '-'}</td>
+          <td><div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">${r.visa_receipt_image ? `<button type="button" class="mini-btn blue" onclick="openVisaReceiptFromBankRow(${r.id})">🧾 الإيصال</button>` : ""}${lv > 0 ? `<button class="mini-btn ${settled ? 'amber' : 'green'}" onclick="toggleBankRowVisa(${r.id})">${settled ? '↩️ تعليق' : '✅ تأكيد نزول'}</button>` : '-'}</div></td>
         </tr>
       `;
     }).join('') || '<tr><td colspan="13" class="empty-state">لا توجد حركات مطابقة</td></tr>';
@@ -372,3 +372,9 @@ function renderOwnerNetProfitFlask() {
     $('bkOwnerGrandNetBadge').textContent = `💎 صافي ربح الأونر النهائي: $${money(totNet)} (${money(totNetEgp, 0)} LE • ${totMargin}%)`;
   }
 }
+
+function openVisaReceiptFromBankRow(rowId) {
+  const r = bkRawRows.find(x => Number(x.id) === Number(rowId));
+  window.openVisaReceiptViewerModal(r?.visa_receipt_image || '', `إيصال فيزا البنك • غرفة ${r?.room_number || rowId}`);
+}
+window.openVisaReceiptFromBankRow = openVisaReceiptFromBankRow;

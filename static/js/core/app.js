@@ -2038,6 +2038,17 @@ async function openQuickIncomeModal(prefill = {}) {
             <input class="input" type="number" step="0.01" id="qiModalOffice" value="${num(prefill.office || 0)}" oninput="calcQuickIncomeModalPreview()">
           </div>
         </div>
+        <div id="qiModalVisaReceiptWrap" style="margin-top:10px;padding:10px 12px;border-radius:10px;border:1.5px dashed #f59e0b;background:rgba(245,158,11,0.06);">
+          <input type="hidden" id="qiModalVisaReceiptImg" value="${esc(prefill.visa_receipt_image || '')}">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <label style="font-weight:900;font-size:12.5px;color:#b45309;margin:0;">📸 صورة إيصال الفيزا (إجباري عند وجود مبلغ فيزا / مكتب) *</label>
+            <label class="btn amber" style="cursor:pointer;min-height:32px;padding:4px 12px;font-size:12px;margin:0;">
+              📤 اختر أو صوّر إيصال الفيزا
+              <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.compressAndReadVisaReceiptImage(this, 'qiModalVisaReceiptImg', 'qiModalVisaReceiptPreview')">
+            </label>
+          </div>
+          <div id="qiModalVisaReceiptPreview" style="margin-top:4px;"></div>
+        </div>
         <div class="form-grid two" style="margin-top:10px;">
           <div class="field">
             <label>عربون مسدد مسبقاً ($) (اختياري)</label>
@@ -2096,6 +2107,8 @@ async function openQuickIncomeModal(prefill = {}) {
     if (!sales) return toast('⚠️ يرجى اختيار اسم السيلز أولاً', 'bad');
     if (!photog1) return toast('⚠️ يرجى اختيار اسم المصور أولاً', 'bad');
 
+    const visaReceiptImg = (document.getElementById('qiModalVisaReceiptImg')?.value || '').trim();
+    if (office > 0 && !visaReceiptImg) return toast('⚠️ إجباري: يرجى رفع صورة إيصال الفيزا أولاً لأن العملية تحتوي على دفع فيزا!', 'bad');
     const gross = dep + usd + eur + ((cash + office) / rate);
     if (gross <= 0) return toast('⚠️ يرجى إدخال المبلغ بأحد أنواعه (دولار، يورو، كاش مصري، أو مكتب)', 'bad');
 
@@ -2118,7 +2131,8 @@ async function openQuickIncomeModal(prefill = {}) {
         le_to_usd: rate,
         cost_dress: costDress,
         cost_usb: costUsb,
-        cost_album: costAlbum
+        cost_album: costAlbum,
+        visa_receipt_image: visaReceiptImg
       });
       closeModal();
       toast(`✅ تم حفظ الدخل السريع في الدخل اليومي بنجاح! (السيلز: ${sales} • المصور: ${photogStr} • الصافي: $${money(res.daily_total)})`);
@@ -2148,5 +2162,107 @@ function calcQuickIncomeModalPreview() {
   if (document.getElementById('qiModalLeEquiv')) document.getElementById('qiModalLeEquiv').textContent = money(leEq) + ' $';
   if (document.getElementById('qiModalGross')) document.getElementById('qiModalGross').textContent = money(gross) + ' $';
   if (document.getElementById('qiModalNet')) document.getElementById('qiModalNet').textContent = money(net) + ' $';
+  const wrap = document.getElementById('qiModalVisaReceiptWrap');
+  if (wrap) { wrap.style.borderColor = office > 0 ? '#dc2626' : '#cbd5e1'; wrap.style.background = office > 0 ? 'rgba(239,68,68,0.06)' : 'rgba(148,163,184,0.05)'; }
 }
 window.calcQuickIncomeModalPreview = calcQuickIncomeModalPreview;
+
+
+// ============================================================================
+// 🧾 نظام رفع وضغط ومعاينة وطباعة صور إيصالات الفيزا (إجباري مع كل عملية فيزا)
+// ============================================================================
+window.renderVisaReceiptPreviewBox = function(previewContainerId, dataUri, hiddenInputId) {
+  const box = document.getElementById(previewContainerId);
+  if (!box) return;
+  const cleanUri = String(dataUri || '').trim();
+  if (!cleanUri) {
+    box.innerHTML = `<span style="color:#dc2626;font-size:11.5px;font-weight:800;">⚠️ لم يتم إرفاق صورة إيصال الفيزا بعد (إجباري عند وجود مبلغ فيزا)</span>`;
+    return;
+  }
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;padding:6px 10px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.35);border-radius:10px;">
+      <img src="${cleanUri}" alt="Visa Receipt" style="width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid #10b981;cursor:pointer;" onclick="window.openVisaReceiptViewerModal(document.getElementById('${hiddenInputId}')?.value || '${cleanUri}', 'معاينة صورة إيصال الفيزا المرفق')">
+      <div style="flex:1;min-width:140px;">
+        <div style="color:#059669;font-weight:900;font-size:12px;">✅ تم إرفاق صورة إيصال الفيزا وحفظها مع الأوردر</div>
+        <small style="color:var(--text-muted);font-size:11px;">اضغط على الصورة لتكبيرها أو طباعتها</small>
+      </div>
+      <button type="button" class="mini-btn blue" onclick="window.openVisaReceiptViewerModal(document.getElementById('${hiddenInputId}')?.value || '', 'معاينة إيصال الفيزا')">🔍 معاينة</button>
+      <button type="button" class="mini-btn red" onclick="if(document.getElementById('${hiddenInputId}'))document.getElementById('${hiddenInputId}').value='';window.renderVisaReceiptPreviewBox('${previewContainerId}','', '${hiddenInputId}')">🗑️ مسح</button>
+    </div>
+  `;
+};
+
+window.compressAndReadVisaReceiptImage = function(fileInput, hiddenInputId, previewContainerId) {
+  const file = fileInput?.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const rawDataUrl = ev.target?.result;
+    if (!rawDataUrl) return;
+    const img = new Image();
+    img.onload = function() {
+      try {
+        const maxDim = 1100;
+        let w = img.width || 800;
+        let h = img.height || 1000;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+          else { w = Math.round((w * maxDim) / h); h = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressedUri = canvas.toDataURL('image/jpeg', 0.78);
+        const hiddenEl = document.getElementById(hiddenInputId);
+        if (hiddenEl) hiddenEl.value = compressedUri;
+        window.renderVisaReceiptPreviewBox(previewContainerId, compressedUri, hiddenInputId);
+        if (typeof toast === 'function') toast('✅ تم إرفاق وضغط صورة إيصال الفيزا بنجاح');
+      } catch (err) {
+        const hiddenEl = document.getElementById(hiddenInputId);
+        if (hiddenEl) hiddenEl.value = rawDataUrl;
+        window.renderVisaReceiptPreviewBox(previewContainerId, rawDataUrl, hiddenInputId);
+      }
+    };
+    img.onerror = function() {
+      const hiddenEl = document.getElementById(hiddenInputId);
+      if (hiddenEl) hiddenEl.value = rawDataUrl;
+      window.renderVisaReceiptPreviewBox(previewContainerId, rawDataUrl, hiddenInputId);
+    };
+    img.src = rawDataUrl;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.openVisaReceiptViewerModal = function(imgSrc, titleText) {
+  const cleanSrc = String(imgSrc || '').trim();
+  if (!cleanSrc) {
+    if (typeof toast === 'function') toast('لا توجد صورة إيصال فيزا مرفقة لهذا السجل', 'bad');
+    return;
+  }
+  const safeTitle = esc(titleText || 'صورة إيصال الفيزا المحفوظة');
+  showModal(`
+    <div class="modal-title" style="flex-direction:row !important;justify-content:space-between !important;align-items:center !important;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2>🧾 ${safeTitle}</h2>
+        <p>صورة إيصال ماكينة الفيزا (POS) المحفوظة بشكل دائم في قاعدة البيانات مع الأوردر</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a href="${cleanSrc}" download="visa_receipt_${Date.now()}.jpg" class="btn green" style="text-decoration:none;">📥 تحميل الصورة</a>
+        <button type="button" class="btn purple" onclick="window.printVisaReceiptImage('${cleanSrc.replace(/'/g, "\'")}', '${safeTitle.replace(/'/g, "\'")}')">🖨️ طباعة الإيصال</button>
+        <button type="button" class="btn" onclick="closeModal()">إغلاق</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;align-items:center;padding:16px;background:var(--bg-surface-2);border-radius:14px;border:1px solid var(--border);max-height:72vh;overflow:auto;">
+      <img src="${cleanSrc}" alt="Visa Receipt" style="max-width:100%;max-height:66vh;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);object-fit:contain;">
+    </div>
+  `, 'modal-lg');
+};
+
+window.printVisaReceiptImage = function(imgSrc, titleText) {
+  const w = window.open('', '_blank', 'width=700,height=850');
+  if (!w) return;
+  w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${titleText || 'إيصال الفيزا'}</title><style>body{font-family:Cairo,sans-serif;text-align:center;padding:16px;margin:0}h2{margin:0 0 12px;color:#0f172a}img{max-width:95%;max-height:85vh;border:1px solid #cbd5e1;border-radius:8px}</style></head><body><h2>${titleText || 'إيصال دفع فيزا (POS)'}</h2><img src="${imgSrc}" onload="setTimeout(()=>{window.print()},250)"></body></html>`);
+  w.document.close();
+};

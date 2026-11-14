@@ -174,7 +174,7 @@ function photographerBadge(name){
 // function renderBookings
 // =========================
 
-function renderBookings(){let p=0,c=0,x=0;bookings.forEach(b=>{const s=String(b.status||'').toLowerCase();if(s.includes('كنسل')||s.includes('cancel')||s.includes('ملغ'))x++;else if(s.includes('مؤكد')||s.includes('deliver'))c++;else p++});$('rTotal').textContent=bookings.length;$('rPending').textContent=p;$('rConfirmed').textContent=c;$('rCancelled').textContent=x;const photos=(team.photographers||[]).length||9;const active=bookings.filter(b=>!String(b.status||'').toLowerCase().match(/كنسل|cancel|deliver/)).length;$('rPhotogAvail').textContent=`${Math.max(0,photos-active)} من ${photos}`;const dressQty=(assetData.dresses||[]).reduce((a,x)=>a+num(x.quantity),0);$('rDressAvail').textContent=Math.max(0,dressQty-active);$('rBody').innerHTML=bookings.map((b,i)=>`<tr class="select-row ${selectedBookingId===b.id?'selected':''}" data-booking-id="${b.id}" onclick="selectBooking(${b.id},this)"><td>${i+1}</td><td>${statusBadge(b.status)}</td><td>${esc(b.hotel)}</td><td>${esc(b.booking_date)}</td><td><b>${esc(b.room_number)}</b></td><td>${esc(b.phone_number||'')}</td><td>${esc(b.booking_time||'')}</td><td>${esc(b.nationality||'')}</td><td title="${esc(b.session_details||'')}">${esc(String(b.session_details||'').slice(0,25))}</td><td>${esc(dressSummary(b))}</td><td>${money(b.deposit_usd)}</td><td>${money(b.deposit_eur)}</td><td>${money(b.deposit_le_cash)}</td><td>${money(b.deposit_le_visa)}</td><td>${money(b.total_agreement)}</td><td>${money(b.remaining)}</td><td>${esc(b.sales_person||'')}</td><td>${photographerBadge(b.photographer)}</td><td><div class="context-actions">${window.PHOTOGRAPHER_ONLY?`<button class="mini-btn blue" title="التفاصيل" onclick="event.stopPropagation();viewDetails(${b.id})">◉ التفاصيل</button>`:`${window.SALES_ONLY?'':`<button class="mini-btn green" title="Checkout وتسليم" onclick="event.stopPropagation();openCheckout(${b.id})">⚡</button>`}<button class="mini-btn purple" title="طباعة إيصال حجز حراري POS" onclick="event.stopPropagation();printBookingPosById(${b.id})">🖨️</button><button class="mini-btn blue" title="التفاصيل" onclick="event.stopPropagation();viewDetails(${b.id})">◉</button><button class="mini-btn amber" title="تعديل" onclick="event.stopPropagation();editBooking(${b.id})">✎</button><button class="mini-btn purple" title="كل الإجراءات" onclick="event.stopPropagation();openRowMenu(event,${b.id})">⋮</button>`}</div></td></tr>`).join('')||'<tr><td colspan="19" class="empty-state">لا توجد حجوزات</td></tr>'}
+function renderBookings(){let p=0,c=0,x=0;bookings.forEach(b=>{const s=String(b.status||'').toLowerCase();if(s.includes('كنسل')||s.includes('cancel')||s.includes('ملغ'))x++;else if(s.includes('مؤكد')||s.includes('deliver'))c++;else p++});$('rTotal').textContent=bookings.length;$('rPending').textContent=p;$('rConfirmed').textContent=c;$('rCancelled').textContent=x;const photos=(team.photographers||[]).length||9;const active=bookings.filter(b=>!String(b.status||'').toLowerCase().match(/كنسل|cancel|deliver/)).length;$('rPhotogAvail').textContent=`${Math.max(0,photos-active)} من ${photos}`;const dressQty=(assetData.dresses||[]).reduce((a,x)=>a+num(x.quantity),0);$('rDressAvail').textContent=Math.max(0,dressQty-active);$('rBody').innerHTML=bookings.map((b,i)=>`<tr class="select-row ${selectedBookingId===b.id?'selected':''}" data-booking-id="${b.id}" onclick="selectBooking(${b.id},this)"><td>${i+1}</td><td>${statusBadge(b.status)}</td><td>${esc(b.hotel)}</td><td>${esc(b.booking_date)}</td><td><b>${esc(b.room_number)}</b></td><td>${esc(b.phone_number||'')}</td><td>${esc(b.booking_time||'')}</td><td>${esc(b.nationality||'')}</td><td title="${esc(b.session_details||'')}">${esc(String(b.session_details||'').slice(0,25))}</td><td>${esc(dressSummary(b))}</td><td>${money(b.deposit_usd)}</td><td>${money(b.deposit_eur)}</td><td>${money(b.deposit_le_cash)}</td><td>${money(b.deposit_le_visa)}${b.visa_receipt_image?` <button type="button" class="mini-btn green" style="padding:1px 6px;font-size:10.5px;" title="عرض صورة إيصال الفيزا" onclick="event.stopPropagation();openVisaReceiptByBookingId(${b.id})">🧾 إيصال</button>`:""}</td><td>${money(b.total_agreement)}</td><td>${money(b.remaining)}</td><td>${esc(b.sales_person||'')}</td><td>${photographerBadge(b.photographer)}</td><td><div class="context-actions">${window.PHOTOGRAPHER_ONLY?`<button class="mini-btn blue" title="التفاصيل" onclick="event.stopPropagation();viewDetails(${b.id})">◉ التفاصيل</button>`:`${window.SALES_ONLY?'':`<button class="mini-btn green" title="Checkout وتسليم" onclick="event.stopPropagation();openCheckout(${b.id})">⚡</button>`}<button class="mini-btn purple" title="طباعة إيصال حجز حراري POS" onclick="event.stopPropagation();printBookingPosById(${b.id})">🖨️</button><button class="mini-btn blue" title="التفاصيل" onclick="event.stopPropagation();viewDetails(${b.id})">◉</button><button class="mini-btn amber" title="تعديل" onclick="event.stopPropagation();editBooking(${b.id})">✎</button><button class="mini-btn purple" title="كل الإجراءات" onclick="event.stopPropagation();openRowMenu(event,${b.id})">⋮</button>`}</div></td></tr>`).join('')||'<tr><td colspan="19" class="empty-state">لا توجد حجوزات</td></tr>'}
 
 
 // =========================
@@ -259,6 +259,17 @@ function bookingFormHTML(b={},duplicate=false){
           <div class="pt-bk-field"><label>كاش مصري (LE)</label><div class="pt-bk-input-row"><span class="pt-bk-icon">💵</span><input class="input calc" type="number" step=".01" id="bfCash" value="${num(duplicate?0:b.deposit_le_cash)}"></div></div>
         </div>
       </div>
+      <div id="bfVisaReceiptBox" style="margin-top:8px;padding:10px 12px;border-radius:10px;border:1.5px dashed #f59e0b;background:rgba(245,158,11,0.06);">
+        <input type="hidden" id="bfVisaReceiptImg" value="${esc(duplicate?'':(b.visa_receipt_image||''))}">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <label style="font-weight:900;font-size:12px;color:#b45309;margin:0;">📸 صورة إيصال الفيزا (إجباري عند وجود عربون فيزا) *</label>
+          <label class="btn amber" style="cursor:pointer;min-height:30px;padding:4px 12px;font-size:12px;margin:0;">
+            📤 رفع / تصوير إيصال الفيزا
+            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.compressAndReadVisaReceiptImage(this, 'bfVisaReceiptImg', 'bfVisaReceiptPreview')">
+          </label>
+        </div>
+        <div id="bfVisaReceiptPreview" style="margin-top:4px;"></div>
+      </div>
       <div class="pt-bk-rate-bar">
         <span>💱 سعر الصرف (الريت):</span>
         <div style="display:flex;align-items:center;gap:6px;">
@@ -292,10 +303,10 @@ function bookingFormHTML(b={},duplicate=false){
 async function openBookingForm(){if(window.PHOTOGRAPHER_ONLY)return toast('حساب المصور مخصص لعرض الأوردرات فقط ولا يمكنه إضافة حجز أو عربون','bad');const host=showModal(bookingFormHTML({}),'modal-xxl');bindBookingForm({})}
 async function editBooking(id){if(window.PHOTOGRAPHER_ONLY)return toast('حساب المصور للعرض فقط','bad');const b=await api('/api/bookings/'+id);const host=showModal(bookingFormHTML(b,false),'modal-xxl');bindBookingForm(b)}function editSelected(){const b=needSelected();if(b)editBooking(b.id)}
 async function duplicateBooking(id){const b=await api('/api/bookings/'+id);showModal(bookingFormHTML(b,true),'modal-xxl');bindBookingForm(b,true)}
-function bindBookingForm(b,duplicate=false){const mySalesName=window.CURRENT_USER?.nickname||window.CURRENT_USER?.username||'';const myHotelName=window.USER_HOTEL_NAME||window.CURRENT_USER?.hotel_name||'';$('bfHotel').value=b.hotel||myHotelName||hotels[0]?.hotel_name||'';$('bfNat').value=b.nationality||'مصري';$('bfStatus').value=duplicate?'انتظار':(b.status||'انتظار');$('bfSales').value=b.sales_person||mySalesName||team.sales?.[0]?.nickname||'';$('bfPhotog').value=duplicate?'':(b.photographer||'');renderClothing();const toggle=()=>{$('reschedBox').hidden=!['تقديم ميعاد','تأخير ميعاد'].includes($('bfStatus').value)};$('bfStatus').addEventListener('change',toggle);toggle();$$('.calc').forEach(x=>x.addEventListener('input',calcBooking));calcBooking();$('bookingForm').addEventListener('submit',saveBooking)}
+function bindBookingForm(b,duplicate=false){const mySalesName=window.CURRENT_USER?.nickname||window.CURRENT_USER?.username||'';const myHotelName=window.USER_HOTEL_NAME||window.CURRENT_USER?.hotel_name||'';$('bfHotel').value=b.hotel||myHotelName||hotels[0]?.hotel_name||'';$('bfNat').value=b.nationality||'مصري';$('bfStatus').value=duplicate?'انتظار':(b.status||'انتظار');$('bfSales').value=b.sales_person||mySalesName||team.sales?.[0]?.nickname||'';$('bfPhotog').value=duplicate?'':(b.photographer||'');renderClothing();const toggle=()=>{$('reschedBox').hidden=!['تقديم ميعاد','تأخير ميعاد'].includes($('bfStatus').value)};$('bfStatus').addEventListener('change',toggle);toggle();if(window.renderVisaReceiptPreviewBox)window.renderVisaReceiptPreviewBox('bfVisaReceiptPreview', duplicate?'':(b.visa_receipt_image||''), 'bfVisaReceiptImg');$$('.calc').forEach(x=>x.addEventListener('input',calcBooking));calcBooking();$('bookingForm').addEventListener('submit',saveBooking)}
 function addClothing(){clothingItems.push({type:$('clType').value,color:$('clColor').value,size:$('clSize').value,qty:String(Math.max(1,num($('clQty').value)))});renderClothing()}function removeClothing(i){clothingItems.splice(i,1);renderClothing()}function renderClothing(){if(!$('clothingList'))return;$('clothingList').innerHTML=clothingItems.map((x,i)=>`<div class="pt-bk-dress-card"><button type="button" class="pt-bk-dc-remove" onclick="removeClothing(${i})" title="حذف">×</button><div style="font-size:18px;text-align:center;">${String(x.type||'').includes('جلاب')?'👘':'👗'}</div><div style="font-size:11.5px;font-weight:900;text-align:center;">${esc(x.type)} • ${esc(x.color)}</div><div style="font-size:10.5px;color:var(--text-muted);text-align:center;">${esc(x.size)} × <b>${esc(x.qty)}</b></div></div>`).join('')||'<div style="display:flex;align-items:center;padding:0 12px;color:var(--text-muted);font-size:12px;font-weight:700;">لا توجد قطع مضافة بعد</div>'}
-function calcBooking(){const total=num($('bfTotal').value),usd=num($('bfUsd').value),eur=num($('bfEur').value),cash=num($('bfCash').value),visa=num($('bfVisa').value),rate=num($('bfRate').value)||50;const paid=usd+eur+((cash+visa)/rate),rem=total-paid;$('bfTotalView').textContent=money(total)+' $';$('bfPaidView').textContent=money(paid)+' $';$('bfRemView').textContent=money(rem)+' $';$('bfRemView').className=rem<=0?'text-green':'text-red';if($('bfRemBoxEgp')){$('bfRemBoxEgp').textContent=`${money(rem)} $ (${money(rem*rate,0)} LE)`;$('bfRemBoxEgp').style.color=rem<=0?'#059669':'#dc2626';}if($('bfPaidBreakdown')){const p=[];if(usd>0)p.push('USD: $'+money(usd));if(eur>0)p.push('EUR: €'+money(eur));if(cash+visa>0)p.push('EGP: '+money(cash+visa,0));$('bfPaidBreakdown').textContent=p.join(' • ');}}
-async function saveBooking(e){e.preventDefault();const id=$('bfId').value;const rate=num($('bfRate').value)||50;const total=num($('bfTotal').value),paid=num($('bfUsd').value)+num($('bfEur').value)+(num($('bfCash').value)+num($('bfVisa').value))/rate;const body={hotel:$('bfHotel').value,booking_date:$('bfDate').value,nationality:$('bfNat').value,room_number:$('bfRoom').value.trim(),phone_number:$('bfPhone').value.trim(),booking_time:$('bfTime').value,session_details:$('bfSession').value,clothing:clothingItems,deposit_usd:num($('bfUsd').value),deposit_eur:num($('bfEur').value),deposit_le_cash:num($('bfCash').value),deposit_le_visa:num($('bfVisa').value),total_agreement:total,remaining:total-paid,sales_person:$('bfSales').value,photographer:$('bfPhotog').value,status:$('bfStatus').value,rate,refund_deposit:false};if(['تقديم ميعاد','تأخير ميعاد'].includes(body.status))body.reschedule_date=$('bfReschedule').value;if(body.status==='كنسل'&&confirmAction('هل يوجد مرتجع عربون؟'))body.refund_deposit=true;try{const saved=await apiJSON(id?'/api/bookings/'+id:'/api/bookings',id?'PUT':'POST',body);toast(saved?.deposit_pending?'✅ تم حفظ الحجز وإرسال إشعار للمدير — العربون معلق في إشعارات المدير لحين استلام الفلوس وتأكيده لترحيله للدخل':'✅ تم حفظ الحجز وإرسال إشعار للمدير بنجاح','good');const shouldPrint=window._PRINT_AFTER_SAVE;window._PRINT_AFTER_SAVE=false;closeModal();await loadBookings();if(shouldPrint){openThermalBookingReceiptModal(Object.assign({id:saved?.id||id,clothing_items:clothingItems},body));}}catch(err){if(String(err.message).includes('مسجلة بالفعل')&&confirmAction('الغرفة مسجلة بالفعل في نفس التاريخ. هل تريد حفظ الحجز المزدوج؟')){body.allow_duplicate=true;await apiJSON('/api/bookings','POST',body);closeModal();loadBookings()}else toast(err.message,'bad')}}
+function calcBooking(){const total=num($('bfTotal').value),usd=num($('bfUsd').value),eur=num($('bfEur').value),cash=num($('bfCash').value),visa=num($('bfVisa').value),rate=num($('bfRate').value)||50;const paid=usd+eur+((cash+visa)/rate),rem=total-paid;$('bfTotalView').textContent=money(total)+' $';$('bfPaidView').textContent=money(paid)+' $';$('bfRemView').textContent=money(rem)+' $';$('bfRemView').className=rem<=0?'text-green':'text-red';if($('bfRemBoxEgp')){$('bfRemBoxEgp').textContent=`${money(rem)} $ (${money(rem*rate,0)} LE)`;$('bfRemBoxEgp').style.color=rem<=0?'#059669':'#dc2626';}if($('bfVisaReceiptBox')){$('bfVisaReceiptBox').style.borderColor=visa>0?'#dc2626':'#cbd5e1';$('bfVisaReceiptBox').style.background=visa>0?'rgba(239,68,68,0.06)':'rgba(148,163,184,0.05)';}if($('bfPaidBreakdown')){const p=[];if(usd>0)p.push('USD: $'+money(usd));if(eur>0)p.push('EUR: €'+money(eur));if(cash+visa>0)p.push('EGP: '+money(cash+visa,0));$('bfPaidBreakdown').textContent=p.join(' • ');}}
+async function saveBooking(e){e.preventDefault();const id=$('bfId').value;const rate=num($('bfRate').value)||50;const total=num($('bfTotal').value),paid=num($('bfUsd').value)+num($('bfEur').value)+(num($('bfCash').value)+num($('bfVisa').value))/rate;const visaVal=num($('bfVisa').value);const visaImg=($('bfVisaReceiptImg')?.value||'').trim();if(visaVal>0&&!visaImg){toast('⚠️ إجباري: يرجى رفع صورة إيصال الفيزا أولاً لحفظ الأوردر طالما يوجد دفع فيزا!','bad');return;}const body={hotel:$('bfHotel').value,booking_date:$('bfDate').value,nationality:$('bfNat').value,room_number:$('bfRoom').value.trim(),phone_number:$('bfPhone').value.trim(),booking_time:$('bfTime').value,session_details:$('bfSession').value,clothing:clothingItems,deposit_usd:num($('bfUsd').value),deposit_eur:num($('bfEur').value),deposit_le_cash:num($('bfCash').value),deposit_le_visa:visaVal,visa_receipt_image:visaImg,total_agreement:total,remaining:total-paid,sales_person:$('bfSales').value,photographer:$('bfPhotog').value,status:$('bfStatus').value,rate,refund_deposit:false};if(['تقديم ميعاد','تأخير ميعاد'].includes(body.status))body.reschedule_date=$('bfReschedule').value;if(body.status==='كنسل'&&confirmAction('هل يوجد مرتجع عربون؟'))body.refund_deposit=true;try{const saved=await apiJSON(id?'/api/bookings/'+id:'/api/bookings',id?'PUT':'POST',body);toast(saved?.deposit_pending?'✅ تم حفظ الحجز وإرسال إشعار للمدير — العربون معلق في إشعارات المدير لحين استلام الفلوس وتأكيده لترحيله للدخل':'✅ تم حفظ الحجز وإرسال إشعار للمدير بنجاح','good');const shouldPrint=window._PRINT_AFTER_SAVE;window._PRINT_AFTER_SAVE=false;closeModal();await loadBookings();if(shouldPrint){openThermalBookingReceiptModal(Object.assign({id:saved?.id||id,clothing_items:clothingItems},body));}}catch(err){if(String(err.message).includes('مسجلة بالفعل')&&confirmAction('الغرفة مسجلة بالفعل في نفس التاريخ. هل تريد حفظ الحجز المزدوج؟')){body.allow_duplicate=true;await apiJSON('/api/bookings','POST',body);closeModal();loadBookings()}else toast(err.message,'bad')}}
 async function deleteBooking(id){if(!confirmAction('هل أنت متأكد من حذف هذا الحجز نهائياً؟'))return;try{await api('/api/bookings/'+id,{method:'DELETE'});toast('تم حذف الحجز');closeModal();selectedBookingId=null;loadBookings()}catch(e){toast(e.message,'bad')}}function deleteSelected(){const b=needSelected();if(b)deleteBooking(b.id)}
 async function viewDetails(id) {
     const b = await api('/api/bookings/' + id);
@@ -333,6 +344,7 @@ async function viewDetails(id) {
                     <div class="detail-row"><small>عربون يورو</small><b>${money(b.deposit_eur)} €</b></div>
                     <div class="detail-row"><small>كاش مصري</small><b>${money(b.deposit_le_cash)} LE</b></div>
                     <div class="detail-row"><small>فيزا مصري</small><b>${money(b.deposit_le_visa)} LE</b></div>
+                    <div class="detail-row full-width"><small>🧾 إيصال الفيزا</small><b>${(b.visa_receipt_image || b.pending_deposit?.visa_receipt_image) ? `<button type="button" class="btn green" style="min-height:30px;padding:4px 12px;font-size:12px;" onclick="window.openVisaReceiptViewerModal('${(b.visa_receipt_image || b.pending_deposit?.visa_receipt_image || '').replace(/'/g, "\'")}', 'إيصال فيزا أوردر غرفة ${esc(b.room_number)}')">🔍 عرض وطباعة صورة إيصال الفيزا</button>` : '<span style="color:var(--text-muted);">لا يوجد إيصال مرفق</span>'}</b></div>
                     <div class="detail-row ${b.remaining <= 0 ? 'highlight-green' : 'highlight-red'}"><small>المتبقي للتحصيل</small><b class="big-val">${money(b.remaining)} $</b></div>
                     <div class="detail-row"><small>اعتماد العربون</small><b>${b.pending_deposit ? (b.pending_deposit.status === 'Pending' ? '⏳ معلق' : '✅ معتمد') : 'لا يوجد'}</b></div>
                 </div>
@@ -407,6 +419,17 @@ async function openCheckout(id) {
                         <input class="input coCalc" id="coRate" type="number" step=".01" value="50" style="height: 40px;">
                     </div>
                 </div>
+                <div id="coVisaReceiptBox" style="margin-top:14px;padding:10px 12px;border-radius:10px;border:1.5px dashed #f59e0b;background:rgba(245,158,11,0.06);">
+                    <input type="hidden" id="coVisaReceiptImg" value="${esc(b.visa_receipt_image||'')}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <label style="font-weight:900;font-size:12.5px;color:#b45309;margin:0;">📸 صورة إيصال الفيزا (إجباري عند تحصيل فيزا) *</label>
+                        <label class="btn amber" style="cursor:pointer;min-height:32px;padding:4px 12px;font-size:12px;margin:0;">
+                            📤 رفع / تصوير إيصال الفيزا
+                            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.compressAndReadVisaReceiptImage(this, 'coVisaReceiptImg', 'coVisaReceiptPreview')">
+                        </label>
+                    </div>
+                    <div id="coVisaReceiptPreview" style="margin-top:4px;"></div>
+                </div>
             </div>
 
             <!-- قسم الحالة والمصورين (مقسوم نصفين) -->
@@ -470,7 +493,7 @@ async function openCheckout(id) {
         // تغيير ألوان مربع (المتبقي) حسب وجود مديونية أم لا
         $('coRem').style.color = rem <= 0 ? '#10b981' : '#ef4444';
         $('remBox').style.background = rem <= 0 ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)';
-        $('remBox').style.borderColor = rem <= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';     };      $$('.coCalc').forEach(x => x.addEventListener('input', calc));
+        $('remBox').style.borderColor = rem <= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';     };      if(window.renderVisaReceiptPreviewBox)window.renderVisaReceiptPreviewBox('coVisaReceiptPreview', b.visa_receipt_image||'', 'coVisaReceiptImg');$$('.coCalc').forEach(x => x.addEventListener('input', calc));
     calc();
 
     // إظهار/إخفاء مربع تغيير التاريخ عند التأجيل
@@ -483,12 +506,16 @@ async function openCheckout(id) {
     // الإرسال لقاعدة البيانات
     $('checkoutForm').addEventListener('submit', async e => {
         e.preventDefault();
+        const coVisaVal = num($('coVisa').value);
+        const coVisaImg = ($('coVisaReceiptImg')?.value || '').trim();
+        if (coVisaVal > 0 && !coVisaImg) { toast('⚠️ إجباري: يرجى رفع صورة إيصال الفيزا لتأكيد التسليم طالما يوجد دفع فيزا!', 'bad'); return; }
         const body = {
             status: $('coStatus').value,
             deposit_usd: num($('coUsd').value),
             deposit_eur: num($('coEur').value),
             deposit_le_cash: num($('coCash').value),
-            deposit_le_visa: num($('coVisa').value),
+            deposit_le_visa: coVisaVal,
+            visa_receipt_image: coVisaImg,
             rate: num($('coRate').value) || 50,
             photographers: [$('coP1').value, $('coP2').value, $('coP3').value].filter(Boolean)
         };
@@ -711,3 +738,13 @@ function printBookingsReportPDF() {
     `);
 }
 window.printBookingsReportPDF = printBookingsReportPDF;
+
+async function openVisaReceiptByBookingId(id) {
+  let b = bookings.find(x => Number(x.id) === Number(id));
+  if (!b || !b.visa_receipt_image) {
+    try { b = await api('/api/bookings/' + id); } catch (e) {}
+  }
+  const img = b?.visa_receipt_image || b?.pending_deposit?.visa_receipt_image || '';
+  window.openVisaReceiptViewerModal(img, `إيصال فيزا أوردر غرفة ${b?.room_number || id}`);
+}
+window.openVisaReceiptByBookingId = openVisaReceiptByBookingId;

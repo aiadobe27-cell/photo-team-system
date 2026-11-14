@@ -44,6 +44,9 @@ function populateSaleFormFromRecord(inc, b=null){
   $('costUsb').value=num(inc.cost_usb);
   $('costAlbum').value=num(inc.cost_album);
   if($('saleAdjustReason'))$('saleAdjustReason').value='';
+  const vImg = inc.visa_receipt_image || b?.visa_receipt_image || '';
+  if($('saleVisaReceiptImg'))$('saleVisaReceiptImg').value = vImg;
+  if(window.renderVisaReceiptPreviewBox)window.renderVisaReceiptPreviewBox('saleVisaReceiptPreview', vImg, 'saleVisaReceiptImg');
   setSaleFormMode(true, inc, b);
   calcSale();
 }
@@ -96,6 +99,9 @@ function selectEligible(id,row){
     $('saleDeposit').value=depEq.toFixed(2);
     ['saleUsd','saleEur','saleCash','saleOffice','costDress','costUsb','costAlbum'].forEach(k=>{if($(k))$(k).value=0});
     $('saleRate').value=50;
+    const bImg = b?.visa_receipt_image || '';
+    if($('saleVisaReceiptImg'))$('saleVisaReceiptImg').value = bImg;
+    if(window.renderVisaReceiptPreviewBox)window.renderVisaReceiptPreviewBox('saleVisaReceiptPreview', bImg, 'saleVisaReceiptImg');
     setSaleFormMode(false, null, b);
     $('selectedOrderInfo').textContent=`غرفة ${b.room_number} • ${b.hotel} • الاتفاق ${money(b.total_agreement)}$ • المتبقي ${money(b.remaining)}$`;
     calcSale();
@@ -105,7 +111,7 @@ function selectEligible(id,row){
 function splitPhotographerNames(value){const out=[];String(value||'').replaceAll('،',',').split(',').forEach(part=>part.split('&').forEach(x=>{const n=x.trim();if(n&&!out.some(v=>v.toLowerCase()===n.toLowerCase()))out.push(n)}));return out.slice(0,3)}
 function photographerRate(name){const row=(dsTeam.photographers||[]).find(x=>String(x.nickname||'').trim().toLowerCase()===String(name||'').trim().toLowerCase());const r=num(row?.commission_rate);return r>0?r:10}
 function renderPhotoSplit(net){const names=splitPhotographerNames($('salePhotog').value);const rows=$('photoSplitRows'),count=$('photoSplitCount');if(!rows||!count)return;if(!names.length){count.textContent='لا يوجد مصور محدد';rows.innerHTML='<div class="empty-state compact">اختر أوردر لعرض تقسيم صافي الدخل والعمولة على المصورين.</div>';return}const share=net/names.length;count.textContent=`${names.length} مصور • حصة الصافي لكل مصور ${money(share)} $`;rows.innerHTML=names.map((name,i)=>{const rate=photographerRate(name),commission=share*rate/100;return `<div class="photo-split-row"><span class="photo-split-index">${i+1}</span><b>${esc(name)}</b><span>حصة الصافي <strong>${money(share)} $</strong></span><span>النسبة <strong>${money(rate)}%</strong></span><span>العمولة <strong>${money(commission)} $</strong></span></div>`}).join('')}
-function calcSale(){const rate=num($('saleRate').value)||50,le=(num($('saleCash').value)+num($('saleOffice').value))/rate,gross=num($('saleDeposit').value)+num($('saleUsd').value)+num($('saleEur').value)+le,cost=num($('costDress').value)+num($('costUsb').value)+num($('costAlbum').value),net=gross-cost;$('saleConverted').textContent=money(le)+' $';$('saleGross').textContent=money(gross)+' $';$('saleCosts').textContent=money(cost)+' $';$('saleNet').textContent=money(net)+' $';renderPhotoSplit(net)}
+function calcSale(){const rate=num($('saleRate').value)||50,le=(num($('saleCash').value)+num($('saleOffice').value))/rate,gross=num($('saleDeposit').value)+num($('saleUsd').value)+num($('saleEur').value)+le,cost=num($('costDress').value)+num($('costUsb').value)+num($('costAlbum').value),net=gross-cost;$('saleConverted').textContent=money(le)+' $';$('saleGross').textContent=money(gross)+' $';$('saleCosts').textContent=money(cost)+' $';$('saleNet').textContent=money(net)+' $';if($('saleVisaReceiptBox')){const v=num($('saleOffice').value);$('saleVisaReceiptBox').style.borderColor=v>0?'#dc2626':'#cbd5e1';$('saleVisaReceiptBox').style.background=v>0?'rgba(239,68,68,0.06)':'rgba(148,163,184,0.05)';}renderPhotoSplit(net)}
 
 function clearSaleForm(){
   ['saleId','saleBookingId','saleRoomNumber','saleHotelId','saleIncomeDate','saleUsd','saleEur','saleCash','saleOffice','costDress','costUsb','costAlbum'].forEach(id=>{
@@ -118,6 +124,8 @@ function clearSaleForm(){
   if($('salePhotogSelect'))$('salePhotogSelect').value='';
   if($('saleQuickRoomInput'))$('saleQuickRoomInput').value='';
   if($('saleAdjustReason'))$('saleAdjustReason').value='';
+  if($('saleVisaReceiptImg'))$('saleVisaReceiptImg').value='';
+  if(window.renderVisaReceiptPreviewBox)window.renderVisaReceiptPreviewBox('saleVisaReceiptPreview', '', 'saleVisaReceiptImg');
   selectedEligible=null;
   setSaleFormMode(false);
   $('selectedOrderInfo').textContent='اختر أوردر من القائمة الجانبية للبدء أو لتعديل دخل مسجل';
@@ -168,8 +176,10 @@ async function saveSale(e){
     cost_dress:num($('costDress').value),
     cost_usb:num($('costUsb').value),
     cost_album:num($('costAlbum').value),
-    adjustment_reason:($('saleAdjustReason')?.value||'').trim()
+    adjustment_reason:($('saleAdjustReason')?.value||'').trim(),
+    visa_receipt_image:($('saleVisaReceiptImg')?.value||'').trim()
   };
+  if(body.income_le_m>0 && !body.visa_receipt_image)return toast('⚠️ إجباري: يرجى رفع صورة إيصال الفيزا أولاً لأن العملية تحتوي على دخل فيزا / مكتب!','bad');
   const checkGross=body.deposit_applied+body.income_usd+body.income_eur+((body.income_le_k+body.income_le_m)/(body.le_to_usd||50));
   if(checkGross<=0)return toast('يرجى إدخال المبلغ بأحد أنواعه (دولار $، يورو €، كاش مصري LE، أو مكتب LE)','bad');
   const gross=body.deposit_applied+body.income_usd+body.income_eur+((body.income_le_k+body.income_le_m)/(body.le_to_usd||50)),cost=body.cost_dress+body.cost_usb+body.cost_album,net=gross-cost;
@@ -226,31 +236,80 @@ async function deleteSaleById(saleId){
 }
 
 let incomeNotesRows=[];
-async function loadSalesSearch(){const start=$('dsStart').value,end=$('dsEnd').value;if($('dsDataType').value==='deposits'){depositRows=await api(`/api/deposits?start=${start}&end=${end}${$('dsHotel').value?'&hotel_id='+$('dsHotel').value:''}`);renderDeposits()}else{const x=await api(`/api/daily-sales?start=${start}&end=${end}${$('dsHotel').value?'&hotel_id='+$('dsHotel').value:''}`);salesRows=x.rows||[];incomeNotesRows=x.notes||[];renderSales(x.summary||{});renderDailyIncomeNotes()}await loadCoinKpi()}
+async function loadSalesSearch(){
+  const start=$('dsStart').value,end=$('dsEnd').value;
+  const hParam=$('dsHotel').value?'&hotel_id='+$('dsHotel').value:'';
+  if($('dsDataType').value==='deposits'){
+    depositRows=await api(`/api/deposits?start=${start}&end=${end}${hParam}`);
+    renderDeposits();
+  }else{
+    const [x, deps] = await Promise.all([
+      api(`/api/daily-sales?start=${start}&end=${end}${hParam}`),
+      apiSafe(`/api/deposits?start=${start}&end=${end}${hParam}`, [])
+    ]);
+    salesRows=x.rows||[];
+    depositRows=Array.isArray(deps)?deps:(deps.rows||[]);
+    incomeNotesRows=x.notes||[];
+    renderSales(x.summary||{});
+    renderDailyIncomeNotes();
+  }
+  await loadCoinKpi();
+}
 function filteredSales(){return salesRows.filter(r=>(!$('dsSalesFilter').value||r.sales_person===$('dsSalesFilter').value)&&(!$('dsPhotoFilter').value||String(r.photographer||'').includes($('dsPhotoFilter').value)))}
-function renderSales(summary){const rows=filteredSales();$('searchHead').innerHTML='<tr><th>#</th><th>الفندق</th><th>الغرفة</th><th>السيلز</th><th>المصور</th><th>العربون</th><th>$</th><th>€</th><th>LE مكتب</th><th>LE كاش</th><th>الريت</th><th>إجمالي</th><th>Dress</th><th>USB</th><th>Album</th><th>تكلفة</th><th>الصافي</th><th>التاريخ</th><th>إجراءات</th></tr>';$('searchBody').innerHTML=rows.map((r,i)=>`<tr data-sale-id="${r.id}"><td>${i+1}</td><td>${esc(r.hotel_name||r.hotel_id)}</td><td><b>${esc(r.room_number||'-')}</b></td><td>${esc(r.sales_person)}</td><td>${esc(r.photographer)}</td><td>${money(r.deposit_applied)}</td><td>${money(r.income_usd)}</td><td>${money(r.income_eur)}</td><td>${money(r.income_le_m)}</td><td>${money(r.income_le_k)}</td><td>${money(r.le_to_usd)}</td><td>${money(r.gross_total)}</td><td>${money(r.cost_dress)}</td><td>${money(r.cost_usb)}</td><td>${money(r.cost_album)}</td><td>${money(r.cost_total)}</td><td><b>${money(r.daily_total)}</b></td><td>${esc(r.income_date)}</td><td><div class="context-actions"><button class="mini-btn purple" title="طباعة إيصال مبيعات حراري POS" onclick="printSalePosById(${r.id})">🖨️ إيصال</button>${(window.PHOTOGRAPHER_ONLY||window.SALES_ONLY)?'':`<button class="mini-btn blue" title="تعديل الدخل" onclick="editSaleFromTable(${r.id})">✏️ تعديل</button><button class="mini-btn red" title="حذف السجل" onclick="deleteSaleById(${r.id})">🗑️</button>`}</div></td></tr>`).join('')||'<tr><td colspan="19" class="empty-state">لا توجد مبيعات</td></tr>';const rs=rows;
-const nIn=(incomeNotesRows||[]).filter(n=>String(n.note_type||'').toUpperCase()==='IN');
-const nOut=(incomeNotesRows||[]).filter(n=>String(n.note_type||'').toUpperCase()!=='IN');
-const diffUsd=nIn.reduce((a,n)=>a+num(n.amount_usd),0)-nOut.reduce((a,n)=>a+num(n.amount_usd),0);
-const diffEur=nIn.reduce((a,n)=>a+num(n.amount_eur),0)-nOut.reduce((a,n)=>a+num(n.amount_eur),0);
-const diffCash=nIn.reduce((a,n)=>a+num(n.amount_le_cash),0)-nOut.reduce((a,n)=>a+num(n.amount_le_cash),0);
-const diffOffice=nIn.reduce((a,n)=>a+num(n.amount_le_office),0)-nOut.reduce((a,n)=>a+num(n.amount_le_office),0);
-const ordersNet=rs.reduce((a,x)=>a+num(x.daily_total),0);
-const totInEq=nIn.reduce((a,n)=>a+num(n.equivalent_usd),0);
-const totOutEq=nOut.reduce((a,n)=>a+num(n.equivalent_usd),0);
-const finalNet=ordersNet+totInEq-totOutEq;
-$('kUsd').textContent=money(rs.reduce((a,x)=>a+num(x.income_usd),0)+diffUsd);
-$('kEur').textContent=money(rs.reduce((a,x)=>a+num(x.income_eur),0)+diffEur);
-$('kCash').textContent=money(rs.reduce((a,x)=>a+num(x.income_le_k),0)+diffCash);
-$('kOffice').textContent=money(rs.reduce((a,x)=>a+num(x.income_le_m),0)+diffOffice);
-$('kNet').textContent=money(finalNet);
-if($('dinOrdersNet'))$('dinOrdersNet').textContent='$'+money(ordersNet);
-if($('dinTotalIn'))$('dinTotalIn').textContent='+$'+money(totInEq);
-if($('dinTotalOut'))$('dinTotalOut').textContent='-$'+money(totOutEq);
-if($('dinFinalNet'))$('dinFinalNet').textContent='$'+money(finalNet);}
+function filteredStandaloneDeposits(currentSalesRows){
+  if($('dsDataType').value!=='all')return [];
+  if($('dsPhotoFilter').value)return [];
+  const recordedBookingIds=new Set((currentSalesRows||[]).map(r=>Number(r.booking_id||0)).filter(Boolean));
+  const recordedRoomsByDate=new Set((currentSalesRows||[]).map(r=>`${String(r.room_number||'').trim()}_${String(r.income_date||'').slice(0,10)}`));
+  return (depositRows||[]).filter(d=>{
+    if($('dsSalesFilter').value && d.deposit_sales_person!==$('dsSalesFilter').value)return false;
+    const eq=num(d.deposit_usd)+num(d.deposit_eur)+((num(d.deposit_le_cash)+num(d.deposit_le_visa))/50);
+    if(eq<=0)return false;
+    if(d.booking_id && recordedBookingIds.has(Number(d.booking_id)))return false;
+    const key=`${String(d.room_number||'').trim()}_${String(d.deposit_date||'').slice(0,10)}`;
+    if(recordedRoomsByDate.has(key))return false;
+    return true;
+  });
+}
+function renderSales(summary){
+  const rows=filteredSales();
+  const standaloneDeps=filteredStandaloneDeposits(rows);
+  $('searchHead').innerHTML='<tr><th>#</th><th>الفندق</th><th>الغرفة</th><th>السيلز</th><th>المصور</th><th>العربون</th><th>$</th><th>€</th><th>LE مكتب</th><th>LE كاش</th><th>الريت</th><th>إجمالي</th><th>Dress</th><th>USB</th><th>Album</th><th>تكلفة</th><th>الصافي</th><th>التاريخ</th><th>إجراءات</th></tr>';
+  const salesHtml=rows.map((r,i)=>`<tr data-sale-id="${r.id}"><td>${i+1}</td><td>${esc(r.hotel_name||r.hotel_id)}</td><td><b>${esc(r.room_number||'-')}</b></td><td>${esc(r.sales_person)}</td><td>${esc(r.photographer||'-')}</td><td>${money(r.deposit_applied)}</td><td>${money(r.income_usd)}</td><td>${money(r.income_eur)}</td><td>${money(r.income_le_m)}</td><td>${money(r.income_le_k)}</td><td>${money(r.le_to_usd)}</td><td>${money(r.gross_total)}</td><td>${money(r.cost_dress)}</td><td>${money(r.cost_usb)}</td><td>${money(r.cost_album)}</td><td>${money(r.cost_total)}</td><td><b>${money(r.daily_total)}</b></td><td>${esc(r.income_date)}</td><td><div class="context-actions">${r.visa_receipt_image?`<button class="mini-btn green" title="عرض صورة إيصال الفيزا المحفوظة" onclick="openVisaReceiptFromSaleId(${r.id})">🧾 إيصال الفيزا</button>`:""}<button class="mini-btn purple" title="طباعة إيصال مبيعات حراري POS" onclick="printSalePosById(${r.id})">🖨️ إيصال</button>${(window.PHOTOGRAPHER_ONLY||window.SALES_ONLY)?'':`<button class="mini-btn blue" title="تعديل الدخل" onclick="editSaleFromTable(${r.id})">✏️ تعديل</button><button class="mini-btn red" title="حذف السجل" onclick="deleteSaleById(${r.id})">🗑️</button>`}</div></td></tr>`);
+  const depsHtml=standaloneDeps.map((d,idx)=>{
+    const eq=num(d.deposit_usd)+num(d.deposit_eur)+((num(d.deposit_le_cash)+num(d.deposit_le_visa))/50);
+    return `<tr style="background:rgba(245,158,11,0.06);"><td>${rows.length+idx+1}</td><td>${esc(d.hotel_name||'-')}</td><td><b>${esc(d.room_number||'-')}</b></td><td>${esc(d.deposit_sales_person||'-')}</td><td><span class="badge amber">عربون حجز معتمد</span></td><td><b>${money(eq)}</b></td><td>${money(d.deposit_usd)}</td><td>${money(d.deposit_eur)}</td><td>${money(d.deposit_le_visa)}</td><td>${money(d.deposit_le_cash)}</td><td>50.00</td><td><b>${money(eq)}</b></td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td><b style="color:#059669;">${money(eq)}</b></td><td>${esc(String(d.deposit_date||'').slice(0,10))}</td><td><div class="context-actions">${d.visa_receipt_image?`<button class="mini-btn green" title="عرض صورة إيصال الفيزا" onclick="openVisaReceiptFromDepositId(${d.id})">🧾 إيصال الفيزا</button>`:""}${(window.PHOTOGRAPHER_ONLY||window.SALES_ONLY)?'':`<button class="mini-btn blue" title="تعديل العربون" onclick="openEditDepositModal(${d.id})">✏️ تعديل</button><button class="mini-btn red" title="حذف العربون" onclick="deleteDepositById(${d.id})">🗑️</button>`}</div></td></tr>`;
+  });
+  $('searchBody').innerHTML=[...salesHtml,...depsHtml].join('')||'<tr><td colspan="19" class="empty-state">لا توجد مبيعات أو عرابين مسجلة</td></tr>';
+  const rs=rows;
+  const nIn=(incomeNotesRows||[]).filter(n=>String(n.note_type||'').toUpperCase()==='IN');
+  const nOut=(incomeNotesRows||[]).filter(n=>String(n.note_type||'').toUpperCase()!=='IN');
+  const diffUsd=nIn.reduce((a,n)=>a+num(n.amount_usd),0)-nOut.reduce((a,n)=>a+num(n.amount_usd),0);
+  const diffEur=nIn.reduce((a,n)=>a+num(n.amount_eur),0)-nOut.reduce((a,n)=>a+num(n.amount_eur),0);
+  const diffCash=nIn.reduce((a,n)=>a+num(n.amount_le_cash),0)-nOut.reduce((a,n)=>a+num(n.amount_le_cash),0);
+  const diffOffice=nIn.reduce((a,n)=>a+num(n.amount_le_office),0)-nOut.reduce((a,n)=>a+num(n.amount_le_office),0);
+  const depsUsd=standaloneDeps.reduce((a,d)=>a+num(d.deposit_usd),0);
+  const depsEur=standaloneDeps.reduce((a,d)=>a+num(d.deposit_eur),0);
+  const depsCash=standaloneDeps.reduce((a,d)=>a+num(d.deposit_le_cash),0);
+  const depsOffice=standaloneDeps.reduce((a,d)=>a+num(d.deposit_le_visa),0);
+  const depsEqUsd=standaloneDeps.reduce((a,d)=>a+num(d.deposit_usd)+num(d.deposit_eur)+((num(d.deposit_le_cash)+num(d.deposit_le_visa))/50),0);
+  const ordersNet=rs.reduce((a,x)=>a+num(x.daily_total),0)+depsEqUsd;
+  const totInEq=nIn.reduce((a,n)=>a+num(n.equivalent_usd),0);
+  const totOutEq=nOut.reduce((a,n)=>a+num(n.equivalent_usd),0);
+  const finalNet=ordersNet+totInEq-totOutEq;
+  $('kUsd').textContent=money(rs.reduce((a,x)=>a+num(x.income_usd)+num(x.deposit_usd),0)+depsUsd+diffUsd);
+  $('kEur').textContent=money(rs.reduce((a,x)=>a+num(x.income_eur)+num(x.deposit_eur),0)+depsEur+diffEur);
+  $('kCash').textContent=money(rs.reduce((a,x)=>a+num(x.income_le_k)+num(x.deposit_le_cash),0)+depsCash+diffCash);
+  $('kOffice').textContent=money(rs.reduce((a,x)=>a+num(x.income_le_m)+num(x.deposit_le_visa),0)+depsOffice+diffOffice);
+  $('kNet').textContent=money(finalNet);
+  if($('dinOrdersNet'))$('dinOrdersNet').textContent='$'+money(ordersNet);
+  if($('dinTotalIn'))$('dinTotalIn').textContent='+$'+money(totInEq);
+  if($('dinTotalOut'))$('dinTotalOut').textContent='-$'+money(totOutEq);
+  if($('dinFinalNet'))$('dinFinalNet').textContent='$'+money(finalNet);
+}
 function renderDeposits(){
   $('searchHead').innerHTML='<tr><th>#</th><th>الغرفة</th><th>مسؤول مبيعات العربون</th><th>$</th><th>€</th><th>كاش LE</th><th>فيزا LE</th><th>التاريخ</th><th>إجراءات</th></tr>';
-  $('searchBody').innerHTML=depositRows.map((r,i)=>`<tr><td>${i+1}</td><td><b>${esc(r.room_number)}</b></td><td>${esc(r.deposit_sales_person)}</td><td>${money(r.deposit_usd)}</td><td>${money(r.deposit_eur)}</td><td>${money(r.deposit_le_cash)}</td><td>${money(r.deposit_le_visa)}</td><td>${esc(r.deposit_date)}</td><td><div class="context-actions"><button class="mini-btn blue" title="تعديل العربون" onclick="openEditDepositModal(${r.id})">✏️ تعديل</button><button class="mini-btn red" title="حذف العربون" onclick="deleteDepositById(${r.id})">🗑️</button></div></td></tr>`).join('')||'<tr><td colspan="9" class="empty-state">لا توجد عرابين</td></tr>';
+  $('searchBody').innerHTML=depositRows.map((r,i)=>`<tr><td>${i+1}</td><td><b>${esc(r.room_number)}</b></td><td>${esc(r.deposit_sales_person)}</td><td>${money(r.deposit_usd)}</td><td>${money(r.deposit_eur)}</td><td>${money(r.deposit_le_cash)}</td><td>${money(r.deposit_le_visa)}</td><td>${esc(r.deposit_date)}</td><td><div class="context-actions">${r.visa_receipt_image?`<button class="mini-btn green" title="عرض صورة إيصال الفيزا" onclick="openVisaReceiptFromDepositId(${r.id})">🧾 إيصال الفيزا</button>`:""}<button class="mini-btn blue" title="تعديل العربون" onclick="openEditDepositModal(${r.id})">✏️ تعديل</button><button class="mini-btn red" title="حذف العربون" onclick="deleteDepositById(${r.id})">🗑️</button></div></td></tr>`).join('')||'<tr><td colspan="9" class="empty-state">لا توجد عرابين</td></tr>';
   $('kUsd').textContent=money(depositRows.reduce((a,x)=>a+num(x.deposit_usd),0));
   $('kEur').textContent=money(depositRows.reduce((a,x)=>a+num(x.deposit_eur),0));
   $('kCash').textContent=money(depositRows.reduce((a,x)=>a+num(x.deposit_le_cash),0));
@@ -278,12 +337,24 @@ function openEditDepositModal(id){
         <div class="field"><label>كاش مصري (LE)</label><input class="input" type="number" step=".01" id="edCash" value="${num(r.deposit_le_cash)}"></div>
         <div class="field"><label>فيزا مصري (LE)</label><input class="input" type="number" step=".01" id="edVisa" value="${num(r.deposit_le_visa)}"></div>
       </div>
+      <div style="margin-top:12px;padding:10px 12px;border-radius:10px;border:1.5px dashed #f59e0b;background:rgba(245,158,11,0.06);">
+        <input type="hidden" id="edVisaReceiptImg" value="${esc(r.visa_receipt_image||'')}">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <label style="font-weight:900;font-size:12px;color:#b45309;margin:0;">📸 صورة إيصال الفيزا (إجباري عند وجود عربون فيزا) *</label>
+          <label class="btn amber" style="cursor:pointer;min-height:30px;padding:4px 12px;font-size:12px;margin:0;">
+            📤 رفع / تصوير إيصال الفيزا
+            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="window.compressAndReadVisaReceiptImage(this, 'edVisaReceiptImg', 'edVisaReceiptPreview')">
+          </label>
+        </div>
+        <div id="edVisaReceiptPreview" style="margin-top:4px;"></div>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn" onclick="closeModal()">إلغاء</button>
         <button type="submit" class="btn green">💾 حفظ تعديلات العربون</button>
       </div>
     </form>
   `,'modal-lg');
+  if(window.renderVisaReceiptPreviewBox)window.renderVisaReceiptPreviewBox('edVisaReceiptPreview', r.visa_receipt_image||'', 'edVisaReceiptImg');
   $('editDepositForm').addEventListener('submit',async e=>{
     e.preventDefault();
     try{
@@ -294,7 +365,8 @@ function openEditDepositModal(id){
         deposit_usd:num($('edUsd').value),
         deposit_eur:num($('edEur').value),
         deposit_le_cash:num($('edCash').value),
-        deposit_le_visa:num($('edVisa').value)
+        deposit_le_visa:num($('edVisa').value),
+        visa_receipt_image:($('edVisaReceiptImg')?.value||'').trim()
       });
       toast('تم تعديل سجل العربون بنجاح');
       closeModal();
@@ -1270,3 +1342,14 @@ window.decideDayLockRequest = decideDayLockRequest;
 setTimeout(refreshDayLockStatus, 350);
 $('dsEntryDate')?.addEventListener('change', refreshDayLockStatus);
 $('dsHotel')?.addEventListener('change', refreshDayLockStatus);
+
+function openVisaReceiptFromSaleId(saleId) {
+  const r = salesRows.find(x => Number(x.id) === Number(saleId));
+  window.openVisaReceiptViewerModal(r?.visa_receipt_image || '', `إيصال فيزا مبيعات غرفة ${r?.room_number || saleId}`);
+}
+function openVisaReceiptFromDepositId(depId) {
+  const r = depositRows.find(x => Number(x.id) === Number(depId));
+  window.openVisaReceiptViewerModal(r?.visa_receipt_image || '', `إيصال فيزا عربون غرفة ${r?.room_number || depId}`);
+}
+window.openVisaReceiptFromSaleId = openVisaReceiptFromSaleId;
+window.openVisaReceiptFromDepositId = openVisaReceiptFromDepositId;

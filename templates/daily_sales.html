@@ -142,8 +142,19 @@
             </div>
             <div class="form-grid three" style="margin-top: 15px;">
                 <div class="field"><label>دخل L.E كاش</label><input class="input sale-calc" id="saleCash" type="number" step=".01" value="0"></div>
-                <div class="field"><label>دخل L.E مكتب</label><input class="input sale-calc" id="saleOffice" type="number" step=".01" value="0"></div>
+                <div class="field"><label>دخل L.E مكتب (فيزا)</label><input class="input sale-calc" id="saleOffice" type="number" step=".01" value="0"></div>
                 <div class="field"><label>سعر الريت (Rate)</label><input class="input sale-calc" id="saleRate" type="number" step=".01" value="50"></div>
+            </div>
+            <div id="saleVisaReceiptBox" style="margin: 12px 0; padding: 10px 14px; border-radius: 12px; border: 1.5px dashed #f59e0b; background: rgba(245, 158, 11, 0.06);">
+                <input type="hidden" id="saleVisaReceiptImg">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                    <label style="font-weight:900; font-size:12.5px; color:#b45309; margin:0;">📸 صورة إيصال الفيزا (إجباري عند وجود دخل فيزا / مكتب) *</label>
+                    <label class="btn amber" style="cursor:pointer; min-height:32px; padding:4px 12px; font-size:12px; margin:0;">
+                        📤 اختر أو صوّر إيصال الفيزا
+                        <input type="file" id="saleVisaReceiptFile" accept="image/*" capture="environment" style="display:none;" onchange="window.compressAndReadVisaReceiptImage(this, 'saleVisaReceiptImg', 'saleVisaReceiptPreview')">
+                    </label>
+                </div>
+                <div id="saleVisaReceiptPreview" style="margin-top:4px;"></div>
             </div>
             
             <div class="detail-row" style="background: var(--bg-surface-2); padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: center; border: 1px solid var(--border-strong);">
