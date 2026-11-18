@@ -74,7 +74,7 @@ body:where(.page-login) {
     background: rgba(255,255,255,.12);
     padding: 6px;
     border-radius: 50px;
-    backdrop-filter: blur(15px);
+    backdrop-filter: none !important;
 }
 
 :where(body.page-login) .theme-toggle button {
@@ -164,7 +164,7 @@ body:where(.page-login) {
     border-radius: 30px;
     background: var(--card-bg);
     border: 1px solid var(--border);
-    backdrop-filter: blur(25px);
+    backdrop-filter: none !important;
     box-shadow: 0 30px 80px rgba(0,0,0,.35);
 }
 
@@ -487,7 +487,7 @@ body.theme-light:where(.page-login) .login-btn:active {
     border: 1px solid rgba(255, 255, 255, 0.18);
     padding: 5px 8px;
     border-radius: 999px;
-    backdrop-filter: blur(16px);
+    backdrop-filter: none !important;
 }
 :where(body.page-login) .login-ui-bar button {
     border: 0;

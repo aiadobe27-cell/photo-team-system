@@ -614,7 +614,7 @@ body.kiosk-mode:where(.page-control_room) .exit-kiosk-btn {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(8px);
+    backdrop-filter: none !important;
     z-index: 9999;
     display: flex;
     align-items: flex-start;

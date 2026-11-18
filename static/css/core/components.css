@@ -239,8 +239,8 @@ body.theme-dark .sidebar nav a.active {
     min-height: 74px;
     padding: 0 32px;
     background: var(--bg-glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-bottom: 1px solid var(--border-strong);
     display: flex;
     justify-content: space-between;
@@ -769,8 +769,8 @@ body.theme-amethyst .sidebar {
     width: 256px !important;
     border-radius: 26px !important;
     background: rgba(255, 255, 255, 0.82) !important;
-    backdrop-filter: blur(24px) !important;
-    -webkit-backdrop-filter: blur(24px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1.5px solid rgba(167, 139, 250, 0.35) !important;
     box-shadow: 0 20px 50px rgba(91, 33, 182, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
@@ -786,8 +786,8 @@ body.theme-amethyst .header {
     margin: 16px 16px 0 24px !important;
     border-radius: 22px !important;
     background: rgba(255, 255, 255, 0.80) !important;
-    backdrop-filter: blur(22px) !important;
-    -webkit-backdrop-filter: blur(22px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1.5px solid rgba(167, 139, 250, 0.32) !important;
     box-shadow: 0 12px 32px rgba(91, 33, 182, 0.08) !important;
 }
@@ -833,8 +833,8 @@ body.theme-amethyst .settings-panel,
 body.theme-amethyst .kpi-card,
 body.theme-amethyst .ops-kpi-card {
     background: rgba(255, 255, 255, 0.84) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1.5px solid rgba(167, 139, 250, 0.30) !important;
     border-radius: 22px !important;
     box-shadow: 0 12px 32px -4px rgba(109, 40, 217, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
@@ -987,8 +987,8 @@ body.layout-ribbon-dock .main {
 .pt-top-command-ribbon {
     display: none;
     background: var(--bg-glass);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-bottom: 2px solid var(--primary);
     padding: 10px 24px;
     gap: 10px;
@@ -1073,8 +1073,8 @@ body.layout-ribbon-dock .pt-hourly-timeline-bar {
     transform: translateX(-50%);
     z-index: 9980;
     background: rgba(15, 23, 42, 0.90);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1.5px solid rgba(96, 165, 250, 0.40);
     border-radius: 24px;
     padding: 7px 14px;
