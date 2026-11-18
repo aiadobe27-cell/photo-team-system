@@ -8,6 +8,11 @@
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="icon" type="image/png" href="/static/img/photo_team_icon.png">
     <link rel="apple-touch-icon" href="/static/img/photo_team_icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0D6E5B">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PhotoTeam">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}PHOTO TEAM SYSTEM{% endblock %}</title>
@@ -2318,5 +2323,13 @@ html body.mobile-phone-edition .modal-card {
 })();
 </script>
 
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+  });
+}
+</script>
 </body>
 </html>

@@ -38,7 +38,26 @@ const todayISO=()=>new Date().toISOString().slice(0,10);
 const monthISO=()=>new Date().toISOString().slice(0,7);
 const firstDayMonth=()=>monthISO()+'-01';
 const num=(v)=>Number(v||0)||0;
-async function api(url,options={}){options.headers=Object.assign({'ngrok-skip-browser-warning':'true'},options.headers||{});const res=await fetch(url,options);let data={};try{data=await res.json()}catch(e){}if(res.status===401){location.href='/login';throw new Error('انتهت الجلسة')}if(!res.ok||data.ok===false)throw new Error(data.error||`خطأ ${res.status}`);return data.data??data}
+async function api(url,options={}){
+  const method=String(options.method||'GET').toUpperCase();
+  const cacheKey='pt_get_cache_'+String(url);
+  options.headers=Object.assign({'ngrok-skip-browser-warning':'true'},options.headers||{});
+  try{
+    const res=await fetch(url,options);
+    let data={};
+    try{data=await res.json()}catch(e){}
+    if(res.status===401){location.href='/login';throw new Error('انتهت الجلسة')}
+    if(!res.ok||data.ok===false)throw new Error(data.error||`خطأ ${res.status}`);
+    const payload=data.data??data;
+    if(method==='GET'){try{localStorage.setItem(cacheKey,JSON.stringify(payload))}catch(e){}}
+    return payload;
+  }catch(err){
+    if(method==='GET' && (err instanceof TypeError || !navigator.onLine)){
+      try{const raw=localStorage.getItem(cacheKey);if(raw!==null)return JSON.parse(raw);}catch(e){}
+    }
+    throw err;
+  }
+}
 async function apiJSON(url,method='POST',body={}){
   if (isOfflineModeActive() && ['POST','PUT'].includes(String(method).toUpperCase()) && !String(url).includes('/api/auth/')) {
     const item = enqueueOfflineOperation(url, method, body);

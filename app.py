@@ -8255,6 +8255,18 @@ def api_thirty_min_session_alerts():
 # =============================================================================
 # 🏦 شاشة حسابات البنك والدخل الشامل (خاص بالأونر CEO فقط) + النسخ الاحتياطي الكامل
 # =============================================================================
+
+@app.get("/manifest.json")
+def pwa_manifest():
+    return send_from_directory(os.path.join(app.root_path, "static"), "manifest.json", mimetype="application/manifest+json")
+
+@app.get("/sw.js")
+def pwa_service_worker():
+    resp = send_from_directory(os.path.join(app.root_path, "static"), "sw.js", mimetype="application/javascript")
+    resp.headers["Service-Worker-Allowed"] = "/"
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
 @app.get("/bank-accounts")
 @login_required
 def page_bank_accounts():
