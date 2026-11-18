@@ -12,7 +12,15 @@ const UI_THEMES=[
 function applyTheme(name,notify=false){
   const found=UI_THEMES.find(x=>x[0]===name)||UI_THEMES[1];
   const sheet=document.getElementById('lightThemeSheet');
+  document.documentElement.setAttribute('data-theme',found[0]);
   document.body.dataset.theme=found[0];
+  if(found[0]==='dark'){
+    document.body.classList.remove('theme-light');
+    document.body.setAttribute('data-black-style','1');
+  }else{
+    document.body.classList.add('theme-light');
+    document.body.removeAttribute('data-black-style');
+  }
   if(sheet) sheet.disabled=(found[0]==='dark');
   localStorage.setItem('phototeam_theme',found[0]);
   localStorage.removeItem('phototeam_light_theme');

@@ -82,10 +82,56 @@
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
+
+  /* Prevent sticky header / nested scrollbar jitter on mouse wheel */
+  body, .app {
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+  .main {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+  }
+  .main > .header {
+    position: relative !important;
+    top: auto !important;
+    flex-shrink: 0 !important;
+  }
+  .main > .content, .main > main.content {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: auto !important;
+    overscroll-behavior: contain !important;
+  }
+  #sidebar.sidebar {
+    height: 100vh !important;
+    overflow-y: auto !important;
+    scroll-behavior: auto !important;
+  }
+
 </style>
 </head>
 
-<body class="theme-light system-mode-1 page-{% block page %}{% endblock %} {{ 'mobile-phone-edition' if is_mobile_device else '' }}">
+<body class="system-mode-1 page-{% block page %}{% endblock %} {{ 'mobile-phone-edition' if is_mobile_device else '' }}">
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('phototeam_theme') || 'pearl';
+    document.documentElement.setAttribute('data-theme', t);
+    document.body.dataset.theme = t;
+    if (t === 'dark') {
+      document.body.classList.remove('theme-light');
+      document.body.setAttribute('data-black-style', '1');
+    } else {
+      document.body.classList.add('theme-light');
+      document.body.removeAttribute('data-black-style');
+    }
+  } catch (e) {}
+})();
+</script>
 
 
 <div class="app">

@@ -8271,8 +8271,8 @@ def pwa_service_worker():
 @login_required
 def page_bank_accounts():
     if is_personal_scope_user():
-        return redirect(url_for("forbidden"))
-    return render_page("bank_accounts.html")
+        return render_template("forbidden.html"), 403
+    return render_template("bank_accounts.html")
 
 
 @app.get("/api/bank-accounts/overview")
