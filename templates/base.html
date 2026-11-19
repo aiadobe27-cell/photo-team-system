@@ -18,7 +18,7 @@
     <title>{% block title %}PHOTO TEAM SYSTEM{% endblock %}</title>
 
     <!-- خط تجوال للأرقام والنصوص -->
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/core/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/core/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/core/interactions.css') }}">
@@ -113,6 +113,207 @@
   }
 
 </style>
+
+<style id="ptErpLightThemeOverride">
+  html:not([data-theme="dark"]),
+  html:not([data-theme="dark"]) body {
+    background-color: #f4f7fb !important;
+    background: #f4f7fb !important;
+    color: #0f172a !important;
+    font-family: 'Cairo', 'Inter', sans-serif !important;
+  }
+  html:not([data-theme="dark"]) * {
+    font-family: 'Cairo', 'Inter', sans-serif;
+  }
+  html:not([data-theme="dark"]) {
+    --primary: #0d9488 !important;
+    --primary-hover: #0f766e !important;
+    --accent: #0d9488 !important;
+    --bg-main: #f4f7fb !important;
+    --bg-card: #ffffff !important;
+    --bg-surface: #ffffff !important;
+    --bg-surface-2: #f8fafc !important;
+    --border: #e2e8f0 !important;
+    --border-strong: #cbd5e1 !important;
+    --text-main: #0f172a !important;
+    --text-heading: #0f172a !important;
+    --text-muted: #64748b !important;
+  }
+  html:not([data-theme="dark"]) #sidebar.sidebar {
+    background: #ffffff !important;
+    border-left: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  }
+  html:not([data-theme="dark"]) #sidebar.sidebar nav a {
+    color: #334155 !important;
+    border-right: 3px solid transparent !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+  }
+  html:not([data-theme="dark"]) #sidebar.sidebar nav a:hover {
+    background: #f1f5f9 !important;
+    color: #0f766e !important;
+  }
+  html:not([data-theme="dark"]) #sidebar.sidebar nav a.active {
+    background: linear-gradient(90deg, rgba(13, 148, 136, 0.08) 0%, rgba(13, 148, 136, 0.16) 100%) !important;
+    color: #0f766e !important;
+    border-right: 3px solid #0d9488 !important;
+    font-weight: 800 !important;
+    box-shadow: none !important;
+  }
+  html:not([data-theme="dark"]) .main > .header {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  }
+  html:not([data-theme="dark"]) .panel,
+  html:not([data-theme="dark"]) .bento-box,
+  html:not([data-theme="dark"]) .kpi-card,
+  html:not([data-theme="dark"]) .res-kpi,
+  html:not([data-theme="dark"]) .modal-card,
+  html:not([data-theme="dark"]) .page-heading {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.03) !important;
+  }
+  html:not([data-theme="dark"]) .input,
+  html:not([data-theme="dark"]) select.input,
+  html:not([data-theme="dark"]) input.input,
+  html:not([data-theme="dark"]) .select-mini,
+  html:not([data-theme="dark"]) .input-mini {
+    background-color: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    border-radius: 10px !important;
+  }
+  html:not([data-theme="dark"]) .input:focus,
+  html:not([data-theme="dark"]) select.input:focus,
+  html:not([data-theme="dark"]) input.input:focus {
+    background-color: #ffffff !important;
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+    outline: none !important;
+  }
+  html:not([data-theme="dark"]) .btn.primary,
+  html:not([data-theme="dark"]) .btn-mini.primary {
+    background: #0d9488 !important;
+    border-color: #0d9488 !important;
+    color: #ffffff !important;
+  }
+  html:not([data-theme="dark"]) .btn.primary:hover,
+  html:not([data-theme="dark"]) .btn-mini.primary:hover {
+    background: #0f766e !important;
+  }
+  html:not([data-theme="dark"]) table thead th {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  html:not([data-theme="dark"]) table tbody td {
+    border-bottom: 1px solid #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+</style>
+
+
+<style id="ptErpDarkThemeOverride">
+  html[data-theme="dark"],
+  html[data-theme="dark"] body {
+    background-color: #0b1120 !important;
+    background: #0b1120 !important;
+    color: #f1f5f9 !important;
+    font-family: 'Cairo', 'Inter', sans-serif !important;
+  }
+  html[data-theme="dark"] * {
+    font-family: 'Cairo', 'Inter', sans-serif;
+  }
+  html[data-theme="dark"] {
+    --primary: #14b8a6 !important;
+    --primary-hover: #0d9488 !important;
+    --accent: #2dd4bf !important;
+    --bg-main: #0b1120 !important;
+    --bg-card: #111827 !important;
+    --bg-surface: #111827 !important;
+    --bg-surface-2: #1e293b !important;
+    --border: #1e293b !important;
+    --border-strong: #334155 !important;
+    --text-main: #f1f5f9 !important;
+    --text-heading: #ffffff !important;
+    --text-muted: #94a3b8 !important;
+  }
+  html[data-theme="dark"] #sidebar.sidebar {
+    background: #111827 !important;
+    border-left: 1px solid #1e293b !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+  }
+  html[data-theme="dark"] #sidebar.sidebar nav a {
+    color: #cbd5e1 !important;
+    border-right: 3px solid transparent !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+  }
+  html[data-theme="dark"] #sidebar.sidebar nav a:hover {
+    background: rgba(30, 41, 59, 0.7) !important;
+    color: #2dd4bf !important;
+  }
+  html[data-theme="dark"] #sidebar.sidebar nav a.active {
+    background: linear-gradient(90deg, rgba(20, 184, 166, 0.08) 0%, rgba(20, 184, 166, 0.22) 100%) !important;
+    color: #2dd4bf !important;
+    border-right: 3px solid #14b8a6 !important;
+    font-weight: 800 !important;
+    box-shadow: none !important;
+  }
+  html[data-theme="dark"] .main > .header {
+    background: #111827 !important;
+    border-bottom: 1px solid #1e293b !important;
+  }
+  html[data-theme="dark"] .panel,
+  html[data-theme="dark"] .bento-box,
+  html[data-theme="dark"] .kpi-card,
+  html[data-theme="dark"] .res-kpi,
+  html[data-theme="dark"] .modal-card,
+  html[data-theme="dark"] .page-heading {
+    background: #111827 !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+  }
+  html[data-theme="dark"] .input,
+  html[data-theme="dark"] select.input,
+  html[data-theme="dark"] input.input,
+  html[data-theme="dark"] .select-mini,
+  html[data-theme="dark"] .input-mini {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+    border-radius: 10px !important;
+  }
+  html[data-theme="dark"] .input:focus,
+  html[data-theme="dark"] select.input:focus,
+  html[data-theme="dark"] input.input:focus {
+    background-color: #0f172a !important;
+    border-color: #14b8a6 !important;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2) !important;
+    outline: none !important;
+  }
+  html[data-theme="dark"] .btn.primary,
+  html[data-theme="dark"] .btn-mini.primary {
+    background: #0d9488 !important;
+    border-color: #14b8a6 !important;
+    color: #ffffff !important;
+  }
+  html[data-theme="dark"] table thead th {
+    background: #1e293b !important;
+    color: #94a3b8 !important;
+    border-bottom: 1px solid #334155 !important;
+  }
+  html[data-theme="dark"] table tbody td {
+    border-bottom: 1px solid #1e293b !important;
+    color: #f1f5f9 !important;
+  }
+</style>
+
 </head>
 
 <body class="system-mode-1 page-{% block page %}{% endblock %} {{ 'mobile-phone-edition' if is_mobile_device else '' }}">
